@@ -1,400 +1,471 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ASCII Ocean – Dynamic Foam & Event Horizon</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>PHOTOGRAMMETRIC // TOPOLOGY_ANALYZER // V2</title>
     <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            background: #020202;
-            overflow: hidden;
-            width: 100%;
-            height: 100%;
-            filter: brightness(2);
-            overscroll-behavior: none;
-            -webkit-overflow-scrolling: auto;
-
-            /* apply VT323 globally */
-            font-family: 'VT323', monospace;
+        :root {
+            --bg-void: #020203;
+            --ui-glass: rgba(10, 10, 15, 0.88);
+            --ui-border: #222233;
+            --text-main: #e0e0e0;
         }
-
-        canvas, pre, div {
-            font-family: inherit;
+        body {
+            margin: 0; padding: 0;
+            background: var(--bg-void); color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            -webkit-text-size-adjust: none; text-size-adjust: none;
+            user-select: none; -webkit-user-select: none;
+            font-size: 9px;
+        }
+        #canvas {
+            position: absolute; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: var(--bg-void); z-index: 1;
+        }
+        #hud {
+            position: absolute; top: 15px; left: 15px;
+            background: var(--ui-glass);
+            border: 1px solid var(--ui-border);
+            padding: 10px 14px; border-radius: 6px;
+            line-height: 1.8; letter-spacing: 0.5px;
+            pointer-events: none; z-index: 5;
+            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+        }
+        .hud-status { color: #fff; font-weight: 800; }
+        #ui-control-panel {
+            position: absolute; bottom: 0; left: 0;
+            width: 100%; background: var(--ui-glass);
+            border-top: 1px solid var(--ui-border);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            transition: transform 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+            padding: 20px 20px 30px 20px; box-sizing: border-box; z-index: 10;
+            transform: translateY(100%);
+        }
+        #ui-control-panel.open { transform: translateY(0); }
+        .handle {
+            position: absolute; top: 0; left: 0; width: 100%;
+            height: 36px; line-height: 36px; text-align: center;
+            cursor: pointer; font-weight: 800; letter-spacing: 1px;
+            transform: translateY(-100%);
+            background: var(--ui-glass); border-top: 1px solid var(--ui-border);
+            border-radius: 8px 8px 0 0; color: #fff; box-sizing: border-box;
+        }
+        .control-row {
+            display: flex; justify-content: space-between;
+            align-items: center; margin: 12px 0; font-weight: 600;
+        }
+        .btn-group { display: flex; gap: 6px; width: 62%; }
+        .btn {
+            flex: 1; background: rgba(255,255,255,0.05);
+            border: 1px solid #555; color: #fff; text-align: center;
+            padding: 8px 0; font-weight: 800; border-radius: 4px;
+            cursor: pointer; transition: 0.2s; font-size: 8px;
+            white-space: nowrap;
+        }
+        .btn.active { background: #fff; color: #000; border-color: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .shutter-btn-wrapper {
+            position: relative; display: block;
+            background: rgba(255,255,255,0.05); border: 1px solid #555;
+            color: #fff; text-align: center;
+            padding: 10px; font-weight: 800; width: 62%; border-radius: 4px;
+            box-sizing: border-box; cursor: pointer;
+        }
+        .shutter-btn-wrapper:active { background: #fff; color: #000; }
+        .shutter-btn-wrapper input[type=file] {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; opacity: 0; cursor: pointer;
+        }
+        input[type=range] {
+            -webkit-appearance: none; background: rgba(255,255,255,0.15);
+            border-radius: 2px; height: 2px; width: 62%;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; background: #fff;
+            width: 14px; height: 14px; border-radius: 50%; cursor: pointer;
+            box-shadow: 0 0 8px rgba(255,255,255,0.4);
         }
     </style>
 </head>
 <body>
-    <canvas id="simulationCanvas"></canvas>
 
-    <script>
-        // ================================================================
-        // Prevent any gesture / scroll / zoom
-        // ================================================================
-        document.addEventListener('gesturestart', e => e.preventDefault());
-        document.addEventListener('gesturechange', e => e.preventDefault());
-        document.addEventListener('gestureend', e => e.preventDefault());
-        document.addEventListener('touchmove', e => {
-            if (e.target === canvas || canvas.contains(e.target)) {
-                e.preventDefault(); 
-            }
-        }, { passive: false });
+<div id="hud">
+    SYS: TOPOLOGY_SLICER_MATRIX_V2<br>
+    VERTICES: <span id="tel-pts" class="hud-status">0</span><br>
+    FPS: <span id="tel-fps" class="hud-status">--</span><br>
+    STATE: <span id="tel-status" style="color:#ff4444;">AWAITING SCENE</span><br>
+    <br>
+    <span style="opacity:0.6;">DRAG ORBIT · PINCH ZOOM</span>
+</div>
 
-        // ================================================================
-        // 1. ENGINE CONFIGURATION
-        // ================================================================
-        const CFG = {
-            fontSize: 4,
-            fontFamily: "monospace",
-            shorelineRatio: 0.30,
-            pierXRatio: 0.7,
-            pierLengthRatio: 0.80,
-            rainIntensity: 0.001,
-            colorBg:      "#020202",
-            colorDrySand: "#c2a678",
-            colorWetSand: "#292522",
-            colorWater:   "#7DB5E5",
-            colorRipple:  "#64dfdf",
-            colorFoam:    "#ffffff",
-            colorPier:    "#DF4231"
-        };
+<canvas id="canvas"></canvas>
 
-        const tester = document.createElement("span");
-        tester.style.fontFamily = CFG.fontFamily;
-        tester.style.fontSize = `${CFG.fontSize}px`;
-        tester.style.lineHeight = "1em";
-        tester.style.position = "absolute";
-        tester.style.visibility = "hidden";
-        tester.style.whiteSpace = "pre";
-        tester.textContent = "█";
-        document.body.appendChild(tester);
-        const rect = tester.getBoundingClientRect();
-        const charW = rect.width;
-        const charH = rect.height;
-        document.body.removeChild(tester);
+<div id="ui-control-panel" class="open">
+    <div class="handle" onclick="togglePanel()">▼ CLOSE CONTROL PANEL ▼</div>
 
-        const canvas = document.getElementById("simulationCanvas");
-        const ctx = canvas.getContext("2d", { alpha: false });
+    <div class="control-row">
+        <label>OPTICAL INGESTION</label>
+        <div style="display:flex; gap:8px; width:62%;">
+            <div class="shutter-btn-wrapper" style="width:auto; flex:1;">
+                [ CAPTURE ]
+                <input type="file" id="pipeline-shutter" accept="image/*" capture="environment">
+            </div>
+            <div class="shutter-btn-wrapper" style="width:auto; flex:1;">
+                [ UPLOAD ]
+                <input type="file" id="pipeline-upload" accept="image/*">
+            </div>
+        </div>
+    </div>
 
-        let W, H;
-        let current = [], previous = [], nextBuffer = [];
-        let foam = [];
+    <div class="control-row">
+        <label>RENDER MODES</label>
+        <div class="btn-group">
+            <div class="btn" id="btn-mesh"  onclick="toggleMesh()">MESH</div>
+            <div class="btn" id="btn-slice" onclick="toggleSlice()">Z-SLICE</div>
+            <div class="btn active" id="btn-depth-scale" onclick="toggleDepthScale()" title="Scale size by luminance depth">LUMA-SZ</div>
+            <div class="btn" id="btn-spin"  onclick="toggleSpin()">AUTO↻</div>
+        </div>
+    </div>
 
-        // Global animation trackers for physical events
-let bearFrameCounter = 0;
-let bearEvent = {
-    active: true, // Always alive
-    x: 10,        // Starts right on screen
-    y: 0,
-    targetX: 10,  // Where he is currently heading
-    targetY: 0,
-    vx: 0.3,
-    vy: 0.1,
-    state: "CHILL", // Starts out already looking at the ocean
-    timer: 200      // Time until his next random walk
-};
+    <div class="control-row">
+        <label>ANALYTICS LAYER</label>
+        <div class="btn-group">
+            <div class="btn" id="btn-heatmap" onclick="toggleHeatMap()">HEAT MAP</div>
+        </div>
+    </div>
 
-// Set his initial y position safely based on the shoreline height once it's available
-function initBearPosition() {
-    const shoreY = Math.floor(H * CFG.shorelineRatio);
-    bearEvent.y = shoreY - 2;
-    bearEvent.targetY = shoreY - 2;
-    bearEvent.x = Math.floor(W * 0.2);
-    bearEvent.targetX = bearEvent.x;
+    <div class="control-row">
+        <label>RESOLUTION MATRIX</label>
+        <div class="btn-group">
+            <div class="btn"        id="btn-res-lo"  onclick="setResolution(72)">LO·72</div>
+            <div class="btn active" id="btn-res-mid" onclick="setResolution(96)">MID·96</div>
+            <div class="btn"        id="btn-res-hi"  onclick="setResolution(144)">HI·144</div>
+        </div>
+    </div>
+
+    <div class="control-row">
+        <label>SPATIAL SCALE</label>
+        <input type="range" id="param-scale" min="20" max="2500" value="600">
+    </div>
+
+    <div class="control-row">
+        <label>Z-DEPTH RELIEF</label>
+        <input type="range" id="param-depth" min="0" max="80" value="2.5" step="0.1">
+    </div>
+
+    <div class="control-row">
+        <label>BASE NODE RADIUS</label>
+        <input type="range" id="param-size" min=".5" max="12" value="3" step="0.5">
+    </div>
+</div>
+
+<script>
+// ── CONFIG ─────────────────────────────────────────────
+let CONFIG = { resolutionX: 96, resolutionY: 96 };
+const ZOOM_MIN = 20, ZOOM_MAX = 2500;
+const SPIN_SPEED = 0.008;
+
+let params = { spatialScale: 600, depthGain: 2.5, nodeSize: 2 };
+let isMesh = false, isSlicing = false, isHeatMap = false, isSpinning = false, isDepthScale = true;
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d', { alpha: false }); // Performance optimization
+const mappingCanvas = document.createElement('canvas');
+const mappingCtx = mappingCanvas.getContext('2d', { willReadFrequently: true });
+
+// Point cloud + pre-allocated projection buffers
+let parsedHardwarePoints = [];
+let projSx, projSy, projPersp, projValid;
+
+// Edge list as flat Int32Array [a0,b0, a1,b1, ...]
+let connectionPairs = null;
+let connectionCount = 0;
+
+let angleX = 0.4, angleY = -0.5;
+let isDragging = false, lastX = 0, lastY = 0;
+let isPanelOpen = true;
+let velocityX = 0, velocityY = 0;
+
+// ── UI TOGGLES ──────────────────────────────────────────
+function togglePanel() {
+    isPanelOpen = !isPanelOpen;
+    document.getElementById('ui-control-panel').classList.toggle('open', isPanelOpen);
+    document.querySelector('.handle').innerText =
+        isPanelOpen ? '▼ CLOSE CONTROL PANEL ▼' : '▲ OPEN CONTROL PANEL ▲';
+}
+function toggleMesh()       { isMesh = !isMesh;             document.getElementById('btn-mesh').classList.toggle('active', isMesh); }
+function toggleSlice()      { isSlicing = !isSlicing;       document.getElementById('btn-slice').classList.toggle('active', isSlicing); }
+function toggleHeatMap()    { isHeatMap = !isHeatMap;       document.getElementById('btn-heatmap').classList.toggle('active', isHeatMap); }
+function toggleSpin()       { isSpinning = !isSpinning;     document.getElementById('btn-spin').classList.toggle('active', isSpinning); }
+function toggleDepthScale() { isDepthScale = !isDepthScale; document.getElementById('btn-depth-scale').classList.toggle('active', isDepthScale); }
+
+function setResolution(res) {
+    CONFIG.resolutionX = CONFIG.resolutionY = res;
+    ['btn-res-lo','btn-res-mid','btn-res-hi'].forEach(id =>
+        document.getElementById(id).classList.remove('active'));
+    const map = { 72:'btn-res-lo', 96:'btn-res-mid', 144:'btn-res-hi' };
+    if (map[res]) document.getElementById(map[res]).classList.add('active');
+    if (parsedHardwarePoints.length > 0) {
+        document.getElementById('tel-status').style.color = '#ffaa00';
+        document.getElementById('tel-status').innerText = 'RES CHANGED · RE-CAPTURE';
+    }
 }
 
+// ── PARAM BINDINGS ──────────────────────────────────────
+document.getElementById('param-scale').addEventListener('input', e => params.spatialScale = parseInt(e.target.value));
+document.getElementById('param-depth').addEventListener('input', e => params.depthGain   = parseFloat(e.target.value));
+document.getElementById('param-size').addEventListener('input',  e => params.nodeSize    = parseFloat(e.target.value));
+document.getElementById('pipeline-shutter').addEventListener('change', executeDirectPipeline);
+document.getElementById('pipeline-upload').addEventListener('change', executeDirectPipeline);
 
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+// ── IMAGE PIPELINE ───────────────────────────────────────
+function executeDirectPipeline(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    document.getElementById('tel-status').style.color = '#aaaaaa';
+    document.getElementById('tel-status').innerText = 'BUILDING MESH TOPOLOGY...';
 
-            W = Math.floor(canvas.width / charW);
-            H = Math.floor(canvas.height / charH);
+    const img = new Image();
+    img.onload = function() {
+        const RX = CONFIG.resolutionX, RY = CONFIG.resolutionY;
+        mappingCanvas.width = RX; mappingCanvas.height = RY;
 
-            current = [];
-            previous = [];
-            nextBuffer = [];
-            foam = [];
+        const ratio = Math.max(RX / img.width, RY / img.height);
+        const shiftX = (RX - img.width  * ratio) / 2;
+        const shiftY = (RY - img.height * ratio) / 2;
+        mappingCtx.clearRect(0, 0, RX, RY);
+        mappingCtx.drawImage(img, 0, 0, img.width, img.height,
+                             shiftX, shiftY, img.width * ratio, img.height * ratio);
 
-            for (let y = 0; y < H; y++) {
-                current[y] = new Float32Array(W);
-                previous[y] = new Float32Array(W);
-                nextBuffer[y] = new Float32Array(W);
-                foam[y] = new Float32Array(W);
-            }
-        }
-        resize();
+        const pixels = mappingCtx.getImageData(0, 0, RX, RY).data;
+        parsedHardwarePoints = [];
 
-        const chars = "·°░º▓o0";
+        const validIndexMap = new Int32Array(RX * RY).fill(-1);
+        let currentIndex = 0;
 
-function triggerBearAttack() {
-    bearEvent.active = true;
-    bearEvent.x = 2; 
-    bearEvent.y = Math.floor(H * CFG.shorelineRatio) - 3; 
-    bearEvent.state = "WALK";
-    bearEvent.timer = 0;
-    bearFrameCounter = 0;
-}
-function updateBearEvent() {
-    if (!bearEvent.active) return;
-
-    const bx = Math.floor(bearEvent.x);
-    const by = Math.floor(bearEvent.y);
-    const shoreY = Math.floor(H * CFG.shorelineRatio);
-
-    if (bearEvent.state === "CHILL") {
-        bearEvent.timer--;
-        
-        // Ambient breathing/resting ripples while he sits in the tide
-        if (by > 0 && by < H - 1 && bx > 0 && bx < W - 1) {
-            if (bearFrameCounter % 40 === 0) {
-                current[by + 1][bx - 1] = 3; // Soft fluid perturbations at his feet
-                foam[by + 1][bx - 1] = 1.5;
-            }
-        }
-
-        // Timer is up. Time to move somewhere else nearby.
-        if (bearEvent.timer <= 0) {
-            bearEvent.state = "WANDER";
-            // Pick a random new spot along the shoreline zone (+/- 15 blocks left/right)
-            const rangeX = 15;
-            bearEvent.targetX = Math.max(3, Math.min(W - 4, bx + (Math.random() * (rangeX * 2) - rangeX)));
-            // Keep him restricted strictly to the sand/water boundary line
-            bearEvent.targetY = shoreY + Math.floor(Math.random() * 3 - 2); 
-        }
-    } 
-    else if (bearEvent.state === "WANDER") {
-        // Calculate direction vectors to target spot
-        const dx = bearEvent.targetX - bearEvent.x;
-        const dy = bearEvent.targetY - bearEvent.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance > 0.5) {
-            // Step toward the target coordinate
-            bearEvent.x += (dx / distance) * bearEvent.vx;
-            bearEvent.y += (dy / distance) * bearEvent.vy;
-
-            // Generate walking displacement tracks in the wave matrices
-            if (by > 1 && by < H - 2 && bx > 2 && bx < W - 2) {
-                if (bearFrameCounter % 4 === 0) {
-                    current[by][bx] = 6;
-                    foam[by][bx - 1] = 4;
+        for (let y = 0; y < RY; y++) {
+            for (let x = 0; x < RX; x++) {
+                const idx = (y * RX + x) * 4;
+                const r = pixels[idx], g = pixels[idx+1], b = pixels[idx+2];
+                // Luma calc acts as our baseline depth scalar
+                const lum = (0.299*r + 0.587*g + 0.114*b) / 255; 
+                
+                if (lum > 0.01) {
+                    parsedHardwarePoints.push({
+                        x: (x / (RX-1)) * 2 - 1,
+                        y: (y / (RY-1)) * 2 - 1,
+                        z: lum,
+                        color: `rgb(${r},${g},${b})`
+                    });
+                    validIndexMap[y * RX + x] = currentIndex++;
                 }
             }
-        } else {
-            // He arrived. Plop down and look at the ocean again.
-            bearEvent.state = "CHILL";
-            // Sit still for a random duration between 200 and 600 frames (~4 to 12 seconds)
-            bearEvent.timer = 200 + Math.floor(Math.random() * 400);
         }
+
+        // Fast Edge Extraction for Mesh Rendering
+        const maxEdges = (RX-1)*RY + RX*(RY-1);
+        const edgeBuf = new Int32Array(maxEdges * 2);
+        let ec = 0;
+        for (let y = 0; y < RY-1; y++) {
+            for (let x = 0; x < RX-1; x++) {
+                const ti = validIndexMap[y*RX + x];
+                if (ti === -1) continue;
+                const ri = validIndexMap[y*RX + (x+1)];
+                const di = validIndexMap[(y+1)*RX + x];
+                if (ri !== -1) { edgeBuf[ec++] = ti; edgeBuf[ec++] = ri; }
+                if (di !== -1) { edgeBuf[ec++] = ti; edgeBuf[ec++] = di; }
+            }
+        }
+        connectionPairs = edgeBuf;
+        connectionCount = ec / 2;
+
+        // Pre-allocate projection buffers to kill garbage collection stutter
+        const len = parsedHardwarePoints.length;
+        projSx    = new Float32Array(len);
+        projSy    = new Float32Array(len);
+        projPersp = new Float32Array(len);
+        projValid = new Uint8Array(len);
+
+        document.getElementById('tel-pts').innerText = len;
+        document.getElementById('tel-status').style.color = '#ffffff';
+        document.getElementById('tel-status').innerText = 'TOPOLOGY LOCKED';
+
+        if (window.innerWidth < 768 && isPanelOpen) togglePanel();
+    };
+    img.src = URL.createObjectURL(file);
+}
+
+// ── INTERACTION ──────────────────────────────────────────
+function setupInteraction() {
+    let pinchDist0 = 0, scale0 = params.spatialScale;
+
+    window.addEventListener('touchstart', e => {
+        if (e.target.closest('#ui-control-panel')) return;
+        if (e.touches.length === 1) {
+            isDragging = true;
+            lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+            velocityX = velocityY = 0;
+        } else if (e.touches.length === 2) {
+            isDragging = false;
+            const dx = e.touches[0].clientX - e.touches[1].clientX;
+            const dy = e.touches[0].clientY - e.touches[1].clientY;
+            pinchDist0 = Math.hypot(dx, dy);
+            scale0 = params.spatialScale;
+        }
+    }, { passive: false });
+
+    window.addEventListener('touchmove', e => {
+        if (e.target.closest('#ui-control-panel')) return;
+        if (e.touches.length === 1 && isDragging) {
+            const dx = e.touches[0].clientX - lastX, dy = e.touches[0].clientY - lastY;
+            angleY += dx * 0.006; angleX += dy * 0.006;
+            velocityY = dx * 0.003; velocityX = dy * 0.003;
+            lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+        } else if (e.touches.length === 2 && pinchDist0 > 0) {
+            const dx = e.touches[0].clientX - e.touches[1].clientX;
+            const dy = e.touches[0].clientY - e.touches[1].clientY;
+            params.spatialScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX,
+                scale0 * Math.hypot(dx, dy) / pinchDist0));
+            document.getElementById('param-scale').value = params.spatialScale;
+        }
+    }, { passive: false });
+
+    window.addEventListener('touchend', () => isDragging = false);
+
+    canvas.addEventListener('mousedown', e => {
+        if (e.target.closest('#ui-control-panel')) return;
+        isDragging = true;
+        lastX = e.clientX; lastY = e.clientY;
+        velocityX = velocityY = 0;
+    });
+    window.addEventListener('mousemove', e => {
+        if (!isDragging) return;
+        const dx = e.clientX - lastX, dy = e.clientY - lastY;
+        angleY += dx * 0.006; angleX += dy * 0.006;
+        velocityY = dx * 0.002; velocityX = dy * 0.002;
+        lastX = e.clientX; lastY = e.clientY;
+    });
+    window.addEventListener('mouseup', () => isDragging = false);
+
+    window.addEventListener('wheel', e => {
+        if (e.target.closest('#ui-control-panel')) return;
+        params.spatialScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX,
+            params.spatialScale - e.deltaY * 0.3));
+        document.getElementById('param-scale').value = params.spatialScale;
+    });
+}
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+
+// ── RENDER LOOP ──────────────────────────────────────────
+let frameCount = 0, fpsTime = performance.now();
+
+function renderLoop(ts) {
+    frameCount++;
+    if (ts - fpsTime >= 1000) {
+        document.getElementById('tel-fps').innerText =
+            Math.round(frameCount / ((ts - fpsTime) / 1000));
+        frameCount = 0; fpsTime = ts;
     }
 
-    bearFrameCounter++;
+    ctx.fillStyle = '#020203';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (!parsedHardwarePoints.length) { requestAnimationFrame(renderLoop); return; }
+
+    if (!isDragging) { angleX += velocityX; angleY += velocityY; velocityX *= 0.94; velocityY *= 0.94; }
+    if (isSpinning) angleY += SPIN_SPEED;
+
+    const cx = canvas.width / 2, cy = canvas.height / 2;
+    const cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+    const cosX = Math.cos(angleX), sinX = Math.sin(angleX);
+    const scale      = params.spatialScale;
+    const depthScale = scale * params.depthGain * 0.5;
+    const W = canvas.width, H = canvas.height;
+    const len = parsedHardwarePoints.length;
+
+    projValid.fill(0);
+
+    // ── Project ────────────────────────────────────────
+    for (let i = 0; i < len; i++) {
+        const p = parsedHardwarePoints[i];
+        if (isSlicing && Math.abs(p.z - 0.5) > 0.25) continue;
+
+        const zs   = p.z - 0.5;
+        const rawX = p.x * scale, rawY = p.y * scale, rawZ = zs * depthScale;
+        const x1   = rawX * cosY - rawZ * sinY;
+        const z1   = rawX * sinY + rawZ * cosY;
+        const y2   = rawY * cosX - z1 * sinX;
+        const z2   = rawY * sinX + z1 * cosX;
+
+        if (z2 < -2700) continue;
+
+        const persp = 800 / (800 + z2);
+        const sx = cx + x1 * persp, sy = cy + y2 * persp;
+        if (sx < -50 || sx > W+50 || sy < -50 || sy > H+50) continue;
+
+        projSx[i] = sx; projSy[i] = sy; projPersp[i] = persp;
+        projValid[i] = 1;
+    }
+
+    // ── Pass 1: Mesh wireframe ─────────────────────────
+    if (isMesh) {
+        ctx.beginPath();
+        ctx.strokeStyle = isHeatMap ? 'rgba(100,180,255,0.2)' : 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 1.0;
+        for (let k = 0; k < connectionCount; k++) {
+            const ai = connectionPairs[k*2], bi = connectionPairs[k*2+1];
+            if (projValid[ai] && projValid[bi]) {
+                ctx.moveTo(projSx[ai], projSy[ai]);
+                ctx.lineTo(projSx[bi], projSy[bi]);
+            }
+        }
+        ctx.stroke();
+    }
+
+    // ── Pass 2: Vertex nodes ───────────────────────────
+    const baseNodeSize = params.nodeSize;
+    for (let i = 0; i < len; i++) {
+        if (!projValid[i]) continue;
+        const p = parsedHardwarePoints[i];
+
+        // Core execution: Perspective scale from camera distance
+        let currentSize = baseNodeSize * projPersp[i];
+
+        // MONSTER UPGRADE: LUMA-SIZE Mapping
+        // Amplifies the size of high-luminance points and shrinks dark ones
+        if (isDepthScale) {
+            // p.z is 0.0 to 1.0. Multiplier scales from 0.15x (shadows) to 2.5x (peaks)
+            const lumaMultiplier = 0.15 + (p.z * 2.35);
+            currentSize *= lumaMultiplier;
+        }
+
+        const size = Math.max(0.5, currentSize);
+        const half = size * 0.5;
+
+        if (isHeatMap) {
+            const hz  = p.z;
+            const hue = hz < 0.5 ? 260 - hz * 240 : 140 - (hz - 0.5) * 280;
+            // Opacity also scales slightly with luma for a holographic effect
+            const alpha = Math.max(0.3, Math.min(1.0, projPersp[i] * (isDepthScale ? 0.6 + hz : 1)));
+            ctx.fillStyle = `hsla(${hue|0}, 90%, 60%, ${alpha})`;
+        } else {
+            ctx.fillStyle = p.color;
+        }
+        
+        ctx.fillRect(projSx[i] - half, projSy[i] - half, size, size);
+    }
+
+    requestAnimationFrame(renderLoop);
 }
 
-
-        function ripple() {
-            const shoreY = Math.floor(H * CFG.shorelineRatio);
-            const pierX = Math.floor(W * CFG.pierXRatio);
-            const pierLength = Math.floor(H * CFG.pierLengthRatio);
-
-            for (let y = 1; y < H - 1; y++) {
-                const cRow = current[y], cAbove = current[y-1], cBelow = current[y+1];
-                const pRow = previous[y], nRow = nextBuffer[y];
-                const fRow = foam[y];
-                const isSand = y < shoreY;
-                const divisor = isSand ? 5  : 2.01;
-                const damping = isSand ? .5 : 0.989;
-
-                for (let x = 1; x < W - 1; x++) {
-                    // Obstacle architecture: Static structural boundary layer
-                    if (x === pierX && y < pierLength && y % 9 === 0) {
-                        nRow[x] = 0;
-                        // Side currents crashing into the piling convert horizontal force to foam
-                        if (Math.abs(cRow[x-1]) > 0.2 || Math.abs(cRow[x+1]) > 0.2) {
-                            fRow[x] = Math.min(8, fRow[x] + 1.5);
-                        }
-                        continue;
-                    }
-
-                    let combinedNeighbors = (cAbove[x] + cBelow[x] + cRow[x-1] + cRow[x+1]) / divisor;
-                    let val = (combinedNeighbors - pRow[x]) * damping;
-              
-                    // --- FOAM INJECTION MODULE ---
-                    // Compute absolute structural velocity delta between steps to find breaking crests
-                    const delta = Math.abs(val - cRow[x]);
-                    if (delta > 0.9) {
-                        fRow[x] += delta * 0.4;
-                    }
-                    
-                    // Natural breaks along the flat shallow sand profile
-                    if (isSand && val > 0.6) {
-                        fRow[x] += 0.3;
-                    }
-
-                    // Persistent decay timeline (Deepwater foam glides; sand layer dampens fast)
-                    fRow[x] *= isSand ? .99 : 0.8; 
-                    if (fRow[x] < 0.05) fRow[x] = 0;
-
-                    // Edge dampening math
-                    if (!isSand && (x < 6 || x > W - 6 || y > H - 6)) {
-                        const edgeX = Math.min(x, W - 1 - x), edgeY = Math.min(y, H - 1 - y);
-                        const closestEdge = Math.min(edgeX, edgeY);
-                        if (closestEdge < 8) val *= (0.6 + (closestEdge / 8) * 0.15);
-                    }
-                    nRow[x] = val;
-                }
-            }
-            const temp = previous;
-            previous = current;
-            current = nextBuffer;
-            nextBuffer = temp;
-        }
-
-        function render() {
-            ctx.fillStyle = CFG.colorBg;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.font = `${CFG.fontSize}px ${CFG.fontFamily}`;
-            ctx.textBaseline = "top";
-
-            const shoreY = Math.floor(H * CFG.shorelineRatio);
-            const pierX = Math.floor(W * CFG.pierXRatio);
-            const pierLength = Math.floor(H * CFG.pierLengthRatio);
-             
-            const bx = Math.floor(bearEvent.x);
-            const by = Math.floor(bearEvent.y);
-
-            for (let y = 0; y < H; y++) {
-                const cRow = current[y];
-                const fRow = foam[y];
-                const isSand = y < shoreY;
-                let runString = "", runColor = "", runStartX = 0;
-
-                for (let x = 0; x < W; x++) {
-                    let char = "∷", color = CFG.colorWater;
-                    
-                    // Intercept step 1: Is this static pier coordinate architecture?
-                    if (x === pierX && y < pierLength && y % 3 === 0) {
-                        char = "⊗"; color = CFG.colorPier;
-                    } 
-                    // Intercept step 2: Is the procedural ASCII entity occupying this spatial grid block?
-                    else if (bearEvent.active && x >= bx - 2 && x <= bx && y >= by && y <= by + 1) {
-                        const localX = x - (bx - 2); 
-                        const localY = y - by;       
-                        const animFrame = Math.floor(bearFrameCounter / 6) % 3;
-
-                        // Integrated 3-frame 3x2 typographic sprite arrays
-                        const frames = [
-                            [ ["(","-","-"], ["/",")","\""] ], 
-                            [ ["(","=","="], ["\\","(","\""] ], 
-                            [ ["{","o","."], ["/",",","*"] ]  
-                        ];
-
-                        char = frames[animFrame][localY][localX];
-                        color = "#a57548"; // Earthy brown cuts through blue fluid data
-                    } 
-                    // Base Map Render Step
-                    else {
-                        const v = cRow[x];
-                        const f = fRow[x];
-                        const normalized = Math.max(-1, Math.min(1, v / 6));
-                        let idx = Math.floor(Math.pow(Math.abs(normalized), 0.65) * (chars.length - 1));
-                        idx = Math.max(0, Math.min(idx, chars.length - 1));
-                        char = chars[idx];
-
-                        if (isSand) {
-                            if (f > 1.8 || v > 1.5) { color = CFG.colorFoam; char = "◌"; }
-                            else if (f > 0.6) { color = CFG.colorFoam; char = "·"; }
-                            else if (v > 0.2 || f > 0.1) { color = CFG.colorWetSand; char = "░"; }
-                            else { color = CFG.colorDrySand; char = "░"; }
-                        } else {
-                            if (f > 2.2) { color = CFG.colorFoam; char = "░"; } 
-                            else if (f > 1.0) { color = CFG.colorFoam; char = "*"; }
-                            else if (f > 0.4) { color = CFG.colorRipple; char = "°"; }
-                            else if (v > 0.3 || v < -0.3) { color = CFG.colorRipple; }
-                            else { 
-                                color = CFG.colorWater; 
-                                if (idx === 2) char = "∙"; 
-                            }
-                        }
-                    }
-
-                    // Native monospaced run-length canvas draw optimizer
-                    if (x === 0) { runColor = color; runString = char; runStartX = 0; }
-                    else if (color === runColor) { runString += char; }
-                    else {
-                        ctx.fillStyle = runColor;
-                        ctx.fillText(runString, runStartX * charW, y * charH);
-                        runColor = color;
-                        runString = char;
-                        runStartX = x;
-                    }
-                }
-                if (runString.length > 0) {
-                    ctx.fillStyle = runColor;
-                    ctx.fillText(runString, runStartX * charW, y * charH);
-                }
-            }
-        }
-
-        function animate() {
-            // Environment context simulation loops
-            if (Math.random() < CFG.rainIntensity) {
-                const rx = Math.floor(Math.random() * (W - 2)) + 1;
-                const ry = Math.floor(Math.random() * (H - 2)) + 1;
-                if (ry > Math.floor(H * CFG.shorelineRatio) + 1) current[ry][rx] = 16;
-            }
-
-            // Stochastic event trigger loop
-            if (!bearEvent.active && Math.random() < 0.002) {
-                triggerBearAttack();
-            }
-
-            // Run processing updates sequentially
-            updateBearEvent();
-            ripple();
-            render();
-            requestAnimationFrame(animate);
-        }
-
-        function splash(cx, cy) {
-            const radius = 3;
-            for (let y = -radius; y <= radius; y++) {
-                const py = cy + y;
-                if (py <= 0 || py >= H - 1) continue;
-                const cRow = current[py];
-                for (let x = -radius; x <= radius; x++) {
-                    const px = cx + x;
-                    if (px > 0 && px < W - 1) cRow[px] = 4;
-                }
-            }
-        }
-
-        function getGridCoords(e) {
-            return {
-                x: Math.floor(e.clientX / window.innerWidth * W),
-                y: Math.floor(e.clientY / window.innerHeight * H)
-            };
-        }
-
-        canvas.addEventListener('pointerdown', e => {
-            const { x, y } = getGridCoords(e);
-            splash(x, y);
-        });
-
-        canvas.addEventListener('pointermove', e => {
-            if (e.buttons) {
-                const { x, y } = getGridCoords(e);
-                splash(x, y);
-            }
-        });
-
-        window.addEventListener('resize', resize);
-        animate();
-    </script>
+setupInteraction();
+resize();
+requestAnimationFrame(renderLoop);
+</script>
 </body>
 </html>
