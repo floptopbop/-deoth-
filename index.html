@@ -1,1005 +1,1042 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>watercolor — force model</title>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  html, body {
-    width:100%; height:100dvh;
-    background:#c8c3b8;
-    overflow:hidden; user-select:none; -webkit-user-select:none; touch-action:none;
-  }
-  canvas {
-    position:absolute; inset:0; width:100%; height:100%;
-    touch-action:none;
-  }
-  /* ── fold-down tray ── */
-  #tray {
-    position:fixed; left:0; right:0; bottom:0;
-    padding:11px 14px calc(20px + env(safe-area-inset-bottom));
-    background:rgba(38,34,30,0.82);
-    backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
-    border-top:1px solid rgba(255,255,255,0.08);
-    display:flex; flex-direction:column; gap:9px;
-    transform:translateY(100%); opacity:0;
-    transition:transform 0.42s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease;
-    z-index:10; touch-action:none;
-  }
-  #tray.visible { transform:translateY(0); opacity:1; }
-
-  #grab {
-    position:absolute; top:5px; left:50%; transform:translateX(-50%);
-    width:38px; height:4px; border-radius:2px;
-    background:rgba(255,255,255,0.22);
-  }
-
-  #swatchRow {
-    display:flex; gap:7px; overflow-x:auto; padding:2px 0 1px;
-    -webkit-overflow-scrolling:touch; scrollbar-width:none;
-  }
-  #swatchRow::-webkit-scrollbar { display:none; }
-  .swatch {
-    width:26px; height:26px; border-radius:50%; flex-shrink:0;
-    border:2px solid rgba(255,255,255,0.18);
-    transition:transform 0.16s, border-color 0.16s, box-shadow 0.16s;
-    touch-action:none;
-  }
-  .swatch.active {
-    border-color:rgba(255,255,255,0.85); transform:scale(1.22);
-    box-shadow:0 0 12px rgba(255,255,255,0.18);
-  }
-
-  .rowDiv { width:1px; align-self:stretch; margin:2px 5px; background:rgba(255,255,255,0.14); flex-shrink:0; }
-
-  .size {
-    width:30px; height:30px; border-radius:50%; flex-shrink:0;
-    display:flex; align-items:center; justify-content:center;
-    border:2px solid rgba(255,255,255,0.14);
-    transition:transform 0.16s, border-color 0.16s; touch-action:none;
-  }
-  .size i { display:block; border-radius:50%; background:rgba(255,255,255,0.55); }
-  .size.active { border-color:rgba(255,255,255,0.85); transform:scale(1.12); }
-  .size.active i { background:rgba(255,255,255,0.92); }
-
-  #resetBtn {
-    width:30px; height:30px; border-radius:50%; flex-shrink:0;
-    display:flex; align-items:center; justify-content:center;
-    border:2px solid rgba(216,138,118,0.55);
-    background:rgba(120,58,48,0.16); color:rgba(242,204,194,0.9);
-    font-size:16px; line-height:1;
-    transition:transform 0.16s, border-color 0.16s, background 0.16s;
-    touch-action:none; -webkit-user-select:none; user-select:none;
-  }
-  #resetBtn:active { transform:scale(0.9); background:rgba(120,58,48,0.34); border-color:rgba(216,138,118,0.85); }
-
-  #dipRow { display:flex; gap:8px; height:70px; }
-  .dip, #napkin {
-    flex:1; border-radius:7px; position:relative; overflow:hidden;
-    display:flex; align-items:center; justify-content:center;
-    font-family:'Courier New', monospace;
-    font-size:0.58rem; letter-spacing:0.1em; text-transform:uppercase;
-    touch-action:none; -webkit-user-select:none; user-select:none;
-  }
-  .dip .fill {
-    position:absolute; left:0; bottom:0; right:0; height:0%;
-    background:rgba(255,255,255,0.30); transition:none;
-  }
-  .dip span, #napkin .napLabel { position:relative; z-index:2; pointer-events:none; }
-  #dipInk   { background:#141210; color:#eee; }
-  #dipWater { background:#2e5d8a; color:#eaf2fa; }
-
-  #napkin { background:#e8e4d8; color:#5a5348; }
-  .napZones { position:absolute; inset:0; display:flex; z-index:1; }
-  .napZone { flex:1; touch-action:none; }
-  .napZone.mid { border-left:1px solid rgba(90,83,72,0.18); border-right:1px solid rgba(90,83,72,0.18); }
-  .napZone.pressed { background:rgba(90,83,72,0.16); }
-  #napkin .napLabel { font-size:0.5rem; opacity:0.6; letter-spacing:0.14em; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Scalar Field Sculpture</title>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --accent: rgba(255, 255, 255, 0.85);
+            --dim: rgba(255, 255, 255, 0.8);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            width: 100%; height: 100%; overflow: hidden;
+            background: var(--bg); touch-action: none;
+            -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
+            -webkit-tap-highlight-color: transparent; position: fixed; top: 0; left: 0;
+        }
+        canvas { display: block; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        #threeCanvas {
+            display: none; position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; touch-action: none;
+        }
+        #hud {
+            position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+            z-index: 20; display: flex; align-items: center; gap: 8px;
+            padding: 7px 14px; background: rgba(10,10,18,0.82);
+            border-radius: 24px; backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,0.09);
+            pointer-events: none; flex-wrap: nowrap;
+        }
+        .hud-btn {
+            font-family: 'SF Mono','JetBrains Mono','Courier New',monospace;
+            font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--accent); background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.18); border-radius: 14px;
+            padding: 4px 10px; cursor: pointer; outline: none; pointer-events: auto;
+            -webkit-tap-highlight-color: transparent; white-space: nowrap;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .hud-btn:active { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.5); }
+        .hud-btn.active { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.8); }
+        .hud-label {
+            font-family: 'SF Mono','JetBrains Mono','Courier New',monospace;
+            font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--dim); white-space: nowrap; pointer-events: none;
+        }
+        .hud-sep { width: 1px; height: 14px; background: rgba(255,255,255,0.12); flex-shrink: 0; }
+        #exportRow {
+            position: fixed; bottom: 74px; left: 50%; transform: translateX(-50%);
+            z-index: 20; display: flex; align-items: center; gap: 8px;
+        }
+        #toast {
+            position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+            background: rgba(10,10,18,0.9); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 16px; padding: 6px 16px; z-index: 30;
+            font-family: 'SF Mono','JetBrains Mono','Courier New',monospace;
+            font-size: 10px; letter-spacing: 0.1em; color: rgba(255,255,255,0.8);
+            opacity: 0; transition: opacity 0.25s; pointer-events: none;
+        }
+        #toast.show { opacity: 1; }
+        .dots { display: flex; gap: 5px; }
+        .dot {
+            width: 5px; height: 5px; border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: background 0.25s, box-shadow 0.25s;
+        }
+        .dot.active { background: rgba(255,255,255,0.88); box-shadow: 0 0 5px rgba(255,255,255,0.8); }
+        .brush-slider {
+            -webkit-appearance: none; appearance: none;
+            width: 60px; height: 4px; background: rgba(255,255,255,0.2);
+            border-radius: 2px; outline: none; pointer-events: auto; cursor: pointer;
+        }
+        .brush-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 12px; height: 12px; border-radius: 50%;
+            background: var(--accent); border: 1px solid rgba(255,255,255,0.8);
+        }
+        .brush-size-label {
+            font-family: 'SF Mono','JetBrains Mono','Courier New',monospace;
+            font-size: 9px; color: var(--dim); white-space: nowrap; pointer-events: none;
+        }
+    </style>
 </head>
 <body>
+    <canvas id="canvas2d"></canvas>
+    <canvas id="threeCanvas"></canvas>
 
-<canvas id="c"></canvas>
-
-<div id="tray">
-  <div id="grab"></div>
-
-  <div id="swatchRow">
-    <div class="swatch active" style="background:#292420" data-ink="#292420"></div>
-    <div class="swatch" style="background:#765649" data-ink="#765649"></div>
-    <div class="swatch" style="background:#4E555B" data-ink="#4E555B"></div>
-    <div class="swatch" style="background:#586456" data-ink="#586456"></div>
-    <div class="swatch" style="background:#714B48" data-ink="#714B48"></div>
-    <div class="rowDiv"></div>
-    <div class="size" data-r="2"><i style="width:4px;height:4px"></i></div>
-    <div class="size active" data-r="8"><i style="width:9px;height:9px"></i></div>
-    <div class="size" data-r="16"><i style="width:15px;height:15px"></i></div>
-    <div class="size" data-r="32"><i style="width:22px;height:22px"></i></div>
-    <div class="rowDiv"></div>
-    <div id="resetBtn">↺</div>
-  </div>
-
-  <div id="dipRow">
-    <div class="dip" id="dipInk"><div class="fill"></div><span>ink</span></div>
-    <div id="napkin">
-      <div class="napZones">
-        <div class="napZone" data-drain="ink"></div>
-        <div class="napZone mid" data-drain="both"></div>
-        <div class="napZone" data-drain="water"></div>
-      </div>
-      <span class="napLabel">napkin</span>
+    <div id="exportRow">
+        <button class="hud-btn" id="btnLoad">LOAD</button>
+        <button class="hud-btn" id="btnExportPNG">PNG</button>
+        <button class="hud-btn" id="btnExportJSON">JSON</button>
     </div>
-    <div class="dip" id="dipWater"><div class="fill"></div><span>water</span></div>
-  </div>
-</div>
-
-<script>
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-
-// ═══════════════════════════════════════════════════════════════
-// MODEL — the brush is three independent things: water it lays down,
-// pigment it lays down, and physical agitation. Agitation is always on,
-// so a bone-dry brush still shoves water it's dragged through (dry paper
-// can't be disturbed — correct). Per wet cell: sat (water), pig (pigment),
-// vx/vy (velocity). absorbed[] is the permanent one-way stain.
-// Each frame: pressure diffusion (blooms, leveling) -> advection (currents,
-// smearing) -> evaporation + absorption (drying, staining). The field draws
-// to a grid-res buffer that's bilinear-upscaled — smooth ramps, no pixel grid.
-//
-// [B] marks values grounded in Baron, D.E., "Fluid Dynamics of Watercolor
-// Painting: Experiments and Modelling" (M.S. thesis, Montclair State, 2017).
-// Tuning changes from the previous build are listed at TUNING NOTES below.
-// ═══════════════════════════════════════════════════════════════
-
-// ── grid ──
-const CELL = 2;
-const EPS  = 0;
-
-// ── pressure diffusion ──
-const FLOW           = .66;
-const DIFF_COEF      = 0.01;
-
-// ── pigment rheology ──
-const VISC_MAX    = 0.6;   // ← was 0.62
-const VISC_CONC   = 2.4;
-const FILM_REF    = 1;
-const FILM_DRAG   = 0.9;   // ← was 0.75
-
-// ── finger instability ──
-const FINGER_GAIN    = 2; // ← was 2.1
-const EDGE_SUB       = 1;
-const RELAX_SUBSTEPS = 0;
-const CRUST_RESIST   = 0.9;
-
-// ── brush force ──
-const FORCE           = .89;
-const WATER_DRIVE_MIN = .2;
-const PRESS_FORCE     = .89;
-const HOLD_PRESS      = 1;
-const VDAMP           = 1;
-const VMAX            = 28;
-const VEPS            = 0.9;
-const ADV_CFL         = 0.1;
-const MOM_CARRY       = 0.9;
-
-// ── loads ──
-let waterLoad = .2;
-let inkLoad   = .94;
-const LOAD_MAX  = 1;
-const DAB       = 0.99;
-const INK_FLOOR = .01;
-const DEPLETE   = false;
-const WATER_USE = 0.00005;
-const INK_USE   = 0.00005;
-const RAMP_PER_SEC = 10;
-
-// ── absorption / staining ──
-const DRY_SECONDS       = 4;   // ← was 8
-const ABSORB_SAT_THRESH = 0.75;  // ← was 0.2
-const ABSORB_RATE       = 0.68;  // ← was 0.2
-const MAX_LIVE_CONC     = .3;
-const MAX_ABSORBED      = .75;
-const BAKE_AFTER_MS     = 6000;
-
-// ── brush geometry ──
-let BRUSH_R = 8;
-
-// ── splatter ──
-const SPLAT_FLICK_MIN = 2;
-const SPLAT_COUNT     = 12;
-const SPLAT_CAP       = 24;
-const SPLAT_SPREAD    = 0.32;
-const SPLAT_REACH     = 50;
-const SPLAT_REACH_MAX = 340;
-const SPLAT_DROP_R    = 12;
-const SPLAT_MIN_R     = 1.2;
-const SPLAT_STRENGTH  = 1;
-const SPLAT_SMEAR     = 1;
-
-// ── render ──
-const PAPER       = [242, 238, 229];
-const K_INK       = 1;
-const WET_SHEEN   = 0.1;
-const GRANULATE   = 0.02;
-const PAPER_GRAIN = 0.01;
-let   SOFTEN      = 0;
-
-// ── TUNING NOTES (changes from the previous build) ─────────────
-//   waterLoad  5    -> 0.2   was 25x its own "1 = soaked" max, and unlike
-//                            pigment it has no downstream clamp
-//   VDAMP      .001 -> 4     currents never decayed (~1000s e-folding time),
-//                            which also kept cells from ever going idle
-//   VEPS       0.25 -> 0.01  was clipping slow settling water to zero
-//   ADV_CFL    0.1  -> 0.9   throttle that compensated for the VDAMP bug
-//   FINGER_GAIN 1.8 -> 2.1   old comment cited D_f 1.43-1.73; thesis actually
-//                            reports ~1.6-1.9 measured, 1.73-1.97 modelled
-// ───────────────────────────────────────────────────────────────
-
-// exp LUT
-const EXP_N = 1024, EXP_MAX = 2, EXP_SCALE = EXP_N / EXP_MAX;
-const EXP_LUT = new Float32Array(EXP_N);
-function buildExpLut() { for (let i = 0; i < EXP_N; i++) EXP_LUT[i] = 1 - Math.exp(-K_INK * (i / EXP_SCALE)); }
-buildExpLut();
-function expA(T) { if (T <= 0) return 0; const idx = T * EXP_SCALE; return idx >= EXP_N - 1 ? EXP_LUT[EXP_N - 1] : EXP_LUT[idx | 0]; }
-
-const fract = x => x - Math.floor(x);
-const dU = (a,b) => fract(Math.sin(a*127.1 + b*311.7) * 43758.5453123);
-const dG = (a,b) => (dU(a,b) + dU(a+1.7, b+0.3) + dU(a+3.1, b+2.9) - 1.5) * 1.15;
-
-// ── state ──
-let gridW = 0, gridH = 0;
-let cells = new Map();
-let absorbed = null;
-let grainTex = null;
-let absColR = null, absColG = null, absColB = null;
-let field, fieldCtx, fieldImg;
-let dpr = 1;
-let needFullPaint = true;
-
-// Pre-allocated delta pools — diffuse/advect write here instead of allocating
-// a Map every frame. O(changed_cells) readback, zero GC churn.
-let _deltaS  = null;   // Float32Array[gridW*gridH]
-let _deltaP  = null;
-let _deltaVX = null;
-let _deltaVY = null;
-let _deltaVW = null;   // weight accumulator for momentum blend
-let _dirtyList = [];   // flat list of indices touched this frame — zeroed after use
-
-// colour delta accumulators (reused per frame, same pattern)
-let _colR = null, _colG = null, _colB = null, _colW = null;
-
-// ── ink colour ──
-let inkR = 0x29, inkG = 0x24, inkB = 0x20;
-
-function setInk(hex) {
-  inkR = parseInt(hex.slice(1,3),16);
-  inkG = parseInt(hex.slice(3,5),16);
-  inkB = parseInt(hex.slice(5,7),16);
-}
-
-function blendCellColor(c, r, g, b, amt, prevPig) {
-  const next = prevPig + amt;
-  if (next <= 1e-9) return;
-  const w = amt / next, iw = 1 - w;
-  c.ir = c.ir*iw + r*w; c.ig = c.ig*iw + g*w; c.ib = c.ib*iw + b*w;
-}
-
-function addStain(i, r, g, b, amt) {
-  if (amt <= 0) return;
-  const prev = absorbed[i], next = prev + amt;
-  const w = amt / next, iw = 1 - w;
-  absColR[i] = absColR[i]*iw + r*w;
-  absColG[i] = absColG[i]*iw + g*w;
-  absColB[i] = absColB[i]*iw + b*w;
-  absorbed[i] = next;
-}
-
-function key(cx, cy) { return cy * gridW + cx; }
-function idxOf(cx, cy) { return cy * gridW + cx; }
-function clampVel(c) {
-  const m = Math.sqrt(c.vx*c.vx + c.vy*c.vy);
-  if (m > VMAX) { const s = VMAX / m; c.vx *= s; c.vy *= s; }
-}
-
-function getCell(cx, cy, create) {
-  if (cx < 0 || cy < 0 || cx >= gridW || cy >= gridH) return null;
-  const k = key(cx, cy);
-  let c = cells.get(k);
-  if (!c && create) {
-    c = { sat:0, pig:0, vx:0, vy:0, ir:inkR, ig:inkG, ib:inkB,
-          lastActive: performance.now(), born: performance.now(),
-          grain:[dU(cx*3.1+1,cy*7.7), dU(cx*3.1+2,cy*7.7), dU(cx*3.1+3,cy*7.7), dU(cx*3.1+4,cy*7.7)] };
-    cells.set(k, c);
-  }
-  return c;
-}
-
-let dirtyX0 = Infinity, dirtyY0 = Infinity;
-let dirtyX1 = -1,       dirtyY1 = -1;
-
-function markDirty(cx, cy) {
-  if (cx < dirtyX0) dirtyX0 = Math.max(0, cx);
-  if (cy < dirtyY0) dirtyY0 = Math.max(0, cy);
-  if (cx > dirtyX1) dirtyX1 = Math.min(gridW - 1, cx);
-  if (cy > dirtyY1) dirtyY1 = Math.min(gridH - 1, cy);
-}
-function resetDirty() { dirtyX0 = gridW; dirtyY0 = gridH; dirtyX1 = -1; dirtyY1 = -1; }
-function markDirtyIdx(i) { markDirty(i % gridW, (i / gridW) | 0); }
-
-function setupGrid(cssW, cssH) {
-  gridW = Math.max(1, Math.ceil(cssW / CELL));
-  gridH = Math.max(1, Math.ceil(cssH / CELL));
-  cells.clear();
-  const n = gridW * gridH;
-  absorbed = new Float32Array(n);
-  absColR  = new Float32Array(n);
-  absColG  = new Float32Array(n);
-  absColB  = new Float32Array(n);
-  grainTex = new Float32Array(n);
-  // pre-alloc delta pools
-  _deltaS  = new Float32Array(n);
-  _deltaP  = new Float32Array(n);
-  _deltaVX = new Float32Array(n);
-  _deltaVY = new Float32Array(n);
-  _deltaVW = new Float32Array(n);
-  _colR = new Float32Array(n); _colG = new Float32Array(n);
-  _colB = new Float32Array(n); _colW = new Float32Array(n);
-  _dirtyList = [];
-
-  for (let y = 0; y < gridH; y++)
-    for (let x = 0; x < gridW; x++)
-      grainTex[y*gridW + x] = dU(x*1.7 + 3.3, y*2.3 + 9.1);
-
-  field = document.createElement('canvas');
-  field.width = gridW; field.height = gridH;
-  fieldCtx = field.getContext('2d');
-  fieldImg = fieldCtx.createImageData(gridW, gridH);
-  needFullPaint = true;
-}
-
-// ═══ DEPOSIT ═══
-function deposit(px, py, radius, sMul) {
-  if (waterLoad <= 0 && inkLoad <= 0) return;
-  const wDab = LOAD_MAX * waterLoad;
-  const iDab = (INK_FLOOR + (LOAD_MAX - INK_FLOOR) * inkLoad);
-  const rCells = Math.max(1, Math.ceil(radius / CELL)) + 1;
-  const cx0 = Math.floor(px/CELL - rCells), cx1 = Math.ceil(px/CELL + rCells);
-  const cy0 = Math.floor(py/CELL - rCells), cy1 = Math.ceil(py/CELL + rCells);
-  let usedW = 0, usedI = 0;
-  const now = performance.now();
-  const rMax2 = (radius + CELL) * (radius + CELL), rFall = radius + CELL * 0.5;
-
-  for (let cy = cy0; cy <= cy1; cy++) {
-    for (let cx = cx0; cx <= cx1; cx++) {
-      if (cx < 0 || cy < 0 || cx >= gridW || cy >= gridH) continue;
-      const dx = (cx + 0.5) * CELL - px, dy = (cy + 0.5) * CELL - py;
-      const d2 = dx*dx + dy*dy;
-      if (d2 > rMax2) continue;
-      const d = Math.sqrt(d2);
-      const f = Math.max(0, 1 - d / rFall);
-      if (f <= 0) continue;
-      const ff = f * f;
-      const addS = wDab * sMul * ff * DAB;
-      const addP = iDab * sMul * ff * DAB;
-      if (addS < 0.0002 && addP < 0.2) continue;
-
-      const c = getCell(cx, cy, true);
-      const prevPig = c.pig;
-      c.sat += addS; c.pig += addP; c.lastActive = now;
-      blendCellColor(c, inkR, inkG, inkB, addP, prevPig);
-      usedW += addS; usedI += addP;
-
-      const conc = c.sat > EPS ? c.pig / c.sat : 0;
-      if (conc > MAX_LIVE_CONC) {
-        const capped = MAX_LIVE_CONC * c.sat, excess = c.pig - capped;
-        const i = idxOf(cx, cy), room = Math.max(0, MAX_ABSORBED - absorbed[i]);
-        const dump = Math.min(excess, room);
-        addStain(i, c.ir, c.ig, c.ib, dump); c.pig = capped + (excess - dump);
-      }
-    }
-  }
-  markDirty(cx0, cy0); markDirty(cx1, cy1);
-
-  if (DEPLETE) {
-    waterLoad = Math.max(0, waterLoad - usedW * WATER_USE);
-    inkLoad   = Math.max(0, inkLoad   - usedI * INK_USE);
-    updateFills();
-  }
-}
-
-// ═══ FORCE ═══
-function injectForce(px, py, dirx, diry, speedCells, radius) {
-  const rCells = Math.max(1, Math.ceil(radius / CELL)) + 1;
-  const cx0 = Math.floor(px/CELL - rCells), cx1 = Math.ceil(px/CELL + rCells);
-  const cy0 = Math.floor(py/CELL - rCells), cy1 = Math.ceil(py/CELL + rCells);
-  const t = performance.now();
-  const rMax2 = (radius + CELL) * (radius + CELL), rFall = radius + CELL;
-  for (let cy = cy0; cy <= cy1; cy++) {
-    for (let cx = cx0; cx <= cx1; cx++) {
-      if (cx < 0 || cy < 0 || cx >= gridW || cy >= gridH) continue;
-      const c = cells.get(key(cx, cy));
-      if (!c) continue;
-      const dx = (cx + 0.5) * CELL - px, dy = (cy + 0.5) * CELL - py;
-      const d2 = dx*dx + dy*dy;
-      if (d2 > rMax2) continue;
-      const d = Math.sqrt(d2);
-      const f = Math.max(0, 1 - d / rFall);
-      if (f <= 0) continue;
-      const imp = speedCells * FORCE * f * (WATER_DRIVE_MIN + (1 - WATER_DRIVE_MIN) * waterLoad);
-      c.vx += dirx * imp; c.vy += diry * imp;
-      c.lastActive = t;
-      clampVel(c);
-    }
-  }
-}
-
-function injectPress(px, py, radius, strength) {
-  const rCells = Math.max(1, Math.ceil(radius / CELL)) + 1;
-  const cx0 = Math.floor(px/CELL - rCells), cx1 = Math.ceil(px/CELL + rCells);
-  const cy0 = Math.floor(py/CELL - rCells), cy1 = Math.ceil(py/CELL + rCells);
-  const rMax2 = (radius + CELL) * (radius + CELL), rFall = radius + CELL * 0.5;
-  for (let cy = cy0; cy <= cy1; cy++) {
-    for (let cx = cx0; cx <= cx1; cx++) {
-      if (cx < 0 || cy < 0 || cx >= gridW || cy >= gridH) continue;
-      const c = cells.get(key(cx, cy));
-      if (!c) continue;
-      const dx = (cx + 0.5) * CELL - px, dy = (cy + 0.5) * CELL - py;
-      const d2 = dx*dx + dy*dy;
-      if (d2 > rMax2) continue;
-      const d = Math.sqrt(d2);
-      const f = Math.max(0, 1 - d / rFall);
-      if (f <= 0) continue;
-      const inv = d > 0.001 ? 1 / d : 0;
-      const imp = strength * f;
-      c.vx += dx * inv * imp; c.vy += dy * inv * imp;
-      clampVel(c);
-    }
-  }
-}
-
-// ═══ PRESSURE DIFFUSION ═══
-// Single-pass and conservative: each shared edge is processed exactly once
-// (+x/+y always, -x/-y only into cells that don't exist yet). No double-count.
-function diffuse(dtSec) {
-  const dtFactor = Math.min(1, dtSec * 60);
-  const dirty = _dirtyList; dirty.length = 0;
-
-  for (const [k, c] of cells) {
-    if (c.sat < EPS && c.pig < EPS) continue;
-    const cx = k % gridW, cy = (k / gridW) | 0;
-    const nb = [[cx+1,cy,0],[cx-1,cy,1],[cx,cy+1,2],[cx,cy-1,3]];
-
-    for (const [nx, ny, dir] of nb) {
-      if (nx < 0 || ny < 0 || nx >= gridW || ny >= gridH) continue;
-      const canonical = (dir === 0 || dir === 2);
-      const nk = key(nx, ny);
-      const nCell = cells.get(nk);
-      if (nCell && !canonical) continue;
-
-      const nSat = nCell ? nCell.sat : 0, nPig = nCell ? nCell.pig : 0;
-      const diff = c.sat - nSat;
-      if (Math.abs(diff) < 0.02) continue;
-
-      const srcConc = c.sat > EPS ? c.pig / Math.max(c.sat, EPS) : (c.pig > EPS ? 999 : 0);
-      const crusted = c.sat < 0.06 && srcConc > 1.4;
-      if (crusted && Math.abs(diff) < CRUST_RESIST) continue;
-
-      let grain = 0.05;
-      for (let s = 0; s < EDGE_SUB; s++) grain += 0.6 + 0.5 * c.grain[(dir + s) % 4];
-      grain /= EDGE_SUB;
-
-      // Read from whichever cell is DONATING water this edge. Must stay above
-      // `edgeness` — declaring it below is a TDZ ReferenceError that hard-freezes.
-      const srcSat  = (diff > 0) ? c.sat : nSat;
-      const srcPig  = (diff > 0) ? c.pig : nPig;
-
-      const edgeness = 1 - Math.min(1, nSat / (srcSat + EPS));
-      grain = Math.max(0.05, 1 + (grain - 1) * (1 + FINGER_GAIN * edgeness));
-
-      const conc0  = srcSat > EPS ? srcPig / srcSat : 0;
-      const viscR  = 1 - VISC_MAX * (conc0 / (conc0 + VISC_CONC));
-      const hRel   = Math.min(1, srcSat / FILM_REF);
-      const filmR  = 1 - FILM_DRAG * (1 - hRel * hRel);
-
-      const move = diff * FLOW * DIFF_COEF * grain * viscR * filmR * dtFactor;
-      if (move === 0) continue;
-
-      // write into pre-allocated arrays instead of allocating Maps
-      if (move > 0) {
-        const conc = c.sat > EPS ? c.pig / c.sat : 0;
-        const pigMove = move * conc;
-        if (_deltaS[k]  === 0 && _deltaP[k]  === 0) dirty.push(k);
-        if (_deltaS[nk] === 0 && _deltaP[nk] === 0) dirty.push(nk);
-        _deltaS[k]  -= move;  _deltaP[k]  -= pigMove;
-        _deltaS[nk] += move;  _deltaP[nk] += pigMove;
-        if (pigMove > 0) {
-          _colR[nk] += c.ir*pigMove; _colG[nk] += c.ig*pigMove;
-          _colB[nk] += c.ib*pigMove; _colW[nk] += pigMove;
-        }
-      } else {
-        const conc = nSat > EPS ? nPig / nSat : 0;
-        const pigMove = -move * conc;
-        if (_deltaS[k]  === 0 && _deltaP[k]  === 0) dirty.push(k);
-        if (_deltaS[nk] === 0 && _deltaP[nk] === 0) dirty.push(nk);
-        _deltaS[k]  -= move;  _deltaP[k]  -= (-move * conc);
-        _deltaS[nk] += move;  _deltaP[nk] += pigMove;
-        if (nCell && pigMove > 0) {
-          _colR[k] += nCell.ir*pigMove; _colG[k] += nCell.ig*pigMove;
-          _colB[k] += nCell.ib*pigMove; _colW[k] += pigMove;
-        }
-      }
-    }
-  }
-
-  // apply deltas and zero out — O(changed_cells), no GC
-  for (let i = 0, len = dirty.length; i < len; i++) {
-    const ki = dirty[i];
-    const ds = _deltaS[ki], dp = _deltaP[ki];
-    _deltaS[ki] = 0; _deltaP[ki] = 0;
-    if (ds === 0 && dp === 0) continue;
-    let c = cells.get(ki);
-    if (!c) {
-      if (ds <= 0 && dp <= 0) { _colR[ki]=_colG[ki]=_colB[ki]=_colW[ki]=0; continue; }
-      c = getCell(ki % gridW, (ki / gridW) | 0, true);
-    }
-    c.sat = Math.max(0, c.sat + ds);
-    c.pig = Math.max(0, c.pig + dp);
-
-    const cw = _colW[ki];
-    if (cw > 0) {
-      const ir = _colR[ki]/cw, ig = _colG[ki]/cw, ib = _colB[ki]/cw;
-      const a = Math.min(0.5, cw / (c.pig + EPS));
-      c.ir = c.ir*(1-a) + ir*a; c.ig = c.ig*(1-a) + ig*a; c.ib = c.ib*(1-a) + ib*a;
-    }
-    _colR[ki]=0; _colG[ki]=0; _colB[ki]=0; _colW[ki]=0;
-  }
-}
-
-// ═══ ADVECTION ═══ velocity carries water + pigment; same typed-array pools
-function advect(dtSec) {
-  const dirty = _dirtyList; dirty.length = 0;
-
-  for (const [k, c] of cells) {
-    if (c.sat < EPS) continue;
-    if (c.vx === 0 && c.vy === 0) continue;
-    const cx = k % gridW, cy = (k / gridW) | 0;
-    const conc = c.pig / c.sat;
-
-    const viscR = 1 - VISC_MAX * (conc / (conc + VISC_CONC));
-    const hRel  = Math.min(1, c.sat / FILM_REF);
-    const filmR = 1 - FILM_DRAG * (1 - hRel * hRel);
-    const drag  = Math.max(0.05, viscR * filmR);
-
-    let fx = c.vx * drag * dtSec;
-    if (fx > ADV_CFL) fx = ADV_CFL; else if (fx < -ADV_CFL) fx = -ADV_CFL;
-    if (fx > 1e-4 || fx < -1e-4) {
-      const nx = cx + (fx > 0 ? 1 : -1);
-      if (nx >= 0 && nx < gridW) {
-        const nk = key(nx, cy);
-        const sMove = c.sat * Math.abs(fx), pMove = sMove * conc;
-        if (_deltaS[k]  === 0 && _deltaP[k]  === 0) dirty.push(k);
-        if (_deltaS[nk] === 0 && _deltaP[nk] === 0) dirty.push(nk);
-        _deltaS[k]  -= sMove; _deltaP[k]  -= pMove;
-        _deltaS[nk] += sMove; _deltaP[nk] += pMove;
-        if (pMove > 0) { _colR[nk]+=c.ir*pMove; _colG[nk]+=c.ig*pMove; _colB[nk]+=c.ib*pMove; _colW[nk]+=pMove; }
-        const mw = sMove * MOM_CARRY;
-        _deltaVX[nk] += c.vx*mw; _deltaVY[nk] += c.vy*mw; _deltaVW[nk] += mw;
-      }
-    }
-
-    let fy = c.vy * drag * dtSec;
-    if (fy > ADV_CFL) fy = ADV_CFL; else if (fy < -ADV_CFL) fy = -ADV_CFL;
-    if (fy > 1e-4 || fy < -1e-4) {
-      const ny = cy + (fy > 0 ? 1 : -1);
-      if (ny >= 0 && ny < gridH) {
-        const nk = key(cx, ny);
-        const sMove = c.sat * Math.abs(fy), pMove = sMove * conc;
-        if (_deltaS[k]  === 0 && _deltaP[k]  === 0) dirty.push(k);
-        if (_deltaS[nk] === 0 && _deltaP[nk] === 0) dirty.push(nk);
-        _deltaS[k]  -= sMove; _deltaP[k]  -= pMove;
-        _deltaS[nk] += sMove; _deltaP[nk] += pMove;
-        if (pMove > 0) { _colR[nk]+=c.ir*pMove; _colG[nk]+=c.ig*pMove; _colB[nk]+=c.ib*pMove; _colW[nk]+=pMove; }
-        const mw = sMove * MOM_CARRY;
-        _deltaVX[nk] += c.vx*mw; _deltaVY[nk] += c.vy*mw; _deltaVW[nk] += mw;
-      }
-    }
-  }
-
-  for (let i = 0, len = dirty.length; i < len; i++) {
-    const ki = dirty[i];
-    const ds = _deltaS[ki], dp = _deltaP[ki];
-    _deltaS[ki] = 0; _deltaP[ki] = 0;
-    if (ds === 0 && dp === 0) {
-      _colR[ki]=_colG[ki]=_colB[ki]=_colW[ki]=0;
-      _deltaVX[ki]=_deltaVY[ki]=_deltaVW[ki]=0;
-      continue;
-    }
-    let c = cells.get(ki);
-    if (!c) {
-      if (ds <= 0 && dp <= 0) {
-        _colR[ki]=_colG[ki]=_colB[ki]=_colW[ki]=0;
-        _deltaVX[ki]=_deltaVY[ki]=_deltaVW[ki]=0;
-        continue;
-      }
-      c = getCell(ki % gridW, (ki / gridW) | 0, true);
-    }
-    c.sat = Math.max(0, c.sat + ds);
-    c.pig = Math.max(0, c.pig + dp);
-
-    const cw = _colW[ki];
-    if (cw > 0) {
-      const ir = _colR[ki]/cw, ig = _colG[ki]/cw, ib = _colB[ki]/cw;
-      const a = Math.min(0.5, cw / (c.pig + EPS));
-      c.ir = c.ir*(1-a)+ir*a; c.ig = c.ig*(1-a)+ig*a; c.ib = c.ib*(1-a)+ib*a;
-    }
-    _colR[ki]=0; _colG[ki]=0; _colB[ki]=0; _colW[ki]=0;
-
-    const vw = _deltaVW[ki];
-    if (vw > 0) {
-      const inVx = _deltaVX[ki]/vw, inVy = _deltaVY[ki]/vw;
-      const a = Math.min(0.6, vw / (c.sat + EPS));
-      c.vx = c.vx*(1-a)+inVx*a; c.vy = c.vy*(1-a)+inVy*a;
-      clampVel(c);
-    }
-    _deltaVX[ki]=0; _deltaVY[ki]=0; _deltaVW[ki]=0;
-  }
-}
-
-function decayVel(dtSec) {
-  const damp = Math.exp(-VDAMP * dtSec);
-  for (const [, c] of cells) {
-    c.vx *= damp; c.vy *= damp;
-    if (c.vx < VEPS && c.vx > -VEPS) c.vx = 0;
-    if (c.vy < VEPS && c.vy > -VEPS) c.vy = 0;
-  }
-}
-
-// ═══ EVAPORATION + ABSORPTION ═══
-function evaporate(dtSec) {
-  const rate = dtSec / DRY_SECONDS;
-  for (const [k, c] of cells) {
-    if (c.sat > 0 || c.pig > EPS) markDirtyIdx(k);
-    if (c.sat > 0) c.sat = Math.max(0, c.sat - rate);
-    if (c.sat < ABSORB_SAT_THRESH && c.pig > EPS) {
-      const i = k;
-      if (absorbed[i] < MAX_ABSORBED) {
-        const dryness = 1 - Math.min(1, c.sat / ABSORB_SAT_THRESH);
-        let take = c.pig * Math.min(1, ABSORB_RATE * dryness * dtSec);
-        take = Math.min(take, MAX_ABSORBED - absorbed[i]);
-        if (take > 0) { c.pig -= take; addStain(i, c.ir, c.ig, c.ib, take); }
-      }
-    }
-  }
-}
-
-// Throttled to 500ms — a full Map sweep every frame bought nothing visually.
-let _lastReap = 0;
-function reapIdle(nowT) {
-  if (nowT - _lastReap < 500) return;
-  _lastReap = nowT;
-  for (const [k, c] of cells) {
-    if (c.sat < EPS) {
-      if (nowT - c.lastActive > BAKE_AFTER_MS) {
-        if (c.pig > 0.001) {
-          const i = k, room = Math.max(0, MAX_ABSORBED - absorbed[i]);
-          addStain(i, c.ir, c.ig, c.ib, Math.min(c.pig, room));
-        }
-        markDirtyIdx(k);
-        cells.delete(k);
-      }
-    } else {
-      c.lastActive = nowT;
-    }
-  }
-}
-
-// ═══ RENDER ═══
-// Blur lives on the `field` element as a CSS filter (GPU-composited), NOT as
-// ctx.filter on drawImage — Safari has no GPU path for that and falls back to a
-// full-canvas software convolution every frame. Same look, ~100x cheaper.
-function render() {
-  if (!needFullPaint && (dirtyX1 < dirtyX0 || dirtyY1 < dirtyY0)) return;
-
-  const data = fieldImg.data;
-
-  let bx0, by0, bx1, by1;
-  if (needFullPaint) { bx0 = 0; by0 = 0; bx1 = gridW - 1; by1 = gridH - 1; }
-  else { bx0 = Math.max(0, dirtyX0); by0 = Math.max(0, dirtyY0);
-         bx1 = Math.min(gridW - 1, dirtyX1); by1 = Math.min(gridH - 1, dirtyY1); }
-
-  for (let y = by0; y <= by1; y++) {
-    const row = y * gridW;
-    let o = (row + bx0) * 4;
-    for (let x = bx0; x <= bx1; x++, o += 4) {
-      const i = row + x;
-      const g = grainTex[i];
-      const T = absorbed[i] * (1 - GRANULATE * 0.5 + GRANULATE * g);
-      const a = expA(T);
-      const pm = 1 - PAPER_GRAIN * (g - 0.5) * 2;
-      const om = (1 - a) * pm;
-      data[o]   = PAPER[0]*om + absColR[i]*a;
-      data[o+1] = PAPER[1]*om + absColG[i]*a;
-      data[o+2] = PAPER[2]*om + absColB[i]*a;
-      data[o+3] = 255;
-    }
-  }
-
-  for (const [k, c] of cells) {
-    if (c.sat < EPS && c.pig < EPS) continue;
-    const i = k, g = grainTex[i];
-    const stainT = absorbed[i] * (1 - GRANULATE * 0.5 + GRANULATE * g);
-    const liveP  = c.pig;
-    const T = stainT + liveP;
-    const a = expA(T);
-    const wsum = stainT + liveP;
-    let cr, cg, cb;
-    if (wsum > EPS) {
-      cr = (absColR[i]*stainT + c.ir*liveP) / wsum;
-      cg = (absColG[i]*stainT + c.ig*liveP) / wsum;
-      cb = (absColB[i]*stainT + c.ib*liveP) / wsum;
-    } else { cr = c.ir; cg = c.ig; cb = c.ib; }
-    let pv = 1 - PAPER_GRAIN * (g - 0.5) * 2;
-    pv *= (1 - WET_SHEEN * Math.min(1, c.sat));
-    const om = (1 - a) * pv;
-    const o = i * 4;
-    data[o]   = PAPER[0]*om + cr*a;
-    data[o+1] = PAPER[1]*om + cg*a;
-    data[o+2] = PAPER[2]*om + cb*a;
-  }
-
-  if (needFullPaint) { fieldCtx.putImageData(fieldImg, 0, 0); needFullPaint = false; }
-  else { fieldCtx.putImageData(fieldImg, 0, 0, bx0, by0, bx1 - bx0 + 1, by1 - by0 + 1); }
-
-  // draw field canvas → main canvas (no ctx.filter here — blur lives on `field` element via CSS)
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(field, 0, 0, gridW, gridH, 0, 0, canvas.width, canvas.height);
-
-  resetDirty();
-}
-
-// ═══ LOOP ═══
-let lastT = performance.now();
-function frame(nowT) {
-  const dtSec = Math.min(0.05, (nowT - lastT) / 1000);
-  lastT = nowT;
-
-  tickHold(nowT);
-  holdFeed(nowT);
-  for (let i = 0; i < RELAX_SUBSTEPS; i++) diffuse(dtSec);
-  advect(dtSec);
-  decayVel(dtSec);
-  evaporate(dtSec);
-  reapIdle(nowT);
-  render();
-
-  requestAnimationFrame(frame);
-}
-
-// ═══ SPLATTER ═══
-function spawnSplat(px, py, angle, spd) {
-  if (spd < SPLAT_FLICK_MIN) return;
-  if (waterLoad <= 0 && inkLoad <= 0) return;
-  const seed = Math.floor(px)*3.1 + Math.floor(py)*7.7 + Math.floor(angle*57.3)*13.9;
-  const cnt = Math.floor(Math.min(SPLAT_CAP, spd * SPLAT_COUNT));
-  if (cnt < 3) return;
-  const reach = Math.min(SPLAT_REACH_MAX, spd * SPLAT_REACH);
-  const fdx = Math.cos(angle), fdy = Math.sin(angle);
-  const smear = Math.min(VMAX, spd * 1000 / CELL) * SPLAT_SMEAR;
-  for (let i = 0; i < cnt; i++) {
-    const a    = angle + dG(seed, i * 2.39996) * SPLAT_SPREAD;
-    const dist = reach * (0.12 + dU(seed + 1.3, i) * 0.88);
-    const rad  = Math.max(SPLAT_MIN_R, (0.3 + dU(seed + 2.6, i) * 0.7) * SPLAT_DROP_R);
-    const fall = 1 - 0.55 * dist / (reach + 1e-3);
-    const lx = px + Math.cos(a) * dist, ly = py + Math.sin(a) * dist;
-    deposit(lx, ly, rad, SPLAT_STRENGTH * fall);
-    injectForce(lx, ly, fdx, fdy, smear * fall, rad * 1.8);
-  }
-}
-
-// ═══ INPUT ═══
-let drawing = false, curPt = null, prevPt = null, lastMoveT = 0;
-let flickVX = 0, flickVY = 0, flickT = 0;
-let strokeStarted = false, heldFed = false, smoothSpd = 0, touchStartT = 0;
-const STATIONARY_MS = 60;
-const HOLD_FEED_RATE = 3.0;
-const SPD_SMOOTH = 0.3;
-const HOLD_START_MS = 180;
-
-function tp(e) { const t = e.touches[0] || e.changedTouches[0]; return { x: t.clientX, y: t.clientY }; }
-
-canvas.addEventListener('touchstart', e => {
-  e.preventDefault();
-  drawing = true;
-  const p = tp(e), t = performance.now();
-  curPt = { x: p.x, y: p.y }; prevPt = { x: p.x, y: p.y, t };
-  lastMoveT = t; holdFeed._last = t; touchStartT = t;
-  flickVX = 0; flickVY = 0; flickT = 0;
-  strokeStarted = false; heldFed = false; smoothSpd = 0;
-  injectPress(p.x, p.y, BRUSH_R, PRESS_FORCE);
-}, { passive:false });
-
-canvas.addEventListener('touchmove', e => {
-  e.preventDefault();
-  if (!drawing) return;
-  const p = tp(e), t = performance.now();
-  const dt = Math.max(4, t - prevPt.t);
-  const dx = p.x - prevPt.x, dy = p.y - prevPt.y;
-  const dist = Math.hypot(dx, dy);
-  const spd = dist / dt;
-  if (!strokeStarted) smoothSpd = spd; else smoothSpd += (spd - smoothSpd) * SPD_SMOOTH;
-  const w = Math.max(BRUSH_R * 2, BRUSH_R / (1 + smoothSpd));
-  const sMul = Math.min(1.4, Math.max(0.3, 1 / (1 + smoothSpd * 4)));
-  const steps = Math.max(1, Math.floor(dist / 2));
-  const dirx = dist > 0.001 ? dx / dist : 0, diry = dist > 0.001 ? dy / dist : 0;
-  const speedCells = Math.min(VMAX, spd * 1000 / CELL);
-
-  const startI = strokeStarted ? 1 : 0;
-  for (let i = startI; i <= steps; i++) {
-    const tt = i / steps;
-    const x = prevPt.x + dx * tt, y = prevPt.y + dy * tt;
-    injectForce(x, y, dirx, diry, speedCells, w);
-    if (waterLoad > 0 || inkLoad > 0) deposit(x, y, w, sMul);
-  }
-  strokeStarted = true;
-  flickVX = dx / dt; flickVY = dy / dt; flickT = t;
-  curPt = { x: p.x, y: p.y }; prevPt = { x: p.x, y: p.y, t }; lastMoveT = t;
-}, { passive:false });
-
-canvas.addEventListener('touchend', e => {
-  e.preventDefault();
-  if (drawing && !strokeStarted && !heldFed) {
-    const lp = tp(e);
-    deposit(lp.x, lp.y, BRUSH_R, 1.0);
-  }
-  if (drawing && performance.now() - flickT < 90) {
-    const spd = Math.hypot(flickVX, flickVY);
-    if (spd > SPLAT_FLICK_MIN) {
-      const lp = tp(e);
-      spawnSplat(lp.x, lp.y, Math.atan2(flickVY, flickVX), spd);
-    }
-  }
-  drawing = false; curPt = null; prevPt = null;
-}, { passive:false });
-canvas.addEventListener('touchcancel', () => { drawing = false; curPt = null; prevPt = null; });
-
-function holdFeed(nowT) {
-  if (!drawing || !curPt) return;
-  if (nowT - lastMoveT < STATIONARY_MS) return;
-  if (!strokeStarted && nowT - touchStartT < HOLD_START_MS) return;
-  const dt = Math.min(0.05, (nowT - (holdFeed._last || nowT)) / 1000);
-  holdFeed._last = nowT;
-  deposit(curPt.x, curPt.y, BRUSH_R, dt * HOLD_FEED_RATE);
-  injectPress(curPt.x, curPt.y, BRUSH_R * 1.2, HOLD_PRESS * dt);
-  heldFed = true;
-}
-
-// ═══ DIP STATION ═══
-const tray      = document.getElementById('tray');
-const dipWater  = document.getElementById('dipWater');
-const dipInk    = document.getElementById('dipInk');
-const fillWater = dipWater.querySelector('.fill');
-const fillInk   = dipInk.querySelector('.fill');
-
-function updateFills() {
-  fillWater.style.height = (Math.min(1, waterLoad) * 100).toFixed(0) + '%';
-  fillInk.style.height   = (Math.min(1, inkLoad)   * 100).toFixed(0) + '%';
-}
-updateFills();
-
-let holding = null;
-function tickHold(nowT) {
-  if (!holding) return;
-  const dt = Math.min(0.1, (nowT - (tickHold._last || nowT)) / 1000);
-  tickHold._last = nowT;
-  const step = RAMP_PER_SEC * dt;
-  switch (holding) {
-    case 'ink':      inkLoad   = Math.min(1, inkLoad   + step); break;
-    case 'water':    waterLoad = Math.min(1, waterLoad + step); break;
-    case 'napInk':   inkLoad   = Math.max(0, inkLoad   - step); break;
-    case 'napWater': waterLoad = Math.max(0, waterLoad - step); break;
-    case 'napBoth':  inkLoad = Math.max(0, inkLoad - step); waterLoad = Math.max(0, waterLoad - step); break;
-  }
-  updateFills();
-}
-function startHold(which) { tickHold._last = performance.now(); holding = which; keepTrayOpen(); }
-function stopHold() { holding = null; scheduleClose(); }
-
-function bindDip(el, which) {
-  el.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); startHold(which); }, { passive:false });
-  el.addEventListener('touchend',   e => { e.preventDefault(); stopHold(); }, { passive:false });
-  el.addEventListener('touchcancel', () => stopHold());
-}
-bindDip(dipInk, 'ink');
-bindDip(dipWater, 'water');
-
-document.querySelectorAll('#napkin .napZone').forEach(z => {
-  const d = z.dataset.drain;
-  const which = d === 'ink' ? 'napInk' : d === 'water' ? 'napWater' : 'napBoth';
-  z.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); z.classList.add('pressed'); startHold(which); }, { passive:false });
-  z.addEventListener('touchend',   e => { e.preventDefault(); z.classList.remove('pressed'); stopHold(); }, { passive:false });
-  z.addEventListener('touchcancel', () => { z.classList.remove('pressed'); stopHold(); });
-});
-
-document.querySelectorAll('#swatchRow .swatch').forEach(sw => {
-  const pick = e => {
-    e.preventDefault(); e.stopPropagation();
-    setInk(sw.dataset.ink);
-    document.querySelectorAll('#swatchRow .swatch').forEach(s => s.classList.remove('active'));
-    sw.classList.add('active');
-    keepTrayOpen(); scheduleClose();
-  };
-  sw.addEventListener('touchstart', pick, { passive:false });
-  sw.addEventListener('click', pick);
-});
-
-document.querySelectorAll('#swatchRow .size').forEach(sz => {
-  const pick = e => {
-    e.preventDefault(); e.stopPropagation();
-    BRUSH_R = +sz.dataset.r;
-    document.querySelectorAll('#swatchRow .size').forEach(s => s.classList.remove('active'));
-    sz.classList.add('active');
-    keepTrayOpen(); scheduleClose();
-  };
-  sz.addEventListener('touchstart', pick, { passive:false });
-  sz.addEventListener('click', pick);
-});
-
-let trayTimer = null;
-function keepTrayOpen() { clearTimeout(trayTimer); }
-function scheduleClose(ms) { clearTimeout(trayTimer); trayTimer = setTimeout(closeTray, ms || 3500); }
-function openTray()  { tray.classList.add('visible'); scheduleClose(4500); }
-function closeTray() { clearTimeout(trayTimer); tray.classList.remove('visible'); holding = null; }
-
-tray.addEventListener('touchstart', () => keepTrayOpen(), { passive:true });
-tray.addEventListener('touchend',   () => scheduleClose(), { passive:true });
-document.getElementById('grab').addEventListener('touchend', e => { e.preventDefault(); e.stopPropagation(); closeTray(); }, { passive:false });
-
-let tapCount = 0, tapTimer = null;
-canvas.addEventListener('touchstart', () => {
-  tapCount++; clearTimeout(tapTimer);
-  tapTimer = setTimeout(() => { tapCount = 0; }, 300);
-  if (tapCount >= 2) { tapCount = 0; openTray(); }
-}, { passive:true });
-
-let swipeY = 0;
-canvas.addEventListener('touchstart', e => { swipeY = e.touches[0].clientY; }, { passive:true });
-canvas.addEventListener('touchend', e => {
-  const dy = swipeY - e.changedTouches[0].clientY;
-  if (dy > 45 && swipeY > window.innerHeight * 0.9) openTray();
-}, { passive:true });
-
-// ═══ RESET ═══ clears the paper; brush loads are deliberately left alone
-const resetBtn = document.getElementById('resetBtn');
-function resetAll() {
-  cells.clear();
-  if (absorbed) {
-    absorbed.fill(0);
-    absColR.fill(0); absColG.fill(0); absColB.fill(0);
-  }
-  needFullPaint = true;
-}
-resetBtn.addEventListener('touchend', e => { e.preventDefault(); resetAll(); }, { passive:false });
-resetBtn.addEventListener('click', () => resetAll());
-
-// ═══ BOOTSTRAP ═══
-function resize() {
-  dpr = Math.min(window.devicePixelRatio || 1, 3);
-  const cssW = window.innerWidth, cssH = window.innerHeight;
-  canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
-  canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
-  const blurPx = Math.max(0.6, dpr * CELL * 0.12);
-  SOFTEN = blurPx;
-  if (field) field.style.filter = blurPx > 0 ? `blur(${blurPx}px)` : 'none';
-  setupGrid(cssW, cssH);
-}
-resize();
-window.addEventListener('resize', resize);
-requestAnimationFrame(frame);
-
-setTimeout(openTray, 400);
-</script>
+    <input type="file" id="fileInput" accept=".json,application/json,image/*" style="display:none">
+
+
+    <div id="hud">
+        <div class="dots" id="colorDots"></div>
+        <div class="hud-sep"></div>
+        <button class="hud-btn" id="btnSculpt">+</button>
+        <div class="hud-sep"></div>
+        <button class="hud-btn" id="btnRD" style="min-width: 70px;">/</button>
+        <div class="hud-sep"></div>
+        <button class="hud-btn" id="btn3D">3D</button>
+        <div class="hud-sep"></div>
+        <span class="brush-size-label">SIZE</span>
+        <input type="range" class="brush-slider" id="brushSlider" min="3" max="80" value="6">
+        <div class="hud-sep"></div>
+        <span class="hud-label" id="lblEnergy">∅ 0.000</span>
+    </div>
+
+    <div id="toast"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        (function() {
+            // ─── CANVAS / CTX ───────────────────────────────────────────────────────────
+            const canvas2d = document.getElementById('canvas2d');
+            const threeCanvas = document.getElementById('threeCanvas');
+            const ctx = canvas2d.getContext('2d');
+
+            // ─── CONFIG ─────────────────────────────────────────────────────────────────
+            const CELL = 3;
+            let brushRadius = 6;
+            let brushSigma = brushRadius / 3.0;
+            const BPEAK = 4;
+            const DIFF = 0.2;
+            const DECAY = 0.991;
+            const FIELD_CAP = 120;
+            const DT2TAP = 310;
+            const DT2DIST = -20;
+
+            // ─── GRAY-SCOTT PRESETS (parameters normalized for stable reaction) ──────────
+            const GS_PRESETS = [
+                { name: 'OFF',       F: 0,      K: 0,      da: 0,    db: 0   },
+                { name: 'CORAL',     F: 0.0545, K: 0.062,  da: 0.16, db: 0.08},
+                { name: 'SPOTS',     F: 0.035,  K: 0.065,  da: 0.16, db: 0.08},
+                { name: 'WAVES',     F: 0.014,  K: 0.054,  da: 0.16, db: 0.08},
+                { name: 'STRIPES',   F: 0.022,  K: 0.051,  da: 0.12, db: 0.06},
+                { name: 'CHAOS',     F: 0.026,  K: 0.059,  da: 0.14, db: 0.07}
+            ];
+            let gsPresetIdx = 0;
+            let useRD = false;
+            let gsF = 0, gsK = 0, gsDA = 0, gsDB = 0;
+
+            const THRESHOLDS = [
+                0.06, 0.12, 0.20, 0.30, 0.42, 0.56, 0.72,
+                0.92, 1.15, 1.42, 1.75, 2.15, 2.65, 3.2, 4,
+                5, 6.20, 7.70, 9.50, 11.70, 14.40, 17.70,
+                21, 26.80, 32.90, 40.50, 49.90, 61.30, 75.40, 92.80, 114.10,
+                140.40, 172.70, 212.40
+            ];
+
+            // ─── COLOR MODES ────────────────────────────────────────────────────────────
+            function heatmapRGB(t) {
+                t = Math.max(0, Math.min(1, t));
+                let r,g,b;
+                if (t < 0.2)      { const s=t/0.2;         r=0;             g=Math.round(s*200);       b=255; }
+                else if (t < 0.4) { const s=(t-0.2)/0.2;   r=0;             g=200+Math.round(s*55);    b=Math.round(255*(1-s)); }
+                else if (t < 0.55){ const s=(t-0.4)/0.15;  r=Math.round(s*255);  g=255;           b=0; }
+                else if (t < 0.75){ const s=(t-0.55)/0.2;  r=255;           g=Math.round(255*(1-s*0.6)); b=0; }
+                else if (t < 0.9) { const s=(t-0.75)/0.15; r=255;           g=Math.round(255*(0.4-s*0.4)); b=0; }
+                else               { const s=(t-0.9)/0.1;   r=255;           g=Math.round(s*255);       b=Math.round(s*255); }
+                return `rgb(${r},${g},${b})`;
+            }
+
+            const COLOR_MODES = [
+                { name:'MONO', bg:'#0a0a10',
+                  getColor:(ti,total,_t)=>{
+                      const pal=['#1a1a24','#252530','#32323e','#41414d','#52525e','#656570',
+                                '#7a7a84','#919199','#aaaab0','#c4c4c8','#dedee0','#f0f0f2','#fafafc','#ffffff'];
+                      return pal[Math.min(ti,pal.length-1)];
+                  }, dotColor:'#ffffff', grid:false },
+                { name:'HEAT', bg:'#060608',
+                  getColor:(ti,total,_t)=>heatmapRGB(ti/total), dotColor:'#ff4400', grid:false },
+                { name:'AMBER', bg:'#0c0a06',
+                  getColor:(ti,total,_t)=>{
+                      const p=['#1a1208','#281c0c','#382812','#4a3618','#5e4420','#735428',
+                              '#8a662e','#a37a36','#bd903e','#d6a848','#ecc254','#f9d668','#fde882','#fff3a0'];
+                      return p[Math.min(ti,p.length-1)];
+                  }, dotColor:'#ffd060', grid:false },
+                { name:'BLUEPRINT', bg:'#04080f',
+                  getColor:(ti,total,_t)=>{
+                      const t=ti/total;
+                      const r=Math.round(t*80), g=Math.round(80+t*175), b=Math.round(160+t*95);
+                      return `rgb(${r},${g},${b})`;
+                  }, dotColor:'#44c8f0', grid:true },
+                { name:'TOPO', bg:'#0a0c08',
+                  getColor:(ti,total,_t)=>{
+                      const p=['#1a2e12','#25441c','#325a26','#427032','#548840','#68a050',
+                              '#7eb862','#96d076','#b0e48c','#ccf2a4','#e4f7c2','#f4fadc','#fcf8e8','#fff8e0'];
+                      return p[Math.min(ti,p.length-1)];
+                  }, dotColor:'#96d076', grid:true },
+            ];
+
+            // ─── STATE ───────────────────────────────────────────────────────────────────
+            let numCols, numRows;
+            let fieldA, fieldB, fieldV, fieldVNext;
+            let useA = true;
+            let fieldMax=0, fieldMin=0, fieldSum=0, fieldCount=0;
+            let fieldStamp=1; // bumped whenever the field actually changes — drives dirty-checked rendering
+
+            let colorMode  = 0;
+            let sculptMode = 0;
+            let sculptSign = 1;
+            let in3D = false;
+            let frozenBuf = null;
+
+            let pendingDeposits = [];
+            let activeTouches = new Map();
+            let twoFingerActive = false;
+            let lastTapTime=0, lastTapX=0, lastTapY=0;
+
+            // ─── BRUSH KERNEL ───────────────────────────────────────────────────────────
+            let brushKernel = [];
+            function buildBrush() {
+                brushKernel = [];
+                for (let dy = -brushRadius; dy <= brushRadius; dy++) {
+                    for (let dx = -brushRadius; dx <= brushRadius; dx++) {
+                        const d2 = dx*dx + dy*dy;
+                        if (d2 <= brushRadius*brushRadius) {
+                            const w = BPEAK * Math.exp(-d2/(2*brushSigma*brushSigma));
+                            if (w > 0.001) brushKernel.push({dx, dy, w});
+                        }
+                    }
+                }
+            }
+            buildBrush();
+
+            const brushSlider = document.getElementById('brushSlider');
+            brushSlider.addEventListener('input', () => {
+                brushRadius = parseInt(brushSlider.value);
+                brushSigma = brushRadius / 3.0;
+                buildBrush();
+            });
+
+            // ─── FIELD HELPERS ──────────────────────────────────────────────────────────
+            function getBuf(a) { return a ? fieldA : fieldB; }
+            function fi(c,r)   { return r*(numCols+1)+c; }
+            function fv(buf,c,r){
+                if (c<0||c>numCols||r<0||r>numRows) return 0;
+                return buf[fi(c,r)];
+            }
+
+            function resizeGrid() {
+                const dpr = window.devicePixelRatio||1;
+                const W=window.innerWidth, H=window.innerHeight;
+                canvas2d.width  = Math.floor(W*dpr);
+                canvas2d.height = Math.floor(H*dpr);
+                canvas2d.style.width  = W+'px';
+                canvas2d.style.height = H+'px';
+                ctx.setTransform(1,0,0,1,0,0);
+                ctx.scale(dpr,dpr);
+                numCols = Math.max(30, Math.floor(W/CELL));
+                numRows = Math.max(40, Math.floor(H/CELL));
+                const n=(numCols+1)*(numRows+1);
+                fieldA = new Float32Array(n);
+                fieldB = new Float32Array(n);
+                fieldV = new Float32Array(n);
+                fieldVNext = new Float32Array(n);
+                useA=true; fieldMax=0; fieldMin=0; fieldSum=0; fieldCount=n; frozenBuf=null;
+                fieldStamp++;
+            }
+
+            function resetField() {
+                const n=(numCols+1)*(numRows+1);
+                fieldA=new Float32Array(n); fieldB=new Float32Array(n); fieldV=new Float32Array(n);
+                fieldVNext=new Float32Array(n);
+                useA=true; fieldMax=0; fieldMin=0; fieldSum=0; fieldCount=n; frozenBuf=null; pendingDeposits=[];
+                fieldStamp++;
+                if (in3D) exit3D();
+            }
+
+            // ─── DEPOSIT ────────────────────────────────────────────────────────────────
+            function deposit(sx,sy,sign) {
+                const cc=Math.round(sx/CELL), rc=Math.round(sy/CELL);
+                const buf = frozenBuf || getBuf(useA);
+                for (const k of brushKernel) {
+                    const c=cc+k.dx, r=rc+k.dy;
+                    if (c>=0&&c<=numCols&&r>=0&&r<=numRows) {
+                        const idx=fi(c,r);
+                        const nv = Math.max(-FIELD_CAP, Math.min(FIELD_CAP, buf[idx] + k.w * sign));
+                        buf[idx]=nv;
+                        if (nv>fieldMax) fieldMax=nv;
+                        if (nv<fieldMin) fieldMin=nv;
+                    }
+                }
+            }
+
+            function depositLine(x0,y0,x1,y1,sign) {
+                const dist=Math.hypot(x1-x0,y1-y0);
+                const step = CELL * brushRadius * 0.4;
+                const steps=Math.max(1,Math.ceil(dist/step));
+                for (let i=0;i<=steps;i++) {
+                    const t=i/steps;
+                    deposit(x0+(x1-x0)*t, y0+(y1-y0)*t, sign);
+                }
+            }
+
+            // ─── SIMULATION (with normalized Gray-Scott) ─────────────────────────────────
+            function updateField() {
+                if (pendingDeposits.length) {
+                    for (const d of pendingDeposits) {
+                        const s = sculptMode===1 ? -1 : 1;
+                        if (d.length===2) deposit(d[0],d[1],s);
+                        else              depositLine(d[0],d[1],d[2],d[3],s);
+                    }
+                    pendingDeposits=[];
+                    fieldStamp++;
+                }
+
+                if (sculptMode===2) return;
+                // Field fully decayed to zero and nothing incoming — nothing to simulate.
+                if (!useRD && fieldMax===0 && fieldMin===0) return;
+
+                const old=getBuf(useA);
+                const nxt=getBuf(!useA);
+                let mx=-Infinity, mn=Infinity, sm=0;
+
+                if (useRD && gsPresetIdx > 0) {
+                    // Normalize U and V to [0,1] for stable reaction
+                    const uBuf = old;
+                    const vBuf = fieldV;
+                    const uNew = nxt;
+                    const vNew = fieldVNext; // persistent scratch — no per-frame allocation
+                    
+                    // Find max values for normalization
+                    let maxU = 0, maxV = 0;
+                    for (let i=0; i<uBuf.length; i++) {
+                        if (uBuf[i] > maxU) maxU = uBuf[i];
+                        if (vBuf[i] > maxV) maxV = vBuf[i];
+                    }
+                    // Avoid division by zero
+                    const uScale = maxU > 0.001 ? maxU : 1;
+                    const vScale = maxV > 0.001 ? maxV : 1;
+
+                    const dt = 0.2;  // time step factor
+                    for (let r=0;r<=numRows;r++) {
+                        for (let c=0;c<=numCols;c++) {
+                            const idx = fi(c,r);
+                            const uRaw = uBuf[idx];
+                            const vRaw = vBuf[idx];
+                            // Normalize
+                            const u = uRaw / uScale;
+                            const v = vRaw / vScale;
+
+                            // Laplacian (normalized)
+                            const un = (r>0 ? uBuf[fi(c,r-1)] : uRaw) / uScale;
+                            const us = (r<numRows ? uBuf[fi(c,r+1)] : uRaw) / uScale;
+                            const uw = (c>0 ? uBuf[fi(c-1,r)] : uRaw) / uScale;
+                            const ue = (c<numCols ? uBuf[fi(c+1,r)] : uRaw) / uScale;
+                            const lapU = un+us+uw+ue - 4*u;
+
+                            const vn = (r>0 ? vBuf[fi(c,r-1)] : vRaw) / vScale;
+                            const vs = (r<numRows ? vBuf[fi(c,r+1)] : vRaw) / vScale;
+                            const vw = (c>0 ? vBuf[fi(c-1,r)] : vRaw) / vScale;
+                            const ve = (c<numCols ? vBuf[fi(c+1,r)] : vRaw) / vScale;
+                            const lapV = vn+vs+vw+ve - 4*v;
+
+                            const uvv = u * v * v;
+                            const nu = Math.max(0, Math.min(1, u + gsDA * lapU * dt - uvv * dt + gsF * (1-u) * dt));
+                            const nv = Math.max(0, Math.min(1, v + gsDB * lapV * dt + uvv * dt - (gsK+gsF) * v * dt));
+
+                            // Denormalize back to original scale
+                            uNew[idx] = nu * uScale;
+                            vNew[idx] = nv * vScale;
+                            if (uNew[idx] > mx) mx = uNew[idx];
+                            sm += uNew[idx];
+                        }
+                    }
+                    const _vt=fieldV; fieldV=fieldVNext; fieldVNext=_vt;
+                } else {
+                    // Standard diffusion
+                    for (let r=0;r<=numRows;r++) {
+                        for (let c=0;c<=numCols;c++) {
+                            const idx=fi(c,r);
+                            const center=old[idx];
+                            const n=r>0?old[fi(c,r-1)]:0;
+                            const s=r<numRows?old[fi(c,r+1)]:0;
+                            const w=c>0?old[fi(c-1,r)]:0;
+                            const e=c<numCols?old[fi(c+1,r)]:0;
+                            let nv=center+DIFF*(n+s+w+e-4*center);
+                            nv*=DECAY;
+                            if (Math.abs(nv)<0.0001) nv=0;
+                            nv=Math.max(-FIELD_CAP, Math.min(FIELD_CAP, nv));
+                            nxt[idx]=nv;
+                            if (nv>mx) mx=nv; if (nv<mn) mn=nv; sm+=nv;
+                        }
+                    }
+                }
+                fieldMax=mx===-Infinity?0:mx; fieldSum=sm;
+                fieldMin=mn===Infinity?0:Math.min(0,mn);
+                fieldStamp++;
+                useA=!useA;
+            }
+
+            // ─── GRAY-SCOTT PRESET HANDLER ──────────────────────────────────────────────
+            function applyGsPreset(idx) {
+                const prevIdx = gsPresetIdx;
+                gsPresetIdx = idx;
+                const preset = GS_PRESETS[idx];
+                if (idx === 0) {
+                    useRD = false;
+                    gsF=gsK=gsDA=gsDB=0;
+                } else {
+                    useRD = true;
+                    gsF = preset.F;
+                    gsK = preset.K;
+                    gsDA = preset.da;
+                    gsDB = preset.db;
+                    // Seed V channel from current U (normalized) only when first enabling RD
+                    if (prevIdx === 0) {
+                        const u = getBuf(useA);
+                        const mx = Math.max(fieldMax, 0.001);
+                        for (let i=0; i<fieldV.length; i++) {
+                            const un = u[i] / mx;
+                            fieldV[i] = Math.min(1, un * 0.25) * mx; // scale back up
+                        }
+                    }
+                }
+            }
+
+            function cycleGsPreset() {
+                if (in3D) return;
+                const nextIdx = (gsPresetIdx + 1) % GS_PRESETS.length;
+                applyGsPreset(nextIdx);
+                const preset = GS_PRESETS[nextIdx];
+                toast(nextIdx === 0 ? 'Reaction-Diffusion OFF' : `RD: ${preset.name}`);
+                updateHUD();
+            }
+
+            // ─── MARCHING SQUARES ───────────────────────────────────────────────────────
+            const MS_EDGES=[
+                [],[['t','l']],[['t','r']],[['r','l']],
+                [['r','b']],[['t','l'],['r','b']],[['t','b']],[['b','l']],
+                [['b','l']],[['t','b']],[['t','r'],['b','l']],[['r','b']],
+                [['r','l']],[['t','r']],[['t','l']],[]
+            ];
+
+            function edgePt(c,r,edge,thresh,buf) {
+                const x0=c*CELL,y0=r*CELL,x1=(c+1)*CELL,y1=(r+1)*CELL;
+                const TL=fv(buf,c,r),TR=fv(buf,c+1,r),BR=fv(buf,c+1,r+1),BL=fv(buf,c,r+1);
+                let a,b,ax,ay,bx,by;
+                switch(edge){
+                    case 't': a=TL;b=TR;ax=x0;ay=y0;bx=x1;by=y0; break;
+                    case 'r': a=TR;b=BR;ax=x1;ay=y0;bx=x1;by=y1; break;
+                    case 'b': a=BL;b=BR;ax=x0;ay=y1;bx=x1;by=y1; break;
+                    case 'l': a=TL;b=BL;ax=x0;ay=y0;bx=x0;by=y1; break;
+                    default: return null;
+                }
+                const d=b-a; if (Math.abs(d)<1e-9) return null;
+                const t=Math.max(0,Math.min(1,(thresh-a)/d));
+                return {x:ax+t*(bx-ax),y:ay+t*(by-ay)};
+            }
+
+            function msCase(buf,c,r,t){
+                let i=0;
+                if (fv(buf,c,r)>=t)   i|=1;
+                if (fv(buf,c+1,r)>=t) i|=2;
+                if (fv(buf,c+1,r+1)>=t) i|=4;
+                if (fv(buf,c,r+1)>=t) i|=8;
+                return i;
+            }
+
+            // ─── 2D RENDER ──────────────────────────────────────────────────────────────
+            function render2D() {
+                const buf = frozenBuf || getBuf(useA);
+                const cm  = COLOR_MODES[colorMode];
+                const W=window.innerWidth, H=window.innerHeight;
+
+                ctx.fillStyle=cm.bg; ctx.fillRect(0,0,W,H);
+
+                if (cm.grid) {
+                    ctx.strokeStyle='rgba(140,170,210,0.06)';
+                    ctx.lineWidth=0.4; ctx.beginPath();
+                    const sp=CELL*8;
+                    for (let x=sp;x<W;x+=sp){ctx.moveTo(x,0);ctx.lineTo(x,H);}
+                    for (let y=sp;y<H;y+=sp){ctx.moveTo(0,y);ctx.lineTo(W,y);}
+                    ctx.stroke();
+                }
+
+                const T=THRESHOLDS;
+                for (let ti=0;ti<T.length;ti++) {
+                    const thresh=T[ti];
+                    if (thresh > fieldMax) break; // thresholds ascend — nothing exists above the peak
+                    ctx.strokeStyle=cm.getColor(ti,T.length-1,thresh);
+                    ctx.lineWidth=1+(ti/T.length)*0.9;
+                    ctx.lineCap='round'; ctx.lineJoin='round';
+                    ctx.beginPath();
+                    for (let r=0;r<numRows;r++) {
+                        for (let c=0;c<numCols;c++) {
+                            const ci=msCase(buf,c,r,thresh);
+                            if (ci===0||ci===15) continue;
+                            for (const pair of MS_EDGES[ci]) {
+                                const p0=edgePt(c,r,pair[0],thresh,buf);
+                                const p1=edgePt(c,r,pair[1],thresh,buf);
+                                if (p0&&p1){ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);}
+                            }
+                        }
+                    }
+                    ctx.stroke();
+                }
+
+                if (fieldMax>0.01) {
+                    const pk=fieldMax*0.9999;
+                    ctx.strokeStyle=cm.getColor(T.length-1,T.length-1,pk);
+                    ctx.lineWidth=3; ctx.globalAlpha=0.5; ctx.beginPath();
+                    for (let r=0;r<numRows;r++) {
+                        for (let c=0;c<numCols;c++) {
+                            const ci=msCase(buf,c,r,pk);
+                            if (ci===0||ci===15) continue;
+                            for (const pair of MS_EDGES[ci]) {
+                                const p0=edgePt(c,r,pair[0],pk,buf);
+                                const p1=edgePt(c,r,pair[1],pk,buf);
+                                if (p0&&p1){ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);}
+                            }
+                        }
+                    }
+                    ctx.stroke(); ctx.globalAlpha=1;
+                }
+            }
+
+            // ─── THREE.JS 3D VIEW ───────────────────────────────────────────────────────
+            let three = null;
+            let renderer3 = null; // persistent — one WebGL context for the app's lifetime
+
+            function buildColorLUT() {
+                // One entry per contour tier — exact same mapping the per-vertex path used,
+                // minus the per-vertex CSS string parsing and THREE.Color allocation.
+                const cm = COLOR_MODES[colorMode];
+                const N = THRESHOLDS.length;
+                const lut = new Float32Array(N*3);
+                const tc = new THREE.Color();
+                for (let i=0;i<N;i++) {
+                    tc.set(cm.getColor(i, N-1, 0));
+                    lut[i*3]=tc.r; lut[i*3+1]=tc.g; lut[i*3+2]=tc.b;
+                }
+                return lut;
+            }
+
+            function enter3D() {
+                canvas2d.style.display='none';
+                threeCanvas.style.display='block';
+                in3D=true;
+
+                if (three) { disposethree(); }
+
+                const W=window.innerWidth, H=window.innerHeight;
+                if (!renderer3) {
+                    renderer3=new THREE.WebGLRenderer({canvas:threeCanvas,antialias:true,alpha:false,preserveDrawingBuffer:false});
+                }
+                renderer3.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+                renderer3.setSize(W,H);
+                renderer3.setClearColor(0x04060a,1);
+
+                const scene=new THREE.Scene();
+                const meshW = numCols*CELL;
+                const meshD = numRows*CELL;
+                const maxElev = meshD * 0.3;
+
+                const camera=new THREE.PerspectiveCamera(55,W/H,1,meshD*6);
+
+                const gW=numCols, gH=numRows;
+                const geo=new THREE.PlaneGeometry(meshW, meshD, gW, gH);
+                geo.rotateX(-Math.PI/2);
+                geo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count*3),3));
+
+                let lut=buildColorLUT();
+                const tLen=THRESHOLDS.length-1;
+
+                function refreshMesh() {
+                    const buf = frozenBuf || getBuf(useA);
+                    const mxv = Math.max(fieldMax, 0.001);
+                    const posArr = geo.attributes.position.array;
+                    const colArr = geo.attributes.color.array;
+                    for (let j=0;j<=gH;j++) {
+                        for (let i=0;i<=gW;i++) {
+                            const vi=j*(gW+1)+i;
+                            const val=buf[fi(i,j)]||0;
+                            const t=Math.max(0,val)/mxv;
+                            posArr[vi*3+1]=t*maxElev;
+                            const li=Math.round(t*tLen)*3;
+                            colArr[vi*3]=lut[li]; colArr[vi*3+1]=lut[li+1]; colArr[vi*3+2]=lut[li+2];
+                        }
+                    }
+                    geo.attributes.position.needsUpdate=true;
+                    geo.attributes.color.needsUpdate=true;
+                    geo.computeVertexNormals();
+                }
+                refreshMesh();
+
+                const mat=new THREE.MeshStandardMaterial({vertexColors:true, roughness:0.65, metalness:0.05, side:THREE.DoubleSide});
+                const mesh=new THREE.Mesh(geo,mat);
+                scene.add(mesh);
+
+                const wireMat=new THREE.MeshBasicMaterial({color:0x1a2a3a,wireframe:true,transparent:true,opacity:0.5});
+                const wireframeMesh=new THREE.Mesh(geo, wireMat);
+                scene.add(wireframeMesh);
+
+                scene.add(new THREE.AmbientLight(0xffffff,0.35));
+                const dir=new THREE.DirectionalLight(0xffffff,1.1);
+                dir.position.set(meshW*0.6, meshD*0.7, meshD*0.4);
+                scene.add(dir);
+                const fill=new THREE.DirectionalLight(0x6688bb,0.4);
+                fill.position.set(-meshW*0.5, meshD*0.3, -meshD*0.3);
+                scene.add(fill);
+
+                let isDragging=false, prevX=0, prevY=0;
+                let theta=-0.3, phi=0.42;
+                let radius=meshD*0.95;
+                const target=new THREE.Vector3(0, maxElev*0.2, 0);
+
+                function updateCamera() {
+                    camera.position.x=target.x+radius*Math.sin(phi)*Math.sin(theta);
+                    camera.position.y=target.y+radius*Math.cos(phi);
+                    camera.position.z=target.z+radius*Math.sin(phi)*Math.cos(theta);
+                    camera.lookAt(target);
+                }
+                updateCamera();
+
+                let pinchStartDist=0, pinchStartRadius=0;
+                let touchOrbit=[];
+
+                function tcDist(a,b){return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);}
+
+                const touchStartHandler = (e) => {
+                    e.preventDefault();
+                    touchOrbit=[...e.touches];
+                    if (touchOrbit.length===1){isDragging=true;prevX=touchOrbit[0].clientX;prevY=touchOrbit[0].clientY;}
+                    if (touchOrbit.length===2){pinchStartDist=tcDist(touchOrbit[0],touchOrbit[1]);pinchStartRadius=radius;}
+                };
+                const touchMoveHandler = (e) => {
+                    e.preventDefault();
+                    const touches=[...e.touches];
+                    if (touches.length===1&&isDragging){
+                        const dx=touches[0].clientX-prevX, dy=touches[0].clientY-prevY;
+                        theta-=dx*0.007; phi=Math.max(0.05,Math.min(Math.PI*0.95,phi-dy*0.007));
+                        prevX=touches[0].clientX; prevY=touches[0].clientY;
+                        updateCamera();
+                    }
+                    if (touches.length===2){
+                        const d=tcDist(touches[0],touches[1]);
+                        radius=Math.max(50,Math.min(numRows*CELL*3,pinchStartRadius*(pinchStartDist/d)));
+                        updateCamera();
+                    }
+                };
+                const touchEndHandler = (e) => {
+                    e.preventDefault();
+                    touchOrbit=[...e.touches];
+                    if (touchOrbit.length<1) isDragging=false;
+                };
+                const mouseDownHandler = (e) => { isDragging=true; prevX=e.clientX; prevY=e.clientY; };
+                const mouseMoveHandler = (e) => {
+                    if (!isDragging) return;
+                    const dx=e.clientX-prevX, dy=e.clientY-prevY;
+                    theta-=dx*0.005; phi=Math.max(0.05,Math.min(Math.PI*0.95,phi-dy*0.005));
+                    prevX=e.clientX; prevY=e.clientY; updateCamera();
+                };
+                const mouseUpHandler = () => { isDragging=false; };
+                const wheelHandler = (e) => {
+                    radius=Math.max(50,Math.min(numRows*CELL*3,radius+e.deltaY*0.5));
+                    updateCamera(); e.preventDefault();
+                };
+
+                threeCanvas.addEventListener('touchstart', touchStartHandler, {passive:false});
+                threeCanvas.addEventListener('touchmove', touchMoveHandler, {passive:false});
+                threeCanvas.addEventListener('touchend', touchEndHandler, {passive:false});
+                threeCanvas.addEventListener('mousedown', mouseDownHandler);
+                threeCanvas.addEventListener('mousemove', mouseMoveHandler);
+                threeCanvas.addEventListener('mouseup', mouseUpHandler);
+                threeCanvas.addEventListener('wheel', wheelHandler, {passive:false});
+
+                three = {
+                    scene, camera, geo, mat, wireMat,
+                    animId: 0,
+                    builtStamp: fieldStamp,
+                    builtColor: colorMode,
+                    listeners: {
+                        touchstart: touchStartHandler,
+                        touchmove: touchMoveHandler,
+                        touchend: touchEndHandler,
+                        mousedown: mouseDownHandler,
+                        mousemove: mouseMoveHandler,
+                        mouseup: mouseUpHandler,
+                        wheel: wheelHandler
+                    }
+                };
+
+                function step() {
+                    if (!three) return; // loop was disposed mid-flight
+                    three.animId = requestAnimationFrame(step); // re-stored every frame so cancel always hits the live id
+                    if (fieldStamp!==three.builtStamp || colorMode!==three.builtColor) {
+                        if (colorMode!==three.builtColor) lut=buildColorLUT();
+                        refreshMesh();
+                        three.builtStamp=fieldStamp;
+                        three.builtColor=colorMode;
+                    }
+                    renderer3.render(scene, camera);
+                }
+                three.animId = requestAnimationFrame(step);
+            }
+
+            function disposethree() {
+                if (!three) return;
+                cancelAnimationFrame(three.animId);
+                const l = three.listeners;
+                threeCanvas.removeEventListener('touchstart', l.touchstart);
+                threeCanvas.removeEventListener('touchmove', l.touchmove);
+                threeCanvas.removeEventListener('touchend', l.touchend);
+                threeCanvas.removeEventListener('mousedown', l.mousedown);
+                threeCanvas.removeEventListener('mousemove', l.mousemove);
+                threeCanvas.removeEventListener('mouseup', l.mouseup);
+                threeCanvas.removeEventListener('wheel', l.wheel);
+                three.geo.dispose();
+                three.mat.dispose();
+                three.wireMat.dispose();
+                three = null;
+                // Shrink the hidden canvas's drawing buffer — releases the full-res
+                // MSAA backbuffer on the GPU instead of pinning it while in 2D.
+                if (renderer3) renderer3.setSize(2,2,false);
+            }
+
+            function exit3D() {
+                in3D=false;
+                disposethree();
+                threeCanvas.style.display='none';
+                canvas2d.style.display='block';
+                drawnStamp=-1; // force an immediate 2D repaint
+                updateSculptBtn();
+            }
+
+            // ─── EXPORT ─────────────────────────────────────────────────────────────────
+            function exportPNG() {
+                if (in3D && three) {
+                    renderer3.render(three.scene,three.camera);
+                    const url=threeCanvas.toDataURL('image/png');
+                    const a=document.createElement('a'); a.href=url; a.download='scalar_field_3d.png'; a.click();
+                    toast('PNG saved (3D)');
+                } else {
+                    render2D();
+                    const url=canvas2d.toDataURL('image/png');
+                    const a=document.createElement('a'); a.href=url; a.download='scalar_field.png'; a.click();
+                    toast('PNG saved');
+                }
+            }
+
+            function exportJSON() {
+                const buf=frozenBuf||getBuf(useA);
+                const payload={
+                    version:1, numCols, numRows, cellSize:CELL,
+                    width:numCols*CELL, height:numRows*CELL,
+                    fieldMax, colorMode:COLOR_MODES[colorMode].name, useRD,
+                    gsPreset: GS_PRESETS[gsPresetIdx].name,
+                    field:Array.from(buf)
+                };
+                const blob=new Blob([JSON.stringify(payload)],{type:'application/json'});
+                const url=URL.createObjectURL(blob);
+                const a=document.createElement('a'); a.href=url; a.download='scalar_field.json'; a.click();
+                URL.revokeObjectURL(url);
+                toast('JSON exported — '+numCols+'×'+numRows+' grid');
+            }
+
+            // ─── LOAD (exported JSON field, or image → luminance seed) ──────────────────
+            function recomputeStats(buf) {
+                let mx=-Infinity, mn=Infinity, sm=0;
+                for (let i=0;i<buf.length;i++){const v=buf[i]; if(v>mx)mx=v; if(v<mn)mn=v; sm+=v;}
+                fieldMax=mx===-Infinity?0:mx;
+                fieldMin=mn===Infinity?0:Math.min(0,mn);
+                fieldSum=sm; fieldCount=buf.length;
+            }
+
+            function seedVFromU(buf) {
+                const mx=Math.max(fieldMax,0.001);
+                for (let i=0;i<fieldV.length;i++){const un=buf[i]/mx; fieldV[i]=Math.min(1,un*0.25)*mx;}
+            }
+
+            function applyLoadedJSON(payload) {
+                if (!payload || !Array.isArray(payload.field)) throw new Error('bad payload');
+                const sC=payload.numCols|0, sR=payload.numRows|0;
+                if ((sC+1)*(sR+1)!==payload.field.length) throw new Error('field size mismatch');
+                const src=payload.field;
+                const target=frozenBuf||getBuf(useA);
+                target.fill(0);
+                const scX=(sC+1)/(numCols+1), scY=(sR+1)/(numRows+1);
+                for (let r=0;r<=numRows;r++){
+                    for (let c=0;c<=numCols;c++){
+                        const sc3=Math.round(c*scX), sr3=Math.round(r*scY);
+                        if (sc3>=0&&sc3<=sC&&sr3>=0&&sr3<=sR) target[fi(c,r)]=src[sr3*(sC+1)+sc3];
+                    }
+                }
+                if (frozenBuf) getBuf(useA).set(frozenBuf);
+                fieldV.fill(0);
+                recomputeStats(target);
+                if (typeof payload.colorMode==='string'){
+                    const ci=COLOR_MODES.findIndex(m=>m.name===payload.colorMode);
+                    if (ci>=0) colorMode=ci;
+                }
+                if (typeof payload.gsPreset==='string'){
+                    const gi=GS_PRESETS.findIndex(p=>p.name===payload.gsPreset);
+                    applyGsPreset(gi>=0?gi:0);
+                } else applyGsPreset(0);
+                fieldStamp++;
+                updateHUD();
+                toast('Field loaded — '+sC+'×'+sR+' → '+numCols+'×'+numRows);
+            }
+
+            function applyLoadedImage(img) {
+                const w=numCols+1, h=numRows+1;
+                const oc=document.createElement('canvas'); oc.width=w; oc.height=h;
+                const octx=oc.getContext('2d');
+                octx.drawImage(img,0,0,w,h);
+                const data=octx.getImageData(0,0,w,h).data;
+                const target=frozenBuf||getBuf(useA);
+                const PEAK=24; // lands the tonal range across the mid contour bands
+                for (let r=0;r<h;r++){
+                    for (let c=0;c<w;c++){
+                        const p=(r*w+c)*4;
+                        const lum=(0.2126*data[p]+0.7152*data[p+1]+0.0722*data[p+2])/255;
+                        target[fi(c,r)]=Math.pow(lum,1.4)*PEAK;
+                    }
+                }
+                if (frozenBuf) getBuf(useA).set(frozenBuf);
+                recomputeStats(target);
+                if (useRD) seedVFromU(target); else fieldV.fill(0);
+                fieldStamp++;
+                updateHUD();
+                toast('Image seeded — luminance → field');
+            }
+
+            const fileInput=document.getElementById('fileInput');
+            document.getElementById('btnLoad').addEventListener('click',e=>{
+                e.stopPropagation(); fileInput.click();
+            });
+            fileInput.addEventListener('change',()=>{
+                const f=fileInput.files&&fileInput.files[0];
+                fileInput.value='';
+                if (!f) return;
+                if (f.type==='application/json'||/\.json$/i.test(f.name)) {
+                    const rd=new FileReader();
+                    rd.onload=()=>{ try{ applyLoadedJSON(JSON.parse(rd.result)); }catch(err){ toast('Load failed — bad field JSON'); } };
+                    rd.onerror=()=>toast('Load failed');
+                    rd.readAsText(f);
+                } else if (/^image\//.test(f.type)) {
+                    const url=URL.createObjectURL(f);
+                    const img=new Image();
+                    img.onload=()=>{ try{ applyLoadedImage(img); }catch(err){ toast('Load failed'); } URL.revokeObjectURL(url); };
+                    img.onerror=()=>{ URL.revokeObjectURL(url); toast('Load failed — bad image'); };
+                    img.src=url;
+                } else toast('Unsupported file type');
+            });
+
+            // ─── HUD ────────────────────────────────────────────────────────────────────
+            const dotsEl=document.getElementById('colorDots');
+            COLOR_MODES.forEach((_,i)=>{
+                const d=document.createElement('span'); d.className='dot';
+                if (i===0) d.classList.add('active');
+                dotsEl.appendChild(d);
+            });
+            const dotEls=dotsEl.querySelectorAll('.dot');
+
+            function updateSculptBtn() {
+                const b=document.getElementById('btnSculpt');
+                if (sculptMode===0) b.textContent='+';
+                else if (sculptMode===1) b.textContent='−';
+                else b.textContent='❄';
+                b.classList.toggle('active', sculptMode===2);
+            }
+
+            function updateHUD() {
+                dotEls.forEach((d,i)=>{
+                    d.classList.toggle('active',i===colorMode);
+                    d.style.background=i===colorMode?COLOR_MODES[i].dotColor:'rgba(255,255,255,0.2)';
+                });
+                updateEnergyLabel();
+                const btnRD = document.getElementById('btnRD');
+                btnRD.textContent = GS_PRESETS[gsPresetIdx].name;
+                btnRD.classList.toggle('active', useRD);
+                document.getElementById('btn3D').classList.toggle('active',in3D);
+                updateSculptBtn();
+                if (parseInt(brushSlider.value) !== brushRadius) {
+                    brushSlider.value = brushRadius;
+                }
+            }
+
+            // ─── BUTTON EVENTS ──────────────────────────────────────────────────────────
+            document.getElementById('btnSculpt').addEventListener('click',e=>{
+                e.stopPropagation();
+                if (in3D) return;
+                sculptMode=(sculptMode+1)%3;
+                if (sculptMode===2) {
+                    frozenBuf=getBuf(useA).slice();
+                } else {
+                    sculptSign=sculptMode===0?1:-1;
+                    if (frozenBuf) {
+                        const live=getBuf(useA);
+                        live.set(frozenBuf);
+                        frozenBuf=null;
+                    }
+                }
+                updateHUD();
+            });
+
+            document.getElementById('btnRD').addEventListener('click',e=>{
+                e.stopPropagation();
+                cycleGsPreset();
+            });
+
+            document.getElementById('btn3D').addEventListener('click',e=>{
+                e.stopPropagation();
+                if (in3D) { exit3D(); updateHUD(); }
+                else { enter3D(); updateHUD(); }
+            });
+
+            document.getElementById('btnExportPNG').addEventListener('click',e=>{e.stopPropagation();exportPNG();});
+            document.getElementById('btnExportJSON').addEventListener('click',e=>{e.stopPropagation();exportJSON();});
+
+            // ─── TOUCH on 2D canvas ─────────────────────────────────────────────────────
+            function sc(t) { return {x:t.clientX,y:t.clientY}; }
+
+            canvas2d.addEventListener('touchstart',e=>{
+                if (in3D) return;
+                e.preventDefault();
+                const now=performance.now();
+                for (const t of e.changedTouches) {
+                    const c=sc(t);
+                    activeTouches.set(t.identifier,{x:c.x,y:c.y,sx:c.x,sy:c.y,st:now,moved:false,px:c.x,py:c.y});
+                }
+                if (activeTouches.size===1) {
+                    twoFingerActive=false;
+                    const d=activeTouches.values().next().value;
+                    if (now-lastTapTime<DT2TAP&&Math.hypot(d.sx-lastTapX,d.sy-lastTapY)<DT2DIST){
+                        resetField(); lastTapTime=0; activeTouches.clear(); updateHUD(); return;
+                    }
+                    pendingDeposits.push([d.x,d.y]);
+                } else if (activeTouches.size>=2 && !twoFingerActive) {
+                    twoFingerActive=true;
+                    colorMode=(colorMode+1)%COLOR_MODES.length;
+                    pendingDeposits=[];
+                    updateHUD();
+                }
+            },{passive:false});
+
+            canvas2d.addEventListener('touchmove',e=>{
+                if (in3D) return;
+                e.preventDefault();
+                for (const t of e.changedTouches) {
+                    const d=activeTouches.get(t.identifier); if (!d) continue;
+                    const c=sc(t);
+                    if (Math.abs(c.x-d.sx)>3||Math.abs(c.y-d.sy)>3) d.moved=true;
+                    if (activeTouches.size===1&&!twoFingerActive) {
+                        pendingDeposits.push([d.px,d.py,c.x,c.y]);
+                    }
+                    d.px=c.x; d.py=c.y; d.x=c.x; d.y=c.y;
+                }
+            },{passive:false});
+
+            canvas2d.addEventListener('touchend',e=>{
+                if (in3D) return;
+                e.preventDefault();
+                const now=performance.now();
+                for (const t of e.changedTouches) {
+                    const d=activeTouches.get(t.identifier);
+                    if (!d){activeTouches.delete(t.identifier);continue;}
+                    if (!d.moved&&activeTouches.size===1&&!twoFingerActive&&now-d.st<250){
+                        lastTapTime=now; lastTapX=d.sx; lastTapY=d.sy;
+                    }
+                    activeTouches.delete(t.identifier);
+                }
+                if (activeTouches.size===0){twoFingerActive=false;pendingDeposits=[];}
+                else if (activeTouches.size===1&&twoFingerActive){
+                    twoFingerActive=false;
+                    const rem=activeTouches.values().next().value;
+                    if (rem){rem.px=rem.x;rem.py=rem.y;rem.sx=rem.x;rem.sy=rem.y;rem.st=now;rem.moved=false;}
+                }
+            },{passive:false});
+
+            canvas2d.addEventListener('touchcancel',e=>{
+                e.preventDefault(); activeTouches.clear(); twoFingerActive=false; pendingDeposits=[];
+            },{passive:false});
+            canvas2d.addEventListener('contextmenu',e=>e.preventDefault());
+
+            // ─── RESIZE ─────────────────────────────────────────────────────────────────
+            window.addEventListener('resize',()=>{
+                clearTimeout(window._rsz);
+                window._rsz=setTimeout(()=>{
+                    if (in3D){exit3D();}
+                    const oldBuf=getBuf(useA),oC=numCols,oR=numRows;
+                    resizeGrid();
+                    const nB=getBuf(useA);
+                    const sc2=(oC+1)/(numCols+1),sr2=(oR+1)/(numRows+1);
+                    for (let r=0;r<=numRows;r++){
+                        for (let c=0;c<=numCols;c++){
+                            const sc3=Math.round(c*sc2),sr3=Math.round(r*sr2);
+                            if (sc3>=0&&sc3<=oC&&sr3>=0&&sr3<=oR) nB[fi(c,r)]=oldBuf[sr3*(oC+1)+sc3];
+                        }
+                    }
+                    let mx=-Infinity,mn=Infinity,sm=0;
+                    for (let i=0;i<nB.length;i++){const v=nB[i];if(v>mx)mx=v;if(v<mn)mn=v;sm+=v;}
+                    fieldMax=mx===-Infinity?0:mx; fieldMin=mn===Infinity?0:Math.min(0,mn); fieldSum=sm; fieldCount=nB.length;
+                    updateHUD();
+                },200);
+            });
+
+            // ─── TOAST ──────────────────────────────────────────────────────────────────
+            let toastTimer;
+            function toast(msg) {
+                const el=document.getElementById('toast');
+                el.textContent=msg; el.classList.add('show');
+                clearTimeout(toastTimer);
+                toastTimer=setTimeout(()=>el.classList.remove('show'),1800);
+            }
+
+            // ─── MAIN LOOP ──────────────────────────────────────────────────────────────
+            let drawnStamp=-1, drawnColor=-1, drawnFrozen=null, hudTick=0, lastEnergyTxt='';
+            function updateEnergyLabel() {
+                const avg=fieldCount>0?fieldSum/fieldCount:0;
+                const txt='Σ '+avg.toFixed(3);
+                if (txt!==lastEnergyTxt){ lastEnergyTxt=txt; document.getElementById('lblEnergy').textContent=txt; }
+            }
+            function loop() {
+                updateField();
+                if (!in3D) {
+                    const frozen = sculptMode===2;
+                    if (fieldStamp!==drawnStamp || colorMode!==drawnColor || frozen!==drawnFrozen) {
+                        render2D();
+                        drawnStamp=fieldStamp; drawnColor=colorMode; drawnFrozen=frozen;
+                    }
+                }
+                if ((hudTick++ & 7)===0) updateEnergyLabel(); // label at ~7Hz instead of full HUD DOM writes at 60Hz
+                requestAnimationFrame(loop);
+            }
+
+            resizeGrid();
+            applyGsPreset(0);
+            updateHUD();
+            requestAnimationFrame(loop);
+        })();
+    </script>
 </body>
 </html>
