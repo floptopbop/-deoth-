@@ -11,7 +11,7 @@ html,body{width:100%;height:100dvh;background:#070b12;overflow:hidden;
   font-family:'Share Tech Mono','IBM Plex Mono',monospace}
 canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 #build{position:fixed;top:6px;left:8px;font-size:9px;letter-spacing:0.12em;
-  color:rgba(87,242,161,0.35);z-index:20;pointer-events:none}
+  color:rgba(236,229,210,0.4);z-index:20;pointer-events:none}
 #bstate{position:fixed;top:8px;right:10px;display:flex;gap:5px;z-index:20;pointer-events:none}
 .bbar{width:6px;height:42px;border-radius:3px;background:rgba(255,255,255,0.06);
   overflow:hidden;position:relative}
@@ -23,27 +23,27 @@ canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 #tray{position:fixed;left:0;right:0;bottom:0;
   padding:11px 14px calc(18px + env(safe-area-inset-bottom));
   background:rgba(7,11,18,0.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-  border-top:1px solid rgba(87,242,161,0.08);
+  border-top:1px solid rgba(236,229,210,0.12);
   display:flex;flex-direction:column;gap:9px;
   transform:translateY(100%);opacity:0;
   transition:transform 0.4s cubic-bezier(0.16,1,0.3,1),opacity 0.3s ease;
   z-index:10;touch-action:none}
 #tray.visible{transform:translateY(0);opacity:1}
 #grab{position:absolute;top:5px;left:50%;transform:translateX(-50%);
-  width:36px;height:3px;border-radius:2px;background:rgba(87,242,161,0.18)}
+  width:36px;height:3px;border-radius:2px;background:rgba(236,229,210,0.25)}
 #swatchRow{display:flex;gap:7px;overflow-x:auto;padding:2px 0 1px;
   -webkit-overflow-scrolling:touch;scrollbar-width:none}
 #swatchRow::-webkit-scrollbar{display:none}
 .swatch{width:26px;height:26px;border-radius:50%;flex-shrink:0;
   border:2px solid rgba(255,255,255,0.12);
   transition:transform 0.16s,border-color 0.16s}
-.swatch.active{border-color:rgba(87,242,161,0.7);transform:scale(1.18)}
+.swatch.active{border-color:rgba(236,229,210,0.85);transform:scale(1.18)}
 .rowDiv{width:1px;align-self:stretch;margin:2px 5px;background:rgba(255,255,255,0.08);flex-shrink:0}
 .size{width:30px;height:30px;border-radius:50%;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
   border:2px solid rgba(255,255,255,0.1);transition:transform 0.16s,border-color 0.16s;touch-action:none}
 .size i{display:block;border-radius:50%;background:rgba(236,229,210,0.4)}
-.size.active{border-color:rgba(87,242,161,0.6);transform:scale(1.1)}
+.size.active{border-color:rgba(236,229,210,0.85);transform:scale(1.1)}
 .size.active i{background:rgba(236,229,210,0.7)}
 #resetBtn{width:30px;height:30px;border-radius:50%;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
@@ -55,7 +55,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
   display:flex;align-items:center;justify-content:center;
   border:2px solid rgba(255,255,255,0.1);font-size:13px;color:rgba(236,229,210,0.45);
   transition:transform 0.16s,border-color 0.16s;touch-action:none}
-.bstyle.active{border-color:rgba(87,242,161,0.6);transform:scale(1.1);color:rgba(236,229,210,0.85)}
+.bstyle.active{border-color:rgba(236,229,210,0.85);transform:scale(1.1);color:rgba(236,229,210,0.85)}
 #styleRow{display:flex;gap:8px;justify-content:center;padding:0 4px}
 #dipRow{display:flex;gap:8px;height:64px}
 .dip,#napkin{flex:1;border-radius:6px;position:relative;overflow:hidden;
@@ -146,23 +146,23 @@ function valueNoise(x,y){
 const CELL=1;
 
 // paper
-const WATER_CAP=1.0;
-const PIGMENT_CAP=1.98;
+const WATER_CAP=2.2;
+const PIGMENT_CAP=2.2;
 
 // brush
-const BRUSH_RAD=4.0;
+const BRUSH_RAD=2.0;
 const BRUSH_W_CAP=50000;
 const BRUSH_P_CAP=40000;
-const DEP_W=0.0015;
-const DEP_P=0.0015;
+const DEP_W=0.00001;
+const DEP_P=0.00001;
 
 // render
 const INK_DARK=12.0;
 const PAP_R=236,PAP_G=229,PAP_B=210;
 
 // ── MoXi percolation constants ──
-const SPREAD_RATE=0.12;       // water spread per frame
-const EVAP_RATE=0.004;        // background evaporation
+const SPREAD_RATE=0.56;       // water spread per frame
+const EVAP_RATE=0.06;        // background evaporation
 const EDGE_EVAP_MULT=0.6;     // extra evap multiplier at wet-dry boundary
 const FIX_RATE=0.12;          // pigment fixation speed
 const HINDRANCE=0.55;         // paper grain pigment catching (0-1)
@@ -251,10 +251,8 @@ function generatePaper(){
   }
 
   // ── pinning texture (MoXi: random short line segments) ──
-  // These create directional pinning sites that produce
-  // organic toe patterns at stroke boundaries
   pinTex.fill(0);
-  const numLines=Math.floor(N*0.003); // density scales with canvas
+  const numLines=Math.floor(N*0.003);
   for(let n=0;n<numLines;n++){
     const sx=hash21(n*1.31,n*2.17)*NX;
     const sy=hash21(n*3.71,n*0.53)*NY;
@@ -357,6 +355,12 @@ function addDeposit(gx,gy,pressure,orientation,speed){
   const skipThresh=dryness*dryness*0.4+Math.min(0.12,speed*0.003);
   const grainAmp=0.06+0.50*dryness;
 
+  // Precompute quadratic scaling factors to replace exponentiation inside loop
+  const ma = Math.max(0.3, a);
+  const mb = Math.max(0.3, b);
+  const invA2 = 1.0 / (ma * ma);
+  const invB2 = 1.0 / (mb * mb);
+
   let totalWt=0;
   const samples=[];
   for(let dy=-search;dy<=search;dy++){
@@ -366,7 +370,8 @@ function addDeposit(gx,gy,pressure,orientation,speed){
       const fx=px-gx,fy=py-gy;
       const u=fx*cosT+fy*sinT;
       const v=-fx*sinT+fy*cosT;
-      const norm=(u/Math.max(0.3,a))**2+(v/Math.max(0.3,b))**2;
+
+      const norm = (u * u) * invA2 + (v * v) * invB2;
       if(norm>9)continue;
 
       let wt=Math.exp(-0.5*norm);
@@ -384,7 +389,7 @@ function addDeposit(gx,gy,pressure,orientation,speed){
         wt*=(1-bristleAmp)+bristleAmp*Math.cos(v*bristleFreq*Math.PI);
       }
 
-      // paper grain modulation (aggressive when dry)
+      // paper grain modulation
       const grain=tex[py*NX+px];
       wt*=(1-grainAmp)+grainAmp*grain;
 
@@ -471,12 +476,12 @@ function drawSegment(x0,y0,x1,y1,pressure){
 }
 
 // ═══════════════════════════════════════════════════════
-// SIMULATION — MoXi-inspired percolation (dirty rect only)
+// SIMULATION — MoXi-inspired percolation
 // ═══════════════════════════════════════════════════════
 function simulateStep(){
   if(!hasWet)return;
 
-  const margin=4;
+  const margin=2;
   const sx0=Math.max(1,dirtyX0-margin);
   const sy0=Math.max(1,dirtyY0-margin);
   const sx1=Math.min(NX-2,dirtyX1+margin);
@@ -498,36 +503,30 @@ function simulateStep(){
       const w=water[i];
       if(w<0.001)continue;
 
-      // inline blocking factor for source
       const kSrc=K_BASE+K_GRAIN*tex[i]+K_PIG*Math.min(1,fPig[i]/PIGMENT_CAP)+K_PIN*pinTex[i];
       const pigConc=mPig[i]/(w+0.001);
 
-      // 4-connected neighbors
       const nb=[i-1,i+1,i-NX,i+NX];
       for(let n=0;n<4;n++){
         const j=nb[n];
 
-        // pinning check: if destination is dry, threshold must be exceeded
         if(water[j]<0.001){
           const sigma=SIGMA_BASE+SIGMA_PIN*pinTex[j]+SIGMA_GRAIN*tex[j];
-          if(w<sigma)continue; // pinned!
+          if(w<sigma)continue;
         }
 
-        // only flow from higher to lower water density
         const diff=w-water[j];
         if(diff<=0)continue;
 
-        // blocking factor at destination
         const kDst=K_BASE+K_GRAIN*tex[j]+K_PIG*Math.min(1,fPig[j]/PIGMENT_CAP)+K_PIN*pinTex[j];
         const kAvg=(kSrc+kDst)*0.5;
 
         let flow=SPREAD_RATE*diff*(1-kAvg);
-        flow=Math.min(flow,w*0.12); // cap per-neighbor drain
+        flow=Math.min(flow,w*0.12);
 
         wDelta[i]-=flow;
         wDelta[j]+=flow;
 
-        // pigment carried by water, hindered by grain
         const hind=HINDRANCE*tex[i];
         let pigFlow=flow*pigConc*(1-hind);
         pigFlow=Math.min(pigFlow,mPig[i]*0.12);
@@ -565,7 +564,6 @@ function simulateStep(){
         if(x>newX1)newX1=x;
         if(y>newY1)newY1=y;
 
-        // edge-aware evaporation (MoXi: boundary sites lose water faster)
         let wetN=0;
         if(water[i-1]>0.01)wetN++;
         if(water[i+1]>0.01)wetN++;
@@ -574,7 +572,6 @@ function simulateStep(){
         const edgeFac=1+(4-wetN)*EDGE_EVAP_MULT;
         water[i]=Math.max(0,w-EVAP_RATE*w*edgeFac);
 
-        // fixation: mobile → fixed (faster as water evaporates)
         const dry=1-water[i]/WATER_CAP;
         const fix=FIX_RATE*dry*dry*absorb[i];
         const pRoom=Math.max(0,PIGMENT_CAP-fPig[i]);
@@ -583,7 +580,6 @@ function simulateStep(){
           const existing=fPig[i];
           const total=existing+amount;
           const ew=existing/total,nw=amount/total;
-          // only darken
           const bR=fR[i]*ew+mR[i]*nw;
           const bG=fG[i]*ew+mG[i]*nw;
           const bB=fB[i]*ew+mB[i]*nw;
@@ -595,7 +591,6 @@ function simulateStep(){
         }
       }
 
-      // bone dry lock: capture all remaining mobile pigment
       if(water[i]<0.005&&mPig[i]>0.001){
         const lockAmt=Math.min(mPig[i],Math.max(0,PIGMENT_CAP-fPig[i]));
         if(lockAmt>0){
@@ -645,7 +640,6 @@ function render(){
     const pi=i*4;
     let r=px[pi],g=px[pi+1],b=px[pi+2];
 
-    // fixed pigment
     if(fp>0.003){
       const fDark=1-Math.exp(-fp*INK_DARK);
       r=r*(1-fDark)+fR[i]*255*fDark;
@@ -653,7 +647,6 @@ function render(){
       b=b*(1-fDark)+fB[i]*255*fDark;
     }
 
-    // mobile pigment
     if(mp>0.003){
       const mDark=Math.min(1,mp*0.5);
       r=r*(1-mDark)+mR[i]*255*mDark;
@@ -661,7 +654,6 @@ function render(){
       b=b*(1-mDark)+mB[i]*255*mDark;
     }
 
-    // wet sheen
     if(w>0.02){
       const sheen=Math.min(0.12,w*0.08);
       r=Math.min(255,r*(1+sheen)+sheen*6);
@@ -836,14 +828,12 @@ function importJsonLayer(jsonStr) {
   try { data = JSON.parse(jsonStr); }
   catch(e) { alert('JSON parse error: ' + e.message); return; }
 
-  // Helper: hex to normalized rgb
   function hexToRgb(hex) {
     const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     if (!m) return null;
     return [parseInt(m[1],16)/255, parseInt(m[2],16)/255, parseInt(m[3],16)/255];
   }
 
-  // ── old flat-array fallback ──
   if (Array.isArray(data)) {
     let n = 0;
     for (const d of data) {
@@ -873,13 +863,10 @@ function importJsonLayer(jsonStr) {
     return;
   }
 
-  // ── stroke-path format ──
-  // Save current engine state to restore after import
   const _brushW = brush.w, _brushP = brush.p;
   const _inkR = inkR, _inkG = inkG, _inkB = inkB;
   const _brushRadius = brushRadius, _brushStyle = brushStyle, _strokeSeed = strokeSeed;
 
-  // paper.wetness — pre-wet the whole field with a thin water wash
   if (data.paper && data.paper.wetness > 0) {
     const wet = Math.min(0.6, data.paper.wetness);
     for (let cy = 0; cy < NY; cy++) {
@@ -897,7 +884,6 @@ function importJsonLayer(jsonStr) {
     const stroke = data.strokes[si];
     if (!stroke.path || stroke.path.length < 1) continue;
 
-    // configure brush for this stroke
     const rgb = hexToRgb(stroke.color || '#292420');
     if (rgb) {
       inkR = rgb[0]; inkG = rgb[1]; inkB = rgb[2];
@@ -909,7 +895,6 @@ function importJsonLayer(jsonStr) {
     const press = Math.min(1, Math.max(0, stroke.pressure ?? 0.5));
     strokeSeed = (performance.now() % 1000 + si * 137) % 1000;
 
-    // convert normalized path to grid coordinates
     const pts = stroke.path.map(([nx, ny]) => [
       nx * (NX - 1),
       ny * (NY - 1)
@@ -919,7 +904,6 @@ function importJsonLayer(jsonStr) {
       addDeposit(pts[0][0], pts[0][1], press, 0, 0);
       dabCount++;
     } else {
-      // deposit at first point to avoid gap
       addDeposit(pts[0][0], pts[0][1], press, 0, 0);
       dabCount++;
       for (let p = 0; p < pts.length - 1; p++) {
@@ -933,7 +917,6 @@ function importJsonLayer(jsonStr) {
     strokeCount++;
   }
 
-  // restore engine state
   brush.w = _brushW; brush.p = _brushP;
   inkR = _inkR; inkG = _inkG; inkB = _inkB;
   brushRadius = _brushRadius; brushStyle = _brushStyle; strokeSeed = _strokeSeed;
@@ -948,7 +931,7 @@ function importJsonLayer(jsonStr) {
   btn.textContent = '⊕ JSON';
   btn.style.cssText = `
     position:fixed; bottom:14px; right:14px; z-index:999;
-    background:#070b12; color:#57f2a1; border:1px solid #57f2a1;
+    background:#070b12; color:#ecd19a; border:1px solid #ecd19a;
     font-family:'IBM Plex Mono',monospace; font-size:11px;
     padding:6px 10px; border-radius:4px; opacity:0.82; cursor:pointer;
     touch-action:none; user-select:none;
@@ -967,7 +950,6 @@ function importJsonLayer(jsonStr) {
 
   btn.addEventListener('click', () => fileIn.click());
 
-  // long-press → paste dialog
   let pressT;
   btn.addEventListener('touchstart', () => { pressT = setTimeout(() => {
     const txt = prompt('Paste JSON layer:');
