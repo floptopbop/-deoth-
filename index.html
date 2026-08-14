@@ -1,1042 +1,1011 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Scalar Field Sculpture</title>
-    <style>
-        :root {
-            --bg: #0a0a0f;
-            --accent: rgba(255, 255, 255, 0.85);
-            --dim: rgba(255, 255, 255, 0.8);
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body {
-            width: 100%; height: 100%; overflow: hidden;
-            background: var(--bg); touch-action: none;
-            -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
-            -webkit-tap-highlight-color: transparent; position: fixed; top: 0; left: 0;
-        }
-        canvas { display: block; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
-        #threeCanvas {
-            display: none; position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%; touch-action: none;
-        }
-        #hud {
-            position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
-            z-index: 20; display: flex; align-items: center; gap: 8px;
-            padding: 7px 14px; background: rgba(10,10,18,0.82);
-            border-radius: 24px; backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            border: 1px solid rgba(255,255,255,0.09);
-            pointer-events: none; flex-wrap: nowrap;
-        }
-        .hud-btn {
-            font-family: 'SF Mono','JetBrains Mono','Courier New',monospace;
-            font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
-            color: var(--accent); background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.18); border-radius: 14px;
-            padding: 4px 10px; cursor: pointer; outline: none; pointer-events: auto;
-            -webkit-tap-highlight-color: transparent; white-space: nowrap;
-            transition: background 0.15s, border-color 0.15s;
-        }
-        .hud-btn:active { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.5); }
-        .hud-btn.active { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.8); }
-        .hud-label {
-            font-family: 'SF Mono','JetBrains Mono','Courier New',monospace;
-            font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
-            color: var(--dim); white-space: nowrap; pointer-events: none;
-        }
-        .hud-sep { width: 1px; height: 14px; background: rgba(255,255,255,0.12); flex-shrink: 0; }
-        #exportRow {
-            position: fixed; bottom: 74px; left: 50%; transform: translateX(-50%);
-            z-index: 20; display: flex; align-items: center; gap: 8px;
-        }
-        #toast {
-            position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
-            background: rgba(10,10,18,0.9); border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 16px; padding: 6px 16px; z-index: 30;
-            font-family: 'SF Mono','JetBrains Mono','Courier New',monospace;
-            font-size: 10px; letter-spacing: 0.1em; color: rgba(255,255,255,0.8);
-            opacity: 0; transition: opacity 0.25s; pointer-events: none;
-        }
-        #toast.show { opacity: 1; }
-        .dots { display: flex; gap: 5px; }
-        .dot {
-            width: 5px; height: 5px; border-radius: 50%;
-            background: rgba(255,255,255,0.2);
-            transition: background 0.25s, box-shadow 0.25s;
-        }
-        .dot.active { background: rgba(255,255,255,0.88); box-shadow: 0 0 5px rgba(255,255,255,0.8); }
-        .brush-slider {
-            -webkit-appearance: none; appearance: none;
-            width: 60px; height: 4px; background: rgba(255,255,255,0.2);
-            border-radius: 2px; outline: none; pointer-events: auto; cursor: pointer;
-        }
-        .brush-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none;
-            width: 12px; height: 12px; border-radius: 50%;
-            background: var(--accent); border: 1px solid rgba(255,255,255,0.8);
-        }
-        .brush-size-label {
-            font-family: 'SF Mono','JetBrains Mono','Courier New',monospace;
-            font-size: 9px; color: var(--dim); white-space: nowrap; pointer-events: none;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>SUMI v3</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100dvh;background:#070b12;overflow:hidden;
+  user-select:none;-webkit-user-select:none;touch-action:none;
+  font-family:'Share Tech Mono','IBM Plex Mono',monospace}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+#build{position:fixed;top:6px;left:8px;font-size:9px;letter-spacing:0.12em;
+  color:rgba(87,242,161,0.35);z-index:20;pointer-events:none}
+#bstate{position:fixed;top:8px;right:10px;display:flex;gap:5px;z-index:20;pointer-events:none}
+.bbar{width:6px;height:42px;border-radius:3px;background:rgba(255,255,255,0.06);
+  overflow:hidden;position:relative}
+.bbar .fill{position:absolute;left:0;right:0;bottom:0;border-radius:3px;
+  transition:height 0.15s}
+#barW .fill{background:rgba(120,180,220,0.55)}
+#barP .fill{background:rgba(200,180,160,0.55)}
+.bbar-label{font-size:7px;color:rgba(255,255,255,0.2);text-align:center;margin-top:2px}
+#tray{position:fixed;left:0;right:0;bottom:0;
+  padding:11px 14px calc(18px + env(safe-area-inset-bottom));
+  background:rgba(7,11,18,0.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-top:1px solid rgba(87,242,161,0.08);
+  display:flex;flex-direction:column;gap:9px;
+  transform:translateY(100%);opacity:0;
+  transition:transform 0.4s cubic-bezier(0.16,1,0.3,1),opacity 0.3s ease;
+  z-index:10;touch-action:none}
+#tray.visible{transform:translateY(0);opacity:1}
+#grab{position:absolute;top:5px;left:50%;transform:translateX(-50%);
+  width:36px;height:3px;border-radius:2px;background:rgba(87,242,161,0.18)}
+#swatchRow{display:flex;gap:7px;overflow-x:auto;padding:2px 0 1px;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+#swatchRow::-webkit-scrollbar{display:none}
+.swatch{width:26px;height:26px;border-radius:50%;flex-shrink:0;
+  border:2px solid rgba(255,255,255,0.12);
+  transition:transform 0.16s,border-color 0.16s}
+.swatch.active{border-color:rgba(87,242,161,0.7);transform:scale(1.18)}
+.rowDiv{width:1px;align-self:stretch;margin:2px 5px;background:rgba(255,255,255,0.08);flex-shrink:0}
+.size{width:30px;height:30px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid rgba(255,255,255,0.1);transition:transform 0.16s,border-color 0.16s;touch-action:none}
+.size i{display:block;border-radius:50%;background:rgba(236,229,210,0.4)}
+.size.active{border-color:rgba(87,242,161,0.6);transform:scale(1.1)}
+.size.active i{background:rgba(236,229,210,0.7)}
+#resetBtn{width:30px;height:30px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid rgba(216,100,80,0.35);background:rgba(120,50,40,0.12);
+  color:rgba(236,229,210,0.5);font-size:15px;line-height:1;
+  transition:transform 0.16s;touch-action:none}
+#resetBtn:active{transform:scale(0.88);background:rgba(120,50,40,0.3)}
+.bstyle{width:30px;height:30px;border-radius:5px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid rgba(255,255,255,0.1);font-size:13px;color:rgba(236,229,210,0.45);
+  transition:transform 0.16s,border-color 0.16s;touch-action:none}
+.bstyle.active{border-color:rgba(87,242,161,0.6);transform:scale(1.1);color:rgba(236,229,210,0.85)}
+#styleRow{display:flex;gap:8px;justify-content:center;padding:0 4px}
+#dipRow{display:flex;gap:8px;height:64px}
+.dip,#napkin{flex:1;border-radius:6px;position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.52rem;letter-spacing:0.12em;text-transform:uppercase;
+  touch-action:none;-webkit-user-select:none;cursor:pointer}
+.dip .fill{position:absolute;left:0;bottom:0;right:0;height:0%;transition:none}
+.dip span,#napkin .napLabel{position:relative;z-index:2;pointer-events:none}
+#dipInk{background:#141210;color:rgba(236,229,210,0.6)}
+#dipInk .fill{background:rgba(236,229,210,0.12)}
+#dipWater{background:#1a3048;color:rgba(180,210,240,0.6)}
+#dipWater .fill{background:rgba(120,180,220,0.2)}
+#napkin{background:rgba(236,229,210,0.12);color:rgba(236,229,210,0.4)}
+.napZones{position:absolute;inset:0;display:flex;z-index:1}
+.napZone{flex:1;touch-action:none;cursor:pointer}
+.napZone.mid{border-left:1px solid rgba(236,229,210,0.08);border-right:1px solid rgba(236,229,210,0.08)}
+.napZone.pressed{background:rgba(236,229,210,0.08)}
+#napkin .napLabel{font-size:0.46rem;opacity:0.5;letter-spacing:0.15em}
+</style>
 </head>
 <body>
-    <canvas id="canvas2d"></canvas>
-    <canvas id="threeCanvas"></canvas>
-
-    <div id="exportRow">
-        <button class="hud-btn" id="btnLoad">LOAD</button>
-        <button class="hud-btn" id="btnExportPNG">PNG</button>
-        <button class="hud-btn" id="btnExportJSON">JSON</button>
+<canvas id="canvas"></canvas>
+<div id="build">SUMI_v3</div>
+<div id="bstate">
+  <div><div class="bbar" id="barW"><div class="fill"></div></div><div class="bbar-label">W</div></div>
+  <div><div class="bbar" id="barP"><div class="fill"></div></div><div class="bbar-label">P</div></div>
+</div>
+<div id="tray">
+  <div id="grab"></div>
+  <div id="swatchRow">
+    <div class="swatch active" style="background:#0d0b09" data-r="0.05" data-g="0.04" data-b="0.035"></div>
+    <div class="swatch" style="background:#765649" data-r="0.46" data-g="0.34" data-b="0.29"></div>
+    <div class="swatch" style="background:#4E555B" data-r="0.31" data-g="0.33" data-b="0.36"></div>
+    <div class="swatch" style="background:#586456" data-r="0.35" data-g="0.39" data-b="0.34"></div>
+    <div class="swatch" style="background:#714B48" data-r="0.44" data-g="0.29" data-b="0.28"></div>
+    <div class="rowDiv"></div>
+    <div class="size" data-r="3"><i style="width:5px;height:5px"></i></div>
+    <div class="size active" data-r="8"><i style="width:9px;height:9px"></i></div>
+    <div class="size" data-r="16"><i style="width:15px;height:15px"></i></div>
+    <div class="size" data-r="28"><i style="width:21px;height:21px"></i></div>
+    <div class="rowDiv"></div>
+    <div id="resetBtn">↺</div>
+  </div>
+  <div id="styleRow">
+    <div class="bstyle active" data-style="round" title="Round">丸</div>
+    <div class="bstyle" data-style="point" title="Point">穂</div>
+    <div class="bstyle" data-style="side" title="Side">側</div>
+    <div class="bstyle" data-style="rake" title="Rake">熊</div>
+  </div>
+  <div id="dipRow">
+    <div class="dip" id="dipInk"><div class="fill"></div><span>墨 ink</span></div>
+    <div id="napkin">
+      <div class="napZones">
+        <div class="napZone" data-drain="ink"></div>
+        <div class="napZone mid" data-drain="both"></div>
+        <div class="napZone" data-drain="water"></div>
+      </div>
+      <span class="napLabel">巾 napkin</span>
     </div>
-    <input type="file" id="fileInput" accept=".json,application/json,image/*" style="display:none">
-
-
-    <div id="hud">
-        <div class="dots" id="colorDots"></div>
-        <div class="hud-sep"></div>
-        <button class="hud-btn" id="btnSculpt">+</button>
-        <div class="hud-sep"></div>
-        <button class="hud-btn" id="btnRD" style="min-width: 70px;">/</button>
-        <div class="hud-sep"></div>
-        <button class="hud-btn" id="btn3D">3D</button>
-        <div class="hud-sep"></div>
-        <span class="brush-size-label">SIZE</span>
-        <input type="range" class="brush-slider" id="brushSlider" min="3" max="80" value="6">
-        <div class="hud-sep"></div>
-        <span class="hud-label" id="lblEnergy">∅ 0.000</span>
-    </div>
-
-    <div id="toast"></div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script>
-        (function() {
-            // ─── CANVAS / CTX ───────────────────────────────────────────────────────────
-            const canvas2d = document.getElementById('canvas2d');
-            const threeCanvas = document.getElementById('threeCanvas');
-            const ctx = canvas2d.getContext('2d');
-
-            // ─── CONFIG ─────────────────────────────────────────────────────────────────
-            const CELL = 3;
-            let brushRadius = 6;
-            let brushSigma = brushRadius / 3.0;
-            const BPEAK = 4;
-            const DIFF = 0.2;
-            const DECAY = 0.991;
-            const FIELD_CAP = 120;
-            const DT2TAP = 310;
-            const DT2DIST = -20;
-
-            // ─── GRAY-SCOTT PRESETS (parameters normalized for stable reaction) ──────────
-            const GS_PRESETS = [
-                { name: 'OFF',       F: 0,      K: 0,      da: 0,    db: 0   },
-                { name: 'CORAL',     F: 0.0545, K: 0.062,  da: 0.16, db: 0.08},
-                { name: 'SPOTS',     F: 0.035,  K: 0.065,  da: 0.16, db: 0.08},
-                { name: 'WAVES',     F: 0.014,  K: 0.054,  da: 0.16, db: 0.08},
-                { name: 'STRIPES',   F: 0.022,  K: 0.051,  da: 0.12, db: 0.06},
-                { name: 'CHAOS',     F: 0.026,  K: 0.059,  da: 0.14, db: 0.07}
-            ];
-            let gsPresetIdx = 0;
-            let useRD = false;
-            let gsF = 0, gsK = 0, gsDA = 0, gsDB = 0;
-
-            const THRESHOLDS = [
-                0.06, 0.12, 0.20, 0.30, 0.42, 0.56, 0.72,
-                0.92, 1.15, 1.42, 1.75, 2.15, 2.65, 3.2, 4,
-                5, 6.20, 7.70, 9.50, 11.70, 14.40, 17.70,
-                21, 26.80, 32.90, 40.50, 49.90, 61.30, 75.40, 92.80, 114.10,
-                140.40, 172.70, 212.40
-            ];
-
-            // ─── COLOR MODES ────────────────────────────────────────────────────────────
-            function heatmapRGB(t) {
-                t = Math.max(0, Math.min(1, t));
-                let r,g,b;
-                if (t < 0.2)      { const s=t/0.2;         r=0;             g=Math.round(s*200);       b=255; }
-                else if (t < 0.4) { const s=(t-0.2)/0.2;   r=0;             g=200+Math.round(s*55);    b=Math.round(255*(1-s)); }
-                else if (t < 0.55){ const s=(t-0.4)/0.15;  r=Math.round(s*255);  g=255;           b=0; }
-                else if (t < 0.75){ const s=(t-0.55)/0.2;  r=255;           g=Math.round(255*(1-s*0.6)); b=0; }
-                else if (t < 0.9) { const s=(t-0.75)/0.15; r=255;           g=Math.round(255*(0.4-s*0.4)); b=0; }
-                else               { const s=(t-0.9)/0.1;   r=255;           g=Math.round(s*255);       b=Math.round(s*255); }
-                return `rgb(${r},${g},${b})`;
-            }
-
-            const COLOR_MODES = [
-                { name:'MONO', bg:'#0a0a10',
-                  getColor:(ti,total,_t)=>{
-                      const pal=['#1a1a24','#252530','#32323e','#41414d','#52525e','#656570',
-                                '#7a7a84','#919199','#aaaab0','#c4c4c8','#dedee0','#f0f0f2','#fafafc','#ffffff'];
-                      return pal[Math.min(ti,pal.length-1)];
-                  }, dotColor:'#ffffff', grid:false },
-                { name:'HEAT', bg:'#060608',
-                  getColor:(ti,total,_t)=>heatmapRGB(ti/total), dotColor:'#ff4400', grid:false },
-                { name:'AMBER', bg:'#0c0a06',
-                  getColor:(ti,total,_t)=>{
-                      const p=['#1a1208','#281c0c','#382812','#4a3618','#5e4420','#735428',
-                              '#8a662e','#a37a36','#bd903e','#d6a848','#ecc254','#f9d668','#fde882','#fff3a0'];
-                      return p[Math.min(ti,p.length-1)];
-                  }, dotColor:'#ffd060', grid:false },
-                { name:'BLUEPRINT', bg:'#04080f',
-                  getColor:(ti,total,_t)=>{
-                      const t=ti/total;
-                      const r=Math.round(t*80), g=Math.round(80+t*175), b=Math.round(160+t*95);
-                      return `rgb(${r},${g},${b})`;
-                  }, dotColor:'#44c8f0', grid:true },
-                { name:'TOPO', bg:'#0a0c08',
-                  getColor:(ti,total,_t)=>{
-                      const p=['#1a2e12','#25441c','#325a26','#427032','#548840','#68a050',
-                              '#7eb862','#96d076','#b0e48c','#ccf2a4','#e4f7c2','#f4fadc','#fcf8e8','#fff8e0'];
-                      return p[Math.min(ti,p.length-1)];
-                  }, dotColor:'#96d076', grid:true },
-            ];
-
-            // ─── STATE ───────────────────────────────────────────────────────────────────
-            let numCols, numRows;
-            let fieldA, fieldB, fieldV, fieldVNext;
-            let useA = true;
-            let fieldMax=0, fieldMin=0, fieldSum=0, fieldCount=0;
-            let fieldStamp=1; // bumped whenever the field actually changes — drives dirty-checked rendering
-
-            let colorMode  = 0;
-            let sculptMode = 0;
-            let sculptSign = 1;
-            let in3D = false;
-            let frozenBuf = null;
-
-            let pendingDeposits = [];
-            let activeTouches = new Map();
-            let twoFingerActive = false;
-            let lastTapTime=0, lastTapX=0, lastTapY=0;
-
-            // ─── BRUSH KERNEL ───────────────────────────────────────────────────────────
-            let brushKernel = [];
-            function buildBrush() {
-                brushKernel = [];
-                for (let dy = -brushRadius; dy <= brushRadius; dy++) {
-                    for (let dx = -brushRadius; dx <= brushRadius; dx++) {
-                        const d2 = dx*dx + dy*dy;
-                        if (d2 <= brushRadius*brushRadius) {
-                            const w = BPEAK * Math.exp(-d2/(2*brushSigma*brushSigma));
-                            if (w > 0.001) brushKernel.push({dx, dy, w});
-                        }
-                    }
-                }
-            }
-            buildBrush();
-
-            const brushSlider = document.getElementById('brushSlider');
-            brushSlider.addEventListener('input', () => {
-                brushRadius = parseInt(brushSlider.value);
-                brushSigma = brushRadius / 3.0;
-                buildBrush();
-            });
-
-            // ─── FIELD HELPERS ──────────────────────────────────────────────────────────
-            function getBuf(a) { return a ? fieldA : fieldB; }
-            function fi(c,r)   { return r*(numCols+1)+c; }
-            function fv(buf,c,r){
-                if (c<0||c>numCols||r<0||r>numRows) return 0;
-                return buf[fi(c,r)];
-            }
-
-            function resizeGrid() {
-                const dpr = window.devicePixelRatio||1;
-                const W=window.innerWidth, H=window.innerHeight;
-                canvas2d.width  = Math.floor(W*dpr);
-                canvas2d.height = Math.floor(H*dpr);
-                canvas2d.style.width  = W+'px';
-                canvas2d.style.height = H+'px';
-                ctx.setTransform(1,0,0,1,0,0);
-                ctx.scale(dpr,dpr);
-                numCols = Math.max(30, Math.floor(W/CELL));
-                numRows = Math.max(40, Math.floor(H/CELL));
-                const n=(numCols+1)*(numRows+1);
-                fieldA = new Float32Array(n);
-                fieldB = new Float32Array(n);
-                fieldV = new Float32Array(n);
-                fieldVNext = new Float32Array(n);
-                useA=true; fieldMax=0; fieldMin=0; fieldSum=0; fieldCount=n; frozenBuf=null;
-                fieldStamp++;
-            }
-
-            function resetField() {
-                const n=(numCols+1)*(numRows+1);
-                fieldA=new Float32Array(n); fieldB=new Float32Array(n); fieldV=new Float32Array(n);
-                fieldVNext=new Float32Array(n);
-                useA=true; fieldMax=0; fieldMin=0; fieldSum=0; fieldCount=n; frozenBuf=null; pendingDeposits=[];
-                fieldStamp++;
-                if (in3D) exit3D();
-            }
-
-            // ─── DEPOSIT ────────────────────────────────────────────────────────────────
-            function deposit(sx,sy,sign) {
-                const cc=Math.round(sx/CELL), rc=Math.round(sy/CELL);
-                const buf = frozenBuf || getBuf(useA);
-                for (const k of brushKernel) {
-                    const c=cc+k.dx, r=rc+k.dy;
-                    if (c>=0&&c<=numCols&&r>=0&&r<=numRows) {
-                        const idx=fi(c,r);
-                        const nv = Math.max(-FIELD_CAP, Math.min(FIELD_CAP, buf[idx] + k.w * sign));
-                        buf[idx]=nv;
-                        if (nv>fieldMax) fieldMax=nv;
-                        if (nv<fieldMin) fieldMin=nv;
-                    }
-                }
-            }
-
-            function depositLine(x0,y0,x1,y1,sign) {
-                const dist=Math.hypot(x1-x0,y1-y0);
-                const step = CELL * brushRadius * 0.4;
-                const steps=Math.max(1,Math.ceil(dist/step));
-                for (let i=0;i<=steps;i++) {
-                    const t=i/steps;
-                    deposit(x0+(x1-x0)*t, y0+(y1-y0)*t, sign);
-                }
-            }
-
-            // ─── SIMULATION (with normalized Gray-Scott) ─────────────────────────────────
-            function updateField() {
-                if (pendingDeposits.length) {
-                    for (const d of pendingDeposits) {
-                        const s = sculptMode===1 ? -1 : 1;
-                        if (d.length===2) deposit(d[0],d[1],s);
-                        else              depositLine(d[0],d[1],d[2],d[3],s);
-                    }
-                    pendingDeposits=[];
-                    fieldStamp++;
-                }
-
-                if (sculptMode===2) return;
-                // Field fully decayed to zero and nothing incoming — nothing to simulate.
-                if (!useRD && fieldMax===0 && fieldMin===0) return;
-
-                const old=getBuf(useA);
-                const nxt=getBuf(!useA);
-                let mx=-Infinity, mn=Infinity, sm=0;
-
-                if (useRD && gsPresetIdx > 0) {
-                    // Normalize U and V to [0,1] for stable reaction
-                    const uBuf = old;
-                    const vBuf = fieldV;
-                    const uNew = nxt;
-                    const vNew = fieldVNext; // persistent scratch — no per-frame allocation
-                    
-                    // Find max values for normalization
-                    let maxU = 0, maxV = 0;
-                    for (let i=0; i<uBuf.length; i++) {
-                        if (uBuf[i] > maxU) maxU = uBuf[i];
-                        if (vBuf[i] > maxV) maxV = vBuf[i];
-                    }
-                    // Avoid division by zero
-                    const uScale = maxU > 0.001 ? maxU : 1;
-                    const vScale = maxV > 0.001 ? maxV : 1;
-
-                    const dt = 0.2;  // time step factor
-                    for (let r=0;r<=numRows;r++) {
-                        for (let c=0;c<=numCols;c++) {
-                            const idx = fi(c,r);
-                            const uRaw = uBuf[idx];
-                            const vRaw = vBuf[idx];
-                            // Normalize
-                            const u = uRaw / uScale;
-                            const v = vRaw / vScale;
-
-                            // Laplacian (normalized)
-                            const un = (r>0 ? uBuf[fi(c,r-1)] : uRaw) / uScale;
-                            const us = (r<numRows ? uBuf[fi(c,r+1)] : uRaw) / uScale;
-                            const uw = (c>0 ? uBuf[fi(c-1,r)] : uRaw) / uScale;
-                            const ue = (c<numCols ? uBuf[fi(c+1,r)] : uRaw) / uScale;
-                            const lapU = un+us+uw+ue - 4*u;
-
-                            const vn = (r>0 ? vBuf[fi(c,r-1)] : vRaw) / vScale;
-                            const vs = (r<numRows ? vBuf[fi(c,r+1)] : vRaw) / vScale;
-                            const vw = (c>0 ? vBuf[fi(c-1,r)] : vRaw) / vScale;
-                            const ve = (c<numCols ? vBuf[fi(c+1,r)] : vRaw) / vScale;
-                            const lapV = vn+vs+vw+ve - 4*v;
-
-                            const uvv = u * v * v;
-                            const nu = Math.max(0, Math.min(1, u + gsDA * lapU * dt - uvv * dt + gsF * (1-u) * dt));
-                            const nv = Math.max(0, Math.min(1, v + gsDB * lapV * dt + uvv * dt - (gsK+gsF) * v * dt));
-
-                            // Denormalize back to original scale
-                            uNew[idx] = nu * uScale;
-                            vNew[idx] = nv * vScale;
-                            if (uNew[idx] > mx) mx = uNew[idx];
-                            sm += uNew[idx];
-                        }
-                    }
-                    const _vt=fieldV; fieldV=fieldVNext; fieldVNext=_vt;
-                } else {
-                    // Standard diffusion
-                    for (let r=0;r<=numRows;r++) {
-                        for (let c=0;c<=numCols;c++) {
-                            const idx=fi(c,r);
-                            const center=old[idx];
-                            const n=r>0?old[fi(c,r-1)]:0;
-                            const s=r<numRows?old[fi(c,r+1)]:0;
-                            const w=c>0?old[fi(c-1,r)]:0;
-                            const e=c<numCols?old[fi(c+1,r)]:0;
-                            let nv=center+DIFF*(n+s+w+e-4*center);
-                            nv*=DECAY;
-                            if (Math.abs(nv)<0.0001) nv=0;
-                            nv=Math.max(-FIELD_CAP, Math.min(FIELD_CAP, nv));
-                            nxt[idx]=nv;
-                            if (nv>mx) mx=nv; if (nv<mn) mn=nv; sm+=nv;
-                        }
-                    }
-                }
-                fieldMax=mx===-Infinity?0:mx; fieldSum=sm;
-                fieldMin=mn===Infinity?0:Math.min(0,mn);
-                fieldStamp++;
-                useA=!useA;
-            }
-
-            // ─── GRAY-SCOTT PRESET HANDLER ──────────────────────────────────────────────
-            function applyGsPreset(idx) {
-                const prevIdx = gsPresetIdx;
-                gsPresetIdx = idx;
-                const preset = GS_PRESETS[idx];
-                if (idx === 0) {
-                    useRD = false;
-                    gsF=gsK=gsDA=gsDB=0;
-                } else {
-                    useRD = true;
-                    gsF = preset.F;
-                    gsK = preset.K;
-                    gsDA = preset.da;
-                    gsDB = preset.db;
-                    // Seed V channel from current U (normalized) only when first enabling RD
-                    if (prevIdx === 0) {
-                        const u = getBuf(useA);
-                        const mx = Math.max(fieldMax, 0.001);
-                        for (let i=0; i<fieldV.length; i++) {
-                            const un = u[i] / mx;
-                            fieldV[i] = Math.min(1, un * 0.25) * mx; // scale back up
-                        }
-                    }
-                }
-            }
-
-            function cycleGsPreset() {
-                if (in3D) return;
-                const nextIdx = (gsPresetIdx + 1) % GS_PRESETS.length;
-                applyGsPreset(nextIdx);
-                const preset = GS_PRESETS[nextIdx];
-                toast(nextIdx === 0 ? 'Reaction-Diffusion OFF' : `RD: ${preset.name}`);
-                updateHUD();
-            }
-
-            // ─── MARCHING SQUARES ───────────────────────────────────────────────────────
-            const MS_EDGES=[
-                [],[['t','l']],[['t','r']],[['r','l']],
-                [['r','b']],[['t','l'],['r','b']],[['t','b']],[['b','l']],
-                [['b','l']],[['t','b']],[['t','r'],['b','l']],[['r','b']],
-                [['r','l']],[['t','r']],[['t','l']],[]
-            ];
-
-            function edgePt(c,r,edge,thresh,buf) {
-                const x0=c*CELL,y0=r*CELL,x1=(c+1)*CELL,y1=(r+1)*CELL;
-                const TL=fv(buf,c,r),TR=fv(buf,c+1,r),BR=fv(buf,c+1,r+1),BL=fv(buf,c,r+1);
-                let a,b,ax,ay,bx,by;
-                switch(edge){
-                    case 't': a=TL;b=TR;ax=x0;ay=y0;bx=x1;by=y0; break;
-                    case 'r': a=TR;b=BR;ax=x1;ay=y0;bx=x1;by=y1; break;
-                    case 'b': a=BL;b=BR;ax=x0;ay=y1;bx=x1;by=y1; break;
-                    case 'l': a=TL;b=BL;ax=x0;ay=y0;bx=x0;by=y1; break;
-                    default: return null;
-                }
-                const d=b-a; if (Math.abs(d)<1e-9) return null;
-                const t=Math.max(0,Math.min(1,(thresh-a)/d));
-                return {x:ax+t*(bx-ax),y:ay+t*(by-ay)};
-            }
-
-            function msCase(buf,c,r,t){
-                let i=0;
-                if (fv(buf,c,r)>=t)   i|=1;
-                if (fv(buf,c+1,r)>=t) i|=2;
-                if (fv(buf,c+1,r+1)>=t) i|=4;
-                if (fv(buf,c,r+1)>=t) i|=8;
-                return i;
-            }
-
-            // ─── 2D RENDER ──────────────────────────────────────────────────────────────
-            function render2D() {
-                const buf = frozenBuf || getBuf(useA);
-                const cm  = COLOR_MODES[colorMode];
-                const W=window.innerWidth, H=window.innerHeight;
-
-                ctx.fillStyle=cm.bg; ctx.fillRect(0,0,W,H);
-
-                if (cm.grid) {
-                    ctx.strokeStyle='rgba(140,170,210,0.06)';
-                    ctx.lineWidth=0.4; ctx.beginPath();
-                    const sp=CELL*8;
-                    for (let x=sp;x<W;x+=sp){ctx.moveTo(x,0);ctx.lineTo(x,H);}
-                    for (let y=sp;y<H;y+=sp){ctx.moveTo(0,y);ctx.lineTo(W,y);}
-                    ctx.stroke();
-                }
-
-                const T=THRESHOLDS;
-                for (let ti=0;ti<T.length;ti++) {
-                    const thresh=T[ti];
-                    if (thresh > fieldMax) break; // thresholds ascend — nothing exists above the peak
-                    ctx.strokeStyle=cm.getColor(ti,T.length-1,thresh);
-                    ctx.lineWidth=1+(ti/T.length)*0.9;
-                    ctx.lineCap='round'; ctx.lineJoin='round';
-                    ctx.beginPath();
-                    for (let r=0;r<numRows;r++) {
-                        for (let c=0;c<numCols;c++) {
-                            const ci=msCase(buf,c,r,thresh);
-                            if (ci===0||ci===15) continue;
-                            for (const pair of MS_EDGES[ci]) {
-                                const p0=edgePt(c,r,pair[0],thresh,buf);
-                                const p1=edgePt(c,r,pair[1],thresh,buf);
-                                if (p0&&p1){ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);}
-                            }
-                        }
-                    }
-                    ctx.stroke();
-                }
-
-                if (fieldMax>0.01) {
-                    const pk=fieldMax*0.9999;
-                    ctx.strokeStyle=cm.getColor(T.length-1,T.length-1,pk);
-                    ctx.lineWidth=3; ctx.globalAlpha=0.5; ctx.beginPath();
-                    for (let r=0;r<numRows;r++) {
-                        for (let c=0;c<numCols;c++) {
-                            const ci=msCase(buf,c,r,pk);
-                            if (ci===0||ci===15) continue;
-                            for (const pair of MS_EDGES[ci]) {
-                                const p0=edgePt(c,r,pair[0],pk,buf);
-                                const p1=edgePt(c,r,pair[1],pk,buf);
-                                if (p0&&p1){ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);}
-                            }
-                        }
-                    }
-                    ctx.stroke(); ctx.globalAlpha=1;
-                }
-            }
-
-            // ─── THREE.JS 3D VIEW ───────────────────────────────────────────────────────
-            let three = null;
-            let renderer3 = null; // persistent — one WebGL context for the app's lifetime
-
-            function buildColorLUT() {
-                // One entry per contour tier — exact same mapping the per-vertex path used,
-                // minus the per-vertex CSS string parsing and THREE.Color allocation.
-                const cm = COLOR_MODES[colorMode];
-                const N = THRESHOLDS.length;
-                const lut = new Float32Array(N*3);
-                const tc = new THREE.Color();
-                for (let i=0;i<N;i++) {
-                    tc.set(cm.getColor(i, N-1, 0));
-                    lut[i*3]=tc.r; lut[i*3+1]=tc.g; lut[i*3+2]=tc.b;
-                }
-                return lut;
-            }
-
-            function enter3D() {
-                canvas2d.style.display='none';
-                threeCanvas.style.display='block';
-                in3D=true;
-
-                if (three) { disposethree(); }
-
-                const W=window.innerWidth, H=window.innerHeight;
-                if (!renderer3) {
-                    renderer3=new THREE.WebGLRenderer({canvas:threeCanvas,antialias:true,alpha:false,preserveDrawingBuffer:false});
-                }
-                renderer3.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
-                renderer3.setSize(W,H);
-                renderer3.setClearColor(0x04060a,1);
-
-                const scene=new THREE.Scene();
-                const meshW = numCols*CELL;
-                const meshD = numRows*CELL;
-                const maxElev = meshD * 0.3;
-
-                const camera=new THREE.PerspectiveCamera(55,W/H,1,meshD*6);
-
-                const gW=numCols, gH=numRows;
-                const geo=new THREE.PlaneGeometry(meshW, meshD, gW, gH);
-                geo.rotateX(-Math.PI/2);
-                geo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count*3),3));
-
-                let lut=buildColorLUT();
-                const tLen=THRESHOLDS.length-1;
-
-                function refreshMesh() {
-                    const buf = frozenBuf || getBuf(useA);
-                    const mxv = Math.max(fieldMax, 0.001);
-                    const posArr = geo.attributes.position.array;
-                    const colArr = geo.attributes.color.array;
-                    for (let j=0;j<=gH;j++) {
-                        for (let i=0;i<=gW;i++) {
-                            const vi=j*(gW+1)+i;
-                            const val=buf[fi(i,j)]||0;
-                            const t=Math.max(0,val)/mxv;
-                            posArr[vi*3+1]=t*maxElev;
-                            const li=Math.round(t*tLen)*3;
-                            colArr[vi*3]=lut[li]; colArr[vi*3+1]=lut[li+1]; colArr[vi*3+2]=lut[li+2];
-                        }
-                    }
-                    geo.attributes.position.needsUpdate=true;
-                    geo.attributes.color.needsUpdate=true;
-                    geo.computeVertexNormals();
-                }
-                refreshMesh();
-
-                const mat=new THREE.MeshStandardMaterial({vertexColors:true, roughness:0.65, metalness:0.05, side:THREE.DoubleSide});
-                const mesh=new THREE.Mesh(geo,mat);
-                scene.add(mesh);
-
-                const wireMat=new THREE.MeshBasicMaterial({color:0x1a2a3a,wireframe:true,transparent:true,opacity:0.5});
-                const wireframeMesh=new THREE.Mesh(geo, wireMat);
-                scene.add(wireframeMesh);
-
-                scene.add(new THREE.AmbientLight(0xffffff,0.35));
-                const dir=new THREE.DirectionalLight(0xffffff,1.1);
-                dir.position.set(meshW*0.6, meshD*0.7, meshD*0.4);
-                scene.add(dir);
-                const fill=new THREE.DirectionalLight(0x6688bb,0.4);
-                fill.position.set(-meshW*0.5, meshD*0.3, -meshD*0.3);
-                scene.add(fill);
-
-                let isDragging=false, prevX=0, prevY=0;
-                let theta=-0.3, phi=0.42;
-                let radius=meshD*0.95;
-                const target=new THREE.Vector3(0, maxElev*0.2, 0);
-
-                function updateCamera() {
-                    camera.position.x=target.x+radius*Math.sin(phi)*Math.sin(theta);
-                    camera.position.y=target.y+radius*Math.cos(phi);
-                    camera.position.z=target.z+radius*Math.sin(phi)*Math.cos(theta);
-                    camera.lookAt(target);
-                }
-                updateCamera();
-
-                let pinchStartDist=0, pinchStartRadius=0;
-                let touchOrbit=[];
-
-                function tcDist(a,b){return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);}
-
-                const touchStartHandler = (e) => {
-                    e.preventDefault();
-                    touchOrbit=[...e.touches];
-                    if (touchOrbit.length===1){isDragging=true;prevX=touchOrbit[0].clientX;prevY=touchOrbit[0].clientY;}
-                    if (touchOrbit.length===2){pinchStartDist=tcDist(touchOrbit[0],touchOrbit[1]);pinchStartRadius=radius;}
-                };
-                const touchMoveHandler = (e) => {
-                    e.preventDefault();
-                    const touches=[...e.touches];
-                    if (touches.length===1&&isDragging){
-                        const dx=touches[0].clientX-prevX, dy=touches[0].clientY-prevY;
-                        theta-=dx*0.007; phi=Math.max(0.05,Math.min(Math.PI*0.95,phi-dy*0.007));
-                        prevX=touches[0].clientX; prevY=touches[0].clientY;
-                        updateCamera();
-                    }
-                    if (touches.length===2){
-                        const d=tcDist(touches[0],touches[1]);
-                        radius=Math.max(50,Math.min(numRows*CELL*3,pinchStartRadius*(pinchStartDist/d)));
-                        updateCamera();
-                    }
-                };
-                const touchEndHandler = (e) => {
-                    e.preventDefault();
-                    touchOrbit=[...e.touches];
-                    if (touchOrbit.length<1) isDragging=false;
-                };
-                const mouseDownHandler = (e) => { isDragging=true; prevX=e.clientX; prevY=e.clientY; };
-                const mouseMoveHandler = (e) => {
-                    if (!isDragging) return;
-                    const dx=e.clientX-prevX, dy=e.clientY-prevY;
-                    theta-=dx*0.005; phi=Math.max(0.05,Math.min(Math.PI*0.95,phi-dy*0.005));
-                    prevX=e.clientX; prevY=e.clientY; updateCamera();
-                };
-                const mouseUpHandler = () => { isDragging=false; };
-                const wheelHandler = (e) => {
-                    radius=Math.max(50,Math.min(numRows*CELL*3,radius+e.deltaY*0.5));
-                    updateCamera(); e.preventDefault();
-                };
-
-                threeCanvas.addEventListener('touchstart', touchStartHandler, {passive:false});
-                threeCanvas.addEventListener('touchmove', touchMoveHandler, {passive:false});
-                threeCanvas.addEventListener('touchend', touchEndHandler, {passive:false});
-                threeCanvas.addEventListener('mousedown', mouseDownHandler);
-                threeCanvas.addEventListener('mousemove', mouseMoveHandler);
-                threeCanvas.addEventListener('mouseup', mouseUpHandler);
-                threeCanvas.addEventListener('wheel', wheelHandler, {passive:false});
-
-                three = {
-                    scene, camera, geo, mat, wireMat,
-                    animId: 0,
-                    builtStamp: fieldStamp,
-                    builtColor: colorMode,
-                    listeners: {
-                        touchstart: touchStartHandler,
-                        touchmove: touchMoveHandler,
-                        touchend: touchEndHandler,
-                        mousedown: mouseDownHandler,
-                        mousemove: mouseMoveHandler,
-                        mouseup: mouseUpHandler,
-                        wheel: wheelHandler
-                    }
-                };
-
-                function step() {
-                    if (!three) return; // loop was disposed mid-flight
-                    three.animId = requestAnimationFrame(step); // re-stored every frame so cancel always hits the live id
-                    if (fieldStamp!==three.builtStamp || colorMode!==three.builtColor) {
-                        if (colorMode!==three.builtColor) lut=buildColorLUT();
-                        refreshMesh();
-                        three.builtStamp=fieldStamp;
-                        three.builtColor=colorMode;
-                    }
-                    renderer3.render(scene, camera);
-                }
-                three.animId = requestAnimationFrame(step);
-            }
-
-            function disposethree() {
-                if (!three) return;
-                cancelAnimationFrame(three.animId);
-                const l = three.listeners;
-                threeCanvas.removeEventListener('touchstart', l.touchstart);
-                threeCanvas.removeEventListener('touchmove', l.touchmove);
-                threeCanvas.removeEventListener('touchend', l.touchend);
-                threeCanvas.removeEventListener('mousedown', l.mousedown);
-                threeCanvas.removeEventListener('mousemove', l.mousemove);
-                threeCanvas.removeEventListener('mouseup', l.mouseup);
-                threeCanvas.removeEventListener('wheel', l.wheel);
-                three.geo.dispose();
-                three.mat.dispose();
-                three.wireMat.dispose();
-                three = null;
-                // Shrink the hidden canvas's drawing buffer — releases the full-res
-                // MSAA backbuffer on the GPU instead of pinning it while in 2D.
-                if (renderer3) renderer3.setSize(2,2,false);
-            }
-
-            function exit3D() {
-                in3D=false;
-                disposethree();
-                threeCanvas.style.display='none';
-                canvas2d.style.display='block';
-                drawnStamp=-1; // force an immediate 2D repaint
-                updateSculptBtn();
-            }
-
-            // ─── EXPORT ─────────────────────────────────────────────────────────────────
-            function exportPNG() {
-                if (in3D && three) {
-                    renderer3.render(three.scene,three.camera);
-                    const url=threeCanvas.toDataURL('image/png');
-                    const a=document.createElement('a'); a.href=url; a.download='scalar_field_3d.png'; a.click();
-                    toast('PNG saved (3D)');
-                } else {
-                    render2D();
-                    const url=canvas2d.toDataURL('image/png');
-                    const a=document.createElement('a'); a.href=url; a.download='scalar_field.png'; a.click();
-                    toast('PNG saved');
-                }
-            }
-
-            function exportJSON() {
-                const buf=frozenBuf||getBuf(useA);
-                const payload={
-                    version:1, numCols, numRows, cellSize:CELL,
-                    width:numCols*CELL, height:numRows*CELL,
-                    fieldMax, colorMode:COLOR_MODES[colorMode].name, useRD,
-                    gsPreset: GS_PRESETS[gsPresetIdx].name,
-                    field:Array.from(buf)
-                };
-                const blob=new Blob([JSON.stringify(payload)],{type:'application/json'});
-                const url=URL.createObjectURL(blob);
-                const a=document.createElement('a'); a.href=url; a.download='scalar_field.json'; a.click();
-                URL.revokeObjectURL(url);
-                toast('JSON exported — '+numCols+'×'+numRows+' grid');
-            }
-
-            // ─── LOAD (exported JSON field, or image → luminance seed) ──────────────────
-            function recomputeStats(buf) {
-                let mx=-Infinity, mn=Infinity, sm=0;
-                for (let i=0;i<buf.length;i++){const v=buf[i]; if(v>mx)mx=v; if(v<mn)mn=v; sm+=v;}
-                fieldMax=mx===-Infinity?0:mx;
-                fieldMin=mn===Infinity?0:Math.min(0,mn);
-                fieldSum=sm; fieldCount=buf.length;
-            }
-
-            function seedVFromU(buf) {
-                const mx=Math.max(fieldMax,0.001);
-                for (let i=0;i<fieldV.length;i++){const un=buf[i]/mx; fieldV[i]=Math.min(1,un*0.25)*mx;}
-            }
-
-            function applyLoadedJSON(payload) {
-                if (!payload || !Array.isArray(payload.field)) throw new Error('bad payload');
-                const sC=payload.numCols|0, sR=payload.numRows|0;
-                if ((sC+1)*(sR+1)!==payload.field.length) throw new Error('field size mismatch');
-                const src=payload.field;
-                const target=frozenBuf||getBuf(useA);
-                target.fill(0);
-                const scX=(sC+1)/(numCols+1), scY=(sR+1)/(numRows+1);
-                for (let r=0;r<=numRows;r++){
-                    for (let c=0;c<=numCols;c++){
-                        const sc3=Math.round(c*scX), sr3=Math.round(r*scY);
-                        if (sc3>=0&&sc3<=sC&&sr3>=0&&sr3<=sR) target[fi(c,r)]=src[sr3*(sC+1)+sc3];
-                    }
-                }
-                if (frozenBuf) getBuf(useA).set(frozenBuf);
-                fieldV.fill(0);
-                recomputeStats(target);
-                if (typeof payload.colorMode==='string'){
-                    const ci=COLOR_MODES.findIndex(m=>m.name===payload.colorMode);
-                    if (ci>=0) colorMode=ci;
-                }
-                if (typeof payload.gsPreset==='string'){
-                    const gi=GS_PRESETS.findIndex(p=>p.name===payload.gsPreset);
-                    applyGsPreset(gi>=0?gi:0);
-                } else applyGsPreset(0);
-                fieldStamp++;
-                updateHUD();
-                toast('Field loaded — '+sC+'×'+sR+' → '+numCols+'×'+numRows);
-            }
-
-            function applyLoadedImage(img) {
-                const w=numCols+1, h=numRows+1;
-                const oc=document.createElement('canvas'); oc.width=w; oc.height=h;
-                const octx=oc.getContext('2d');
-                octx.drawImage(img,0,0,w,h);
-                const data=octx.getImageData(0,0,w,h).data;
-                const target=frozenBuf||getBuf(useA);
-                const PEAK=24; // lands the tonal range across the mid contour bands
-                for (let r=0;r<h;r++){
-                    for (let c=0;c<w;c++){
-                        const p=(r*w+c)*4;
-                        const lum=(0.2126*data[p]+0.7152*data[p+1]+0.0722*data[p+2])/255;
-                        target[fi(c,r)]=Math.pow(lum,1.4)*PEAK;
-                    }
-                }
-                if (frozenBuf) getBuf(useA).set(frozenBuf);
-                recomputeStats(target);
-                if (useRD) seedVFromU(target); else fieldV.fill(0);
-                fieldStamp++;
-                updateHUD();
-                toast('Image seeded — luminance → field');
-            }
-
-            const fileInput=document.getElementById('fileInput');
-            document.getElementById('btnLoad').addEventListener('click',e=>{
-                e.stopPropagation(); fileInput.click();
-            });
-            fileInput.addEventListener('change',()=>{
-                const f=fileInput.files&&fileInput.files[0];
-                fileInput.value='';
-                if (!f) return;
-                if (f.type==='application/json'||/\.json$/i.test(f.name)) {
-                    const rd=new FileReader();
-                    rd.onload=()=>{ try{ applyLoadedJSON(JSON.parse(rd.result)); }catch(err){ toast('Load failed — bad field JSON'); } };
-                    rd.onerror=()=>toast('Load failed');
-                    rd.readAsText(f);
-                } else if (/^image\//.test(f.type)) {
-                    const url=URL.createObjectURL(f);
-                    const img=new Image();
-                    img.onload=()=>{ try{ applyLoadedImage(img); }catch(err){ toast('Load failed'); } URL.revokeObjectURL(url); };
-                    img.onerror=()=>{ URL.revokeObjectURL(url); toast('Load failed — bad image'); };
-                    img.src=url;
-                } else toast('Unsupported file type');
-            });
-
-            // ─── HUD ────────────────────────────────────────────────────────────────────
-            const dotsEl=document.getElementById('colorDots');
-            COLOR_MODES.forEach((_,i)=>{
-                const d=document.createElement('span'); d.className='dot';
-                if (i===0) d.classList.add('active');
-                dotsEl.appendChild(d);
-            });
-            const dotEls=dotsEl.querySelectorAll('.dot');
-
-            function updateSculptBtn() {
-                const b=document.getElementById('btnSculpt');
-                if (sculptMode===0) b.textContent='+';
-                else if (sculptMode===1) b.textContent='−';
-                else b.textContent='❄';
-                b.classList.toggle('active', sculptMode===2);
-            }
-
-            function updateHUD() {
-                dotEls.forEach((d,i)=>{
-                    d.classList.toggle('active',i===colorMode);
-                    d.style.background=i===colorMode?COLOR_MODES[i].dotColor:'rgba(255,255,255,0.2)';
-                });
-                updateEnergyLabel();
-                const btnRD = document.getElementById('btnRD');
-                btnRD.textContent = GS_PRESETS[gsPresetIdx].name;
-                btnRD.classList.toggle('active', useRD);
-                document.getElementById('btn3D').classList.toggle('active',in3D);
-                updateSculptBtn();
-                if (parseInt(brushSlider.value) !== brushRadius) {
-                    brushSlider.value = brushRadius;
-                }
-            }
-
-            // ─── BUTTON EVENTS ──────────────────────────────────────────────────────────
-            document.getElementById('btnSculpt').addEventListener('click',e=>{
-                e.stopPropagation();
-                if (in3D) return;
-                sculptMode=(sculptMode+1)%3;
-                if (sculptMode===2) {
-                    frozenBuf=getBuf(useA).slice();
-                } else {
-                    sculptSign=sculptMode===0?1:-1;
-                    if (frozenBuf) {
-                        const live=getBuf(useA);
-                        live.set(frozenBuf);
-                        frozenBuf=null;
-                    }
-                }
-                updateHUD();
-            });
-
-            document.getElementById('btnRD').addEventListener('click',e=>{
-                e.stopPropagation();
-                cycleGsPreset();
-            });
-
-            document.getElementById('btn3D').addEventListener('click',e=>{
-                e.stopPropagation();
-                if (in3D) { exit3D(); updateHUD(); }
-                else { enter3D(); updateHUD(); }
-            });
-
-            document.getElementById('btnExportPNG').addEventListener('click',e=>{e.stopPropagation();exportPNG();});
-            document.getElementById('btnExportJSON').addEventListener('click',e=>{e.stopPropagation();exportJSON();});
-
-            // ─── TOUCH on 2D canvas ─────────────────────────────────────────────────────
-            function sc(t) { return {x:t.clientX,y:t.clientY}; }
-
-            canvas2d.addEventListener('touchstart',e=>{
-                if (in3D) return;
-                e.preventDefault();
-                const now=performance.now();
-                for (const t of e.changedTouches) {
-                    const c=sc(t);
-                    activeTouches.set(t.identifier,{x:c.x,y:c.y,sx:c.x,sy:c.y,st:now,moved:false,px:c.x,py:c.y});
-                }
-                if (activeTouches.size===1) {
-                    twoFingerActive=false;
-                    const d=activeTouches.values().next().value;
-                    if (now-lastTapTime<DT2TAP&&Math.hypot(d.sx-lastTapX,d.sy-lastTapY)<DT2DIST){
-                        resetField(); lastTapTime=0; activeTouches.clear(); updateHUD(); return;
-                    }
-                    pendingDeposits.push([d.x,d.y]);
-                } else if (activeTouches.size>=2 && !twoFingerActive) {
-                    twoFingerActive=true;
-                    colorMode=(colorMode+1)%COLOR_MODES.length;
-                    pendingDeposits=[];
-                    updateHUD();
-                }
-            },{passive:false});
-
-            canvas2d.addEventListener('touchmove',e=>{
-                if (in3D) return;
-                e.preventDefault();
-                for (const t of e.changedTouches) {
-                    const d=activeTouches.get(t.identifier); if (!d) continue;
-                    const c=sc(t);
-                    if (Math.abs(c.x-d.sx)>3||Math.abs(c.y-d.sy)>3) d.moved=true;
-                    if (activeTouches.size===1&&!twoFingerActive) {
-                        pendingDeposits.push([d.px,d.py,c.x,c.y]);
-                    }
-                    d.px=c.x; d.py=c.y; d.x=c.x; d.y=c.y;
-                }
-            },{passive:false});
-
-            canvas2d.addEventListener('touchend',e=>{
-                if (in3D) return;
-                e.preventDefault();
-                const now=performance.now();
-                for (const t of e.changedTouches) {
-                    const d=activeTouches.get(t.identifier);
-                    if (!d){activeTouches.delete(t.identifier);continue;}
-                    if (!d.moved&&activeTouches.size===1&&!twoFingerActive&&now-d.st<250){
-                        lastTapTime=now; lastTapX=d.sx; lastTapY=d.sy;
-                    }
-                    activeTouches.delete(t.identifier);
-                }
-                if (activeTouches.size===0){twoFingerActive=false;pendingDeposits=[];}
-                else if (activeTouches.size===1&&twoFingerActive){
-                    twoFingerActive=false;
-                    const rem=activeTouches.values().next().value;
-                    if (rem){rem.px=rem.x;rem.py=rem.y;rem.sx=rem.x;rem.sy=rem.y;rem.st=now;rem.moved=false;}
-                }
-            },{passive:false});
-
-            canvas2d.addEventListener('touchcancel',e=>{
-                e.preventDefault(); activeTouches.clear(); twoFingerActive=false; pendingDeposits=[];
-            },{passive:false});
-            canvas2d.addEventListener('contextmenu',e=>e.preventDefault());
-
-            // ─── RESIZE ─────────────────────────────────────────────────────────────────
-            window.addEventListener('resize',()=>{
-                clearTimeout(window._rsz);
-                window._rsz=setTimeout(()=>{
-                    if (in3D){exit3D();}
-                    const oldBuf=getBuf(useA),oC=numCols,oR=numRows;
-                    resizeGrid();
-                    const nB=getBuf(useA);
-                    const sc2=(oC+1)/(numCols+1),sr2=(oR+1)/(numRows+1);
-                    for (let r=0;r<=numRows;r++){
-                        for (let c=0;c<=numCols;c++){
-                            const sc3=Math.round(c*sc2),sr3=Math.round(r*sr2);
-                            if (sc3>=0&&sc3<=oC&&sr3>=0&&sr3<=oR) nB[fi(c,r)]=oldBuf[sr3*(oC+1)+sc3];
-                        }
-                    }
-                    let mx=-Infinity,mn=Infinity,sm=0;
-                    for (let i=0;i<nB.length;i++){const v=nB[i];if(v>mx)mx=v;if(v<mn)mn=v;sm+=v;}
-                    fieldMax=mx===-Infinity?0:mx; fieldMin=mn===Infinity?0:Math.min(0,mn); fieldSum=sm; fieldCount=nB.length;
-                    updateHUD();
-                },200);
-            });
-
-            // ─── TOAST ──────────────────────────────────────────────────────────────────
-            let toastTimer;
-            function toast(msg) {
-                const el=document.getElementById('toast');
-                el.textContent=msg; el.classList.add('show');
-                clearTimeout(toastTimer);
-                toastTimer=setTimeout(()=>el.classList.remove('show'),1800);
-            }
-
-            // ─── MAIN LOOP ──────────────────────────────────────────────────────────────
-            let drawnStamp=-1, drawnColor=-1, drawnFrozen=null, hudTick=0, lastEnergyTxt='';
-            function updateEnergyLabel() {
-                const avg=fieldCount>0?fieldSum/fieldCount:0;
-                const txt='Σ '+avg.toFixed(3);
-                if (txt!==lastEnergyTxt){ lastEnergyTxt=txt; document.getElementById('lblEnergy').textContent=txt; }
-            }
-            function loop() {
-                updateField();
-                if (!in3D) {
-                    const frozen = sculptMode===2;
-                    if (fieldStamp!==drawnStamp || colorMode!==drawnColor || frozen!==drawnFrozen) {
-                        render2D();
-                        drawnStamp=fieldStamp; drawnColor=colorMode; drawnFrozen=frozen;
-                    }
-                }
-                if ((hudTick++ & 7)===0) updateEnergyLabel(); // label at ~7Hz instead of full HUD DOM writes at 60Hz
-                requestAnimationFrame(loop);
-            }
-
-            resizeGrid();
-            applyGsPreset(0);
-            updateHUD();
-            requestAnimationFrame(loop);
-        })();
-    </script>
+    <div class="dip" id="dipWater"><div class="fill"></div><span>水 water</span></div>
+  </div>
+</div>
+
+<script>
+(()=>{
+// ═══════════════════════════════════════════════════════
+// SUMI_v3 — MoXi-INSPIRED PERCOLATION ENGINE
+// ═══════════════════════════════════════════════════════
+
+function hash21(x,y){
+  let s=Math.sin(x*127.1+y*311.7)*43758.5453;
+  return s-Math.floor(s);
+}
+function hash11(n){
+  let s=Math.sin(n*127.1+311.7)*43758.5453;
+  return s-Math.floor(s);
+}
+function valueNoise(x,y){
+  const ix=Math.floor(x),iy=Math.floor(y);
+  const fx=x-ix,fy=y-iy;
+  const ux=fx*fx*(3-2*fx),uy=fy*fy*(3-2*fy);
+  const a=hash21(ix,iy),b=hash21(ix+1,iy);
+  const c=hash21(ix,iy+1),d=hash21(ix+1,iy+1);
+  return a+(b-a)*ux+(c-a)*uy+(a-b-c+d)*ux*uy;
+}
+
+// ── constants ──
+const CELL=1;
+
+// paper
+const WATER_CAP=1.0;
+const PIGMENT_CAP=1.98;
+
+// brush
+const BRUSH_RAD=4.0;
+const BRUSH_W_CAP=50000;
+const BRUSH_P_CAP=40000;
+const DEP_W=0.0015;
+const DEP_P=0.0015;
+
+// render
+const INK_DARK=12.0;
+const PAP_R=236,PAP_G=229,PAP_B=210;
+
+// ── MoXi percolation constants ──
+const SPREAD_RATE=0.12;       // water spread per frame
+const EVAP_RATE=0.004;        // background evaporation
+const EDGE_EVAP_MULT=0.6;     // extra evap multiplier at wet-dry boundary
+const FIX_RATE=0.12;          // pigment fixation speed
+const HINDRANCE=0.55;         // paper grain pigment catching (0-1)
+const SIGMA_BASE=0.08;        // base pinning threshold
+const SIGMA_PIN=0.30;         // pinning texture contribution
+const SIGMA_GRAIN=0.12;       // grain contribution to pinning
+// blocking factor weights
+const K_BASE=0.04;
+const K_GRAIN=0.42;
+const K_PIG=0.28;
+const K_PIN=0.18;
+
+// ── canvas setup ──
+const canvas=document.getElementById('canvas');
+const W_PX=Math.floor(window.innerWidth);
+const H_PX=Math.floor(window.innerHeight);
+canvas.width=W_PX;
+canvas.height=H_PX;
+const ctx=canvas.getContext('2d',{alpha:false});
+
+const NX=Math.floor(W_PX/CELL);
+const NY=Math.floor(H_PX/CELL);
+const N=NX*NY;
+
+// ── grid arrays ──
+const water=new Float32Array(N);
+const mPig=new Float32Array(N);       // mobile pigment amount
+const mR=new Float32Array(N);         // mobile pigment color
+const mG=new Float32Array(N);
+const mB=new Float32Array(N);
+const fPig=new Float32Array(N);       // fixed pigment concentration
+const fR=new Float32Array(N);         // fixed pigment color
+const fG=new Float32Array(N);
+const fB=new Float32Array(N);
+const tex=new Float32Array(N);        // paper grain (0-1)
+const absorb=new Float32Array(N);     // local absorbency
+const pinTex=new Float32Array(N);     // pinning texture (MoXi)
+const wDelta=new Float32Array(N);     // water spread delta buffer
+const pDelta=new Float32Array(N);     // pigment spread delta buffer
+
+// pre-baked paper pixel buffer
+const paperPixels=new Uint8ClampedArray(W_PX*H_PX*4);
+const imgData=ctx.createImageData(W_PX,H_PX);
+
+// ── brush ──
+const brush={w:BRUSH_W_CAP*40, p:BRUSH_P_CAP*0.8};
+let brushRadius=2;
+let inkR=0.05,inkG=0.04,inkB=0.035;
+let brushStyle='round';
+
+// ── dirty rect tracking ──
+let dirtyX0=NX,dirtyY0=NY,dirtyX1=0,dirtyY1=0;
+let hasWet=false;
+
+function expandDirty(x0,y0,x1,y1){
+  dirtyX0=Math.max(0,Math.min(dirtyX0,x0|0));
+  dirtyY0=Math.max(0,Math.min(dirtyY0,y0|0));
+  dirtyX1=Math.min(NX-1,Math.max(dirtyX1,Math.ceil(x1)));
+  dirtyY1=Math.min(NY-1,Math.max(dirtyY1,Math.ceil(y1)));
+  hasWet=true;
+}
+
+// ═══════════════════════════════════════════════════════
+// PAPER + PINNING TEXTURE GENERATION
+// ═══════════════════════════════════════════════════════
+function generatePaper(){
+  // ── paper grain (washi fiber texture) ──
+  let min=Infinity,max=-Infinity;
+  for(let gy=0;gy<NY;gy++){
+    for(let gx=0;gx<NX;gx++){
+      const i=gy*NX+gx;
+      let v=valueNoise(gx*0.15,gy*0.16)*0.15
+           +valueNoise(gx*0.4,gy*0.42)*0.30
+           +valueNoise(gx*0.9,gy*0.95)*0.30
+           +valueNoise(gx*2.0,gy*2.1)*0.15;
+      v+=valueNoise(gx*0.8,gy*0.04)*0.10;
+      tex[i]=v;
+      if(v<min)min=v;
+      if(v>max)max=v;
+    }
+  }
+  const range=max-min||1;
+  for(let i=0;i<N;i++){
+    tex[i]=(tex[i]-min)/range;
+    absorb[i]=0.96+0.04*tex[i];
+  }
+
+  // ── pinning texture (MoXi: random short line segments) ──
+  // These create directional pinning sites that produce
+  // organic toe patterns at stroke boundaries
+  pinTex.fill(0);
+  const numLines=Math.floor(N*0.003); // density scales with canvas
+  for(let n=0;n<numLines;n++){
+    const sx=hash21(n*1.31,n*2.17)*NX;
+    const sy=hash21(n*3.71,n*0.53)*NY;
+    const angle=hash21(n*5.13,n*7.91)*Math.PI;
+    const len=3+hash21(n*0.37,n*4.29)*8;
+    const ca=Math.cos(angle),sa=Math.sin(angle);
+    const steps=Math.ceil(len);
+    for(let s=0;s<=steps;s++){
+      const px=Math.round(sx+ca*s);
+      const py=Math.round(sy+sa*s);
+      if(px>=0&&px<NX&&py>=0&&py<NY){
+        pinTex[py*NX+px]=1;
+      }
+    }
+  }
+  // light blur: average with neighbors for smoother transitions
+  const ptCopy=new Float32Array(pinTex);
+  for(let y=1;y<NY-1;y++){
+    for(let x=1;x<NX-1;x++){
+      const i=y*NX+x;
+      pinTex[i]=(ptCopy[i]*2+ptCopy[i-1]+ptCopy[i+1]+ptCopy[i-NX]+ptCopy[i+NX])/6;
+    }
+  }
+
+  // ── bake paper pixels ──
+  for(let gy=0;gy<NY;gy++){
+    for(let gx=0;gx<NX;gx++){
+      const t=tex[gy*NX+gx];
+      const pi=(gy*W_PX+gx)*4;
+      paperPixels[pi]=PAP_R-t*9|0;
+      paperPixels[pi+1]=PAP_G-t*7|0;
+      paperPixels[pi+2]=PAP_B-t*5|0;
+      paperPixels[pi+3]=255;
+    }
+  }
+}
+generatePaper();
+
+// ═══════════════════════════════════════════════════════
+// COORDINATE MAPPING
+// ═══════════════════════════════════════════════════════
+function clientToGrid(cx,cy){
+  const r=canvas.getBoundingClientRect();
+  return[(cx-r.left)/r.width*NX,(cy-r.top)/r.height*NY];
+}
+
+// ═══════════════════════════════════════════════════════
+// BRUSH DEPOSIT — anisotropic kernel → water/mPig layers
+// ═══════════════════════════════════════════════════════
+function addDeposit(gx,gy,pressure,orientation,speed){
+  if(brush.w<=0&&brush.p<=0)return;
+  pressure=Math.max(0.05,Math.min(1,pressure));
+
+  const baseRad=BRUSH_RAD*(brushRadius/16);
+  let a,b,orientOff=0;
+
+  switch(brushStyle){
+    case'point':
+      const pCube=pressure*pressure*pressure;
+      a=baseRad*(0.1+pCube*1.4);
+      b=a*(0.2+pCube*0.7);
+      break;
+    case'side':
+      orientOff=Math.PI*0.5;
+      a=baseRad*(1.2+pressure*1.8);
+      b=baseRad*(0.12+pressure*0.18);
+      break;
+    case'rake':
+      a=baseRad*(0.7+pressure*1.0);
+      b=a*(0.8+pressure*0.15);
+      break;
+    default:
+      a=baseRad*(0.55+pressure*0.85);
+      b=a*(0.6+pressure*0.3);
+  }
+
+  // per-stamp chaos: width jitter
+  const stampHash=hash21(gx*0.37+strokeSeed,gy*0.53-strokeSeed*0.2);
+  const catchJitter=1.0+0.25*(stampHash-0.5);
+  a*=catchJitter;
+  b*=catchJitter;
+
+  const search=Math.ceil(Math.max(a,b)*3)+2;
+  const x0=Math.floor(gx),y0=Math.floor(gy);
+  const theta=orientation+orientOff;
+  const cosT=Math.cos(theta),sinT=Math.sin(theta);
+
+  const wFrac=brush.w/(brush.w+brush.p+1e-12);
+  const dryness=1-wFrac;
+  const speedFac=1/(1+speed/30);
+  const xferScale=pressure*speedFac;
+
+  let reqW=brush.w*DEP_W*xferScale;
+  let reqP=brush.p*DEP_P*xferScale;
+  reqP*=0.25+0.75*wFrac;
+  reqW=Math.min(reqW,brush.w);
+  reqP=Math.min(reqP,brush.p);
+  if(reqW<1e-9&&reqP<1e-9)return;
+
+  const skipThresh=dryness*dryness*0.4+Math.min(0.12,speed*0.003);
+  const grainAmp=0.06+0.50*dryness;
+
+  let totalWt=0;
+  const samples=[];
+  for(let dy=-search;dy<=search;dy++){
+    for(let dx=-search;dx<=search;dx++){
+      const px=x0+dx,py=y0+dy;
+      if(px<0||px>=NX||py<0||py>=NY)continue;
+      const fx=px-gx,fy=py-gy;
+      const u=fx*cosT+fy*sinT;
+      const v=-fx*sinT+fy*cosT;
+      const norm=(u/Math.max(0.3,a))**2+(v/Math.max(0.3,b))**2;
+      if(norm>9)continue;
+
+      let wt=Math.exp(-0.5*norm);
+
+      if(brushStyle==='rake'){
+        const rakeFreq=Math.min(0.6,1.0/Math.max(0.5,baseRad*0.15));
+        wt*=Math.max(0,Math.cos(v*rakeFreq*Math.PI));
+      }
+      if(brushStyle==='point') wt*=wt*wt;
+
+      // bristle texture
+      const bristleFreq=brushStyle==='rake'?0:Math.min(0.7,1.5/Math.max(1.0,baseRad*0.4));
+      if(bristleFreq>0){
+        const bristleAmp=0.02+0.58*dryness;
+        wt*=(1-bristleAmp)+bristleAmp*Math.cos(v*bristleFreq*Math.PI);
+      }
+
+      // paper grain modulation (aggressive when dry)
+      const grain=tex[py*NX+px];
+      wt*=(1-grainAmp)+grainAmp*grain;
+
+      // catch/drag chaos
+      const catchNoise=hash21(px*3.17+strokeSeed*0.43,py*5.31-strokeSeed*1.7);
+      const catchThresh=0.15*dryness*dryness;
+      if(catchNoise<catchThresh){
+        wt=catchNoise<catchThresh*0.4?0:wt*2.5;
+      }
+
+      // lane-based dry streaking
+      if(skipThresh>0.02){
+        const lane=Math.round(v/Math.max(2.0,b*0.5));
+        const laneNoise=hash21(lane*7.13+strokeSeed,lane*3.71-strokeSeed*0.7);
+        if(laneNoise<skipThresh) wt=0;
+      }
+
+      // edge sharpening when dry
+      if(norm>1.5){
+        const edgeSteep=1+2.0*dryness;
+        wt*=Math.pow(Math.max(0,1-norm/9),edgeSteep);
+      }
+
+      if(wt<0.005)continue;
+      samples.push({idx:py*NX+px,w:wt});
+      totalWt+=wt;
+    }
+  }
+  if(totalWt<=0)return;
+
+  // ── deposit to water + mobile pigment layers ──
+  let appliedW=0,appliedP=0;
+  for(const s of samples){
+    const frac=s.w/totalWt;
+    let wAdd=reqW*frac;
+    let pAdd=reqP*frac;
+
+    // blocking: accumulated pigment resists new deposit
+    const resist=Math.min(0.7,fPig[s.idx]/PIGMENT_CAP);
+    wAdd*=(1-resist*0.4);
+    pAdd*=(1-resist*0.4);
+
+    // water capacity
+    const room=Math.max(0,WATER_CAP-water[s.idx]);
+    if(wAdd>room){const sc=room/(wAdd+1e-12);wAdd*=sc;pAdd*=sc;}
+    if(wAdd<1e-12&&pAdd<1e-12)continue;
+
+    water[s.idx]+=wAdd;
+
+    // blend mobile pigment color
+    const existing=mPig[s.idx];
+    const total=existing+pAdd;
+    if(total>0){
+      const ew=existing/total,nw=pAdd/total;
+      mR[s.idx]=mR[s.idx]*ew+inkR*nw;
+      mG[s.idx]=mG[s.idx]*ew+inkG*nw;
+      mB[s.idx]=mB[s.idx]*ew+inkB*nw;
+    }
+    mPig[s.idx]=total;
+
+    appliedW+=wAdd;
+    appliedP+=pAdd;
+  }
+  brush.w=Math.max(0,brush.w-appliedW);
+  brush.p=Math.max(0,brush.p-appliedP);
+
+  // expand dirty rect
+  expandDirty(x0-search,y0-search,x0+search,y0+search);
+}
+
+// ═══════════════════════════════════════════════════════
+// STROKE INTERPOLATION
+// ═══════════════════════════════════════════════════════
+function drawSegment(x0,y0,x1,y1,pressure){
+  const dx=x1-x0,dy=y1-y0;
+  const dist=Math.hypot(dx,dy);
+  if(dist<0.001)return;
+  const orient=Math.atan2(dy,dx);
+  const steps=Math.max(1,Math.ceil(dist/1.5));
+  for(let i=1;i<=steps;i++){
+    const t=i/steps;
+    addDeposit(x0+dx*t,y0+dy*t,pressure,orient,dist);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// SIMULATION — MoXi-inspired percolation (dirty rect only)
+// ═══════════════════════════════════════════════════════
+function simulateStep(){
+  if(!hasWet)return;
+
+  const margin=4;
+  const sx0=Math.max(1,dirtyX0-margin);
+  const sy0=Math.max(1,dirtyY0-margin);
+  const sx1=Math.min(NX-2,dirtyX1+margin);
+  const sy1=Math.min(NY-2,dirtyY1+margin);
+
+  // zero delta buffers within dirty region
+  for(let y=sy0;y<=sy1;y++){
+    const row=y*NX;
+    for(let x=sx0;x<=sx1;x++){
+      wDelta[row+x]=0;
+      pDelta[row+x]=0;
+    }
+  }
+
+  // ── Pass 1: water percolation + pigment transport ──
+  for(let y=sy0;y<=sy1;y++){
+    for(let x=sx0;x<=sx1;x++){
+      const i=y*NX+x;
+      const w=water[i];
+      if(w<0.001)continue;
+
+      // inline blocking factor for source
+      const kSrc=K_BASE+K_GRAIN*tex[i]+K_PIG*Math.min(1,fPig[i]/PIGMENT_CAP)+K_PIN*pinTex[i];
+      const pigConc=mPig[i]/(w+0.001);
+
+      // 4-connected neighbors
+      const nb=[i-1,i+1,i-NX,i+NX];
+      for(let n=0;n<4;n++){
+        const j=nb[n];
+
+        // pinning check: if destination is dry, threshold must be exceeded
+        if(water[j]<0.001){
+          const sigma=SIGMA_BASE+SIGMA_PIN*pinTex[j]+SIGMA_GRAIN*tex[j];
+          if(w<sigma)continue; // pinned!
+        }
+
+        // only flow from higher to lower water density
+        const diff=w-water[j];
+        if(diff<=0)continue;
+
+        // blocking factor at destination
+        const kDst=K_BASE+K_GRAIN*tex[j]+K_PIG*Math.min(1,fPig[j]/PIGMENT_CAP)+K_PIN*pinTex[j];
+        const kAvg=(kSrc+kDst)*0.5;
+
+        let flow=SPREAD_RATE*diff*(1-kAvg);
+        flow=Math.min(flow,w*0.12); // cap per-neighbor drain
+
+        wDelta[i]-=flow;
+        wDelta[j]+=flow;
+
+        // pigment carried by water, hindered by grain
+        const hind=HINDRANCE*tex[i];
+        let pigFlow=flow*pigConc*(1-hind);
+        pigFlow=Math.min(pigFlow,mPig[i]*0.12);
+        if(pigFlow>0.0001){
+          pDelta[i]-=pigFlow;
+          pDelta[j]+=pigFlow;
+        }
+      }
+    }
+  }
+
+  // ── Apply deltas ──
+  for(let y=sy0;y<=sy1;y++){
+    for(let x=sx0;x<=sx1;x++){
+      const i=y*NX+x;
+      if(wDelta[i]!==0) water[i]=Math.max(0,water[i]+wDelta[i]);
+      if(pDelta[i]!==0) mPig[i]=Math.max(0,mPig[i]+pDelta[i]);
+    }
+  }
+
+  // ── Pass 2: evaporation + fixation ──
+  let stillWet=false;
+  let newX0=NX,newY0=NY,newX1=0,newY1=0;
+
+  for(let y=sy0;y<=sy1;y++){
+    for(let x=sx0;x<=sx1;x++){
+      const i=y*NX+x;
+      const w=water[i];
+      if(w<0.001&&mPig[i]<0.001)continue;
+
+      if(w>0.001){
+        stillWet=true;
+        if(x<newX0)newX0=x;
+        if(y<newY0)newY0=y;
+        if(x>newX1)newX1=x;
+        if(y>newY1)newY1=y;
+
+        // edge-aware evaporation (MoXi: boundary sites lose water faster)
+        let wetN=0;
+        if(water[i-1]>0.01)wetN++;
+        if(water[i+1]>0.01)wetN++;
+        if(water[i-NX]>0.01)wetN++;
+        if(water[i+NX]>0.01)wetN++;
+        const edgeFac=1+(4-wetN)*EDGE_EVAP_MULT;
+        water[i]=Math.max(0,w-EVAP_RATE*w*edgeFac);
+
+        // fixation: mobile → fixed (faster as water evaporates)
+        const dry=1-water[i]/WATER_CAP;
+        const fix=FIX_RATE*dry*dry*absorb[i];
+        const pRoom=Math.max(0,PIGMENT_CAP-fPig[i]);
+        const amount=Math.min(mPig[i]*fix,pRoom);
+        if(amount>0.0001){
+          const existing=fPig[i];
+          const total=existing+amount;
+          const ew=existing/total,nw=amount/total;
+          // only darken
+          const bR=fR[i]*ew+mR[i]*nw;
+          const bG=fG[i]*ew+mG[i]*nw;
+          const bB=fB[i]*ew+mB[i]*nw;
+          fR[i]=existing>0.001?Math.min(fR[i],bR):bR;
+          fG[i]=existing>0.001?Math.min(fG[i],bG):bG;
+          fB[i]=existing>0.001?Math.min(fB[i],bB):bB;
+          fPig[i]=total;
+          mPig[i]-=amount;
+        }
+      }
+
+      // bone dry lock: capture all remaining mobile pigment
+      if(water[i]<0.005&&mPig[i]>0.001){
+        const lockAmt=Math.min(mPig[i],Math.max(0,PIGMENT_CAP-fPig[i]));
+        if(lockAmt>0){
+          const ex=fPig[i],tot=ex+lockAmt;
+          if(tot>0){
+            const ew=ex/tot,nw=lockAmt/tot;
+            const bR=fR[i]*ew+mR[i]*nw;
+            const bG=fG[i]*ew+mG[i]*nw;
+            const bB=fB[i]*ew+mB[i]*nw;
+            fR[i]=ex>0.001?Math.min(fR[i],bR):bR;
+            fG[i]=ex>0.001?Math.min(fG[i],bG):bG;
+            fB[i]=ex>0.001?Math.min(fB[i],bB):bB;
+            fPig[i]=tot;
+          }
+        }
+        mPig[i]=0;
+        water[i]=0;
+      }
+    }
+  }
+
+  // ── update dirty rect ──
+  if(stillWet){
+    dirtyX0=Math.max(0,newX0-2);
+    dirtyY0=Math.max(0,newY0-2);
+    dirtyX1=Math.min(NX-1,newX1+2);
+    dirtyY1=Math.min(NY-1,newY1+2);
+  }else{
+    hasWet=false;
+    dirtyX0=NX;dirtyY0=NY;dirtyX1=0;dirtyY1=0;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER — paper + fixed pigment + mobile pigment + wet sheen
+// ═══════════════════════════════════════════════════════
+function render(){
+  const px=imgData.data;
+  px.set(paperPixels);
+
+  for(let i=0;i<N;i++){
+    const fp=fPig[i];
+    const mp=mPig[i];
+    const w=water[i];
+    if(fp<0.003&&mp<0.003&&w<0.01)continue;
+
+    const pi=i*4;
+    let r=px[pi],g=px[pi+1],b=px[pi+2];
+
+    // fixed pigment
+    if(fp>0.003){
+      const fDark=1-Math.exp(-fp*INK_DARK);
+      r=r*(1-fDark)+fR[i]*255*fDark;
+      g=g*(1-fDark)+fG[i]*255*fDark;
+      b=b*(1-fDark)+fB[i]*255*fDark;
+    }
+
+    // mobile pigment
+    if(mp>0.003){
+      const mDark=Math.min(1,mp*0.5);
+      r=r*(1-mDark)+mR[i]*255*mDark;
+      g=g*(1-mDark)+mG[i]*255*mDark;
+      b=b*(1-mDark)+mB[i]*255*mDark;
+    }
+
+    // wet sheen
+    if(w>0.02){
+      const sheen=Math.min(0.12,w*0.08);
+      r=Math.min(255,r*(1+sheen)+sheen*6);
+      g=Math.min(255,g*(1+sheen)+sheen*8);
+      b=Math.min(255,b*(1+sheen)+sheen*14);
+    }
+
+    px[pi]=r|0;
+    px[pi+1]=g|0;
+    px[pi+2]=b|0;
+  }
+  ctx.putImageData(imgData,0,0);
+}
+
+// ═══════════════════════════════════════════════════════
+// TRAY UI
+// ═══════════════════════════════════════════════════════
+const tray=document.getElementById('tray');
+const fillInk=document.querySelector('#dipInk .fill');
+const fillWater=document.querySelector('#dipWater .fill');
+const barWFill=document.querySelector('#barW .fill');
+const barPFill=document.querySelector('#barP .fill');
+
+function updateFills(){
+  const wp=brush.w/BRUSH_W_CAP*100;
+  const pp=brush.p/BRUSH_P_CAP*100;
+  fillWater.style.height=wp.toFixed(0)+'%';
+  fillInk.style.height=pp.toFixed(0)+'%';
+  barWFill.style.height=Math.min(100,wp).toFixed(0)+'%';
+  barPFill.style.height=Math.min(100,pp).toFixed(0)+'%';
+}
+
+let holding=null,tickLast=0,trayTimer=null;
+const RAMP=0.6;
+
+function keepOpen(){clearTimeout(trayTimer)}
+function schedClose(ms=3500){clearTimeout(trayTimer);trayTimer=setTimeout(closeTray,ms)}
+function openTray(){tray.classList.add('visible');schedClose(4500)}
+function closeTray(){clearTimeout(trayTimer);tray.classList.remove('visible');holding=null}
+
+function tickHold(now){
+  if(!holding)return;
+  const dt=Math.min(0.1,(now-tickLast)/1000);
+  tickLast=now;
+  const step=RAMP*dt;
+  switch(holding){
+    case'ink':brush.p=Math.min(BRUSH_P_CAP,brush.p+step*BRUSH_P_CAP);break;
+    case'water':brush.w=Math.min(BRUSH_W_CAP,brush.w+step*BRUSH_W_CAP);break;
+    case'napInk':brush.p=Math.max(0,brush.p-step*BRUSH_P_CAP);break;
+    case'napWater':brush.w=Math.max(0,brush.w-step*BRUSH_W_CAP);break;
+    case'napBoth':
+      brush.p=Math.max(0,brush.p-step*BRUSH_P_CAP);
+      brush.w=Math.max(0,brush.w-step*BRUSH_W_CAP);break;
+  }
+}
+
+function startHold(which){tickLast=performance.now();holding=which;keepOpen()}
+function stopHold(){holding=null;schedClose()}
+
+function bindHold(el,which){
+  const press=e=>{e.preventDefault();e.stopPropagation();startHold(which);el.classList.add('pressed')};
+  const release=e=>{e.preventDefault();stopHold();el.classList.remove('pressed')};
+  el.addEventListener('pointerdown',press);
+  el.addEventListener('pointerup',release);
+  el.addEventListener('pointercancel',release);
+}
+
+bindHold(document.getElementById('dipInk'),'ink');
+bindHold(document.getElementById('dipWater'),'water');
+document.querySelectorAll('#napkin .napZone').forEach(z=>{
+  const d=z.dataset.drain;
+  bindHold(z,d==='ink'?'napInk':d==='water'?'napWater':'napBoth');
+});
+
+document.querySelectorAll('#swatchRow .swatch').forEach(sw=>{
+  sw.addEventListener('pointerdown',e=>{
+    e.preventDefault();e.stopPropagation();
+    document.querySelectorAll('#swatchRow .swatch').forEach(s=>s.classList.remove('active'));
+    sw.classList.add('active');
+    inkR=parseFloat(sw.dataset.r);
+    inkG=parseFloat(sw.dataset.g);
+    inkB=parseFloat(sw.dataset.b);
+    schedClose();
+  });
+});
+
+document.querySelectorAll('#swatchRow .size').forEach(sz=>{
+  sz.addEventListener('pointerdown',e=>{
+    e.preventDefault();e.stopPropagation();
+    brushRadius=Number(sz.dataset.r);
+    document.querySelectorAll('#swatchRow .size').forEach(s=>s.classList.remove('active'));
+    sz.classList.add('active');
+    schedClose();
+  });
+});
+
+document.querySelectorAll('#styleRow .bstyle').forEach(bs=>{
+  bs.addEventListener('pointerdown',e=>{
+    e.preventDefault();e.stopPropagation();
+    document.querySelectorAll('#styleRow .bstyle').forEach(s=>s.classList.remove('active'));
+    bs.classList.add('active');
+    brushStyle=bs.dataset.style;
+    schedClose();
+  });
+});
+
+function resetAll(){
+  water.fill(0);mPig.fill(0);fPig.fill(0);
+  mR.fill(0);mG.fill(0);mB.fill(0);
+  fR.fill(0);fG.fill(0);fB.fill(0);
+  hasWet=false;dirtyX0=NX;dirtyY0=NY;dirtyX1=0;dirtyY1=0;
+  updateFills();render();
+}
+document.getElementById('resetBtn').addEventListener('pointerdown',e=>{
+  e.preventDefault();e.stopPropagation();resetAll();
+});
+
+let tapCount=0,tapTimer=null;
+canvas.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='mouse')return;
+  tapCount++;clearTimeout(tapTimer);
+  tapTimer=setTimeout(()=>{tapCount=0},300);
+  if(tapCount>=2){tapCount=0;openTray()}
+});
+let swipeY=0;
+canvas.addEventListener('pointerdown',e=>{swipeY=e.clientY});
+canvas.addEventListener('pointerup',e=>{
+  if(swipeY-e.clientY>45&&swipeY>window.innerHeight*0.88)openTray();
+});
+document.getElementById('grab').addEventListener('pointerdown',e=>{
+  e.preventDefault();e.stopPropagation();closeTray();
+});
+
+// ═══════════════════════════════════════════════════════
+// DRAWING — pointer events
+// ═══════════════════════════════════════════════════════
+let drawing=false,lastGX=0,lastGY=0,lastTime=0,strokeSeed=0;
+
+function getPressure(e){
+  if(e.pressure>0&&e.pressure!==0.5)return e.pressure;
+  if(e.width&&e.width>1)return Math.min(1,Math.max(0.08,(e.width-8)/42));
+  return 0.5;
+}
+
+canvas.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  canvas.setPointerCapture(e.pointerId);
+  const[gx,gy]=clientToGrid(e.clientX,e.clientY);
+  drawing=true;lastGX=gx;lastGY=gy;lastTime=performance.now();
+  strokeSeed=performance.now()%1000;
+  addDeposit(gx,gy,getPressure(e),0,0);
+});
+
+canvas.addEventListener('pointermove',e=>{
+  if(!drawing)return;
+  const[gx,gy]=clientToGrid(e.clientX,e.clientY);
+  drawSegment(lastGX,lastGY,gx,gy,getPressure(e));
+  lastGX=gx;lastGY=gy;lastTime=performance.now();
+});
+
+canvas.addEventListener('pointerup',e=>{
+  drawing=false;
+  try{canvas.releasePointerCapture(e.pointerId)}catch(_){}
+});
+canvas.addEventListener('pointercancel',()=>{drawing=false});
+
+// ═══════════════════════════════════════════════════════
+// JSON STROKE IMPORT
+// ═══════════════════════════════════════════════════════
+function importJsonLayer(jsonStr) {
+  let data;
+  try { data = JSON.parse(jsonStr); }
+  catch(e) { alert('JSON parse error: ' + e.message); return; }
+
+  // Helper: hex to normalized rgb
+  function hexToRgb(hex) {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!m) return null;
+    return [parseInt(m[1],16)/255, parseInt(m[2],16)/255, parseInt(m[3],16)/255];
+  }
+
+  // ── old flat-array fallback ──
+  if (Array.isArray(data)) {
+    let n = 0;
+    for (const d of data) {
+      const gx = Math.round(d.x), gy = Math.round(d.y);
+      if (gx < 0 || gy < 0 || gx >= NX || gy >= NY) continue;
+      const idx = gy * NX + gx;
+      const sat = Math.min(1, Math.max(0, d.sat || 0));
+      const pig = Math.min(sat * PIGMENT_CAP, Math.max(0, d.pig || 0));
+      const toPixel = v => (v == null ? 0 : v <= 1.0 ? v * 255 : v);
+      const ir = toPixel(d.r), ig = toPixel(d.g), ib = toPixel(d.b);
+
+      const existing = fPig[idx];
+      const total = existing + pig;
+      if (total > 1e-6) {
+        const ew = existing / total, nw = pig / total;
+        fR[idx] = fR[idx] * ew + (ir/255) * nw;
+        fG[idx] = fG[idx] * ew + (ig/255) * nw;
+        fB[idx] = fB[idx] * ew + (ib/255) * nw;
+        fPig[idx] = Math.min(PIGMENT_CAP, total);
+      } else {
+        fPig[idx] = Math.min(PIGMENT_CAP, pig);
+        fR[idx] = ir/255; fG[idx] = ig/255; fB[idx] = ib/255;
+      }
+      n++;
+    }
+    console.log(`JSON import (legacy): ${n} cells`);
+    return;
+  }
+
+  // ── stroke-path format ──
+  // Save current engine state to restore after import
+  const _brushW = brush.w, _brushP = brush.p;
+  const _inkR = inkR, _inkG = inkG, _inkB = inkB;
+  const _brushRadius = brushRadius, _brushStyle = brushStyle, _strokeSeed = strokeSeed;
+
+  // paper.wetness — pre-wet the whole field with a thin water wash
+  if (data.paper && data.paper.wetness > 0) {
+    const wet = Math.min(0.6, data.paper.wetness);
+    for (let cy = 0; cy < NY; cy++) {
+      for (let cx = 0; cx < NX; cx++) {
+        const idx = cy * NX + cx;
+        water[idx] = Math.min(1, water[idx] + wet * (0.75 + 0.25 * valueNoise(cx*1.3, cy*2.7)));
+      }
+    }
+    expandDirty(0, 0, NX-1, NY-1);
+    hasWet = true;
+  }
+
+  let strokeCount = 0, dabCount = 0;
+  for (let si = 0; si < (data.strokes || []).length; si++) {
+    const stroke = data.strokes[si];
+    if (!stroke.path || stroke.path.length < 1) continue;
+
+    // configure brush for this stroke
+    const rgb = hexToRgb(stroke.color || '#292420');
+    if (rgb) {
+      inkR = rgb[0]; inkG = rgb[1]; inkB = rgb[2];
+    }
+    brush.w = Math.min(BRUSH_W_CAP, Math.max(0, (stroke.water ?? 0.8) * BRUSH_W_CAP));
+    brush.p = Math.min(BRUSH_P_CAP, Math.max(0, (stroke.pigment ?? 0.5) * BRUSH_P_CAP));
+    brushRadius = stroke.brush ?? brushRadius;
+    brushStyle = (stroke.style && ['round','point','side','rake'].includes(stroke.style)) ? stroke.style : brushStyle;
+    const press = Math.min(1, Math.max(0, stroke.pressure ?? 0.5));
+    strokeSeed = (performance.now() % 1000 + si * 137) % 1000;
+
+    // convert normalized path to grid coordinates
+    const pts = stroke.path.map(([nx, ny]) => [
+      nx * (NX - 1),
+      ny * (NY - 1)
+    ]);
+
+    if (pts.length === 1) {
+      addDeposit(pts[0][0], pts[0][1], press, 0, 0);
+      dabCount++;
+    } else {
+      // deposit at first point to avoid gap
+      addDeposit(pts[0][0], pts[0][1], press, 0, 0);
+      dabCount++;
+      for (let p = 0; p < pts.length - 1; p++) {
+        drawSegment(pts[p][0], pts[p][1], pts[p+1][0], pts[p+1][1], press);
+        const dx = pts[p+1][0] - pts[p][0];
+        const dy = pts[p+1][1] - pts[p][1];
+        const dist = Math.hypot(dx, dy);
+        dabCount += Math.max(1, Math.ceil(dist / 1.5));
+      }
+    }
+    strokeCount++;
+  }
+
+  // restore engine state
+  brush.w = _brushW; brush.p = _brushP;
+  inkR = _inkR; inkG = _inkG; inkB = _inkB;
+  brushRadius = _brushRadius; brushStyle = _brushStyle; strokeSeed = _strokeSeed;
+
+  updateFills();
+  console.log(`JSON import: ${strokeCount} strokes, ~${dabCount} dabs`);
+}
+
+// ── JSON import UI ──
+(function buildJsonUI() {
+  const btn = document.createElement('button');
+  btn.textContent = '⊕ JSON';
+  btn.style.cssText = `
+    position:fixed; bottom:14px; right:14px; z-index:999;
+    background:#070b12; color:#57f2a1; border:1px solid #57f2a1;
+    font-family:'IBM Plex Mono',monospace; font-size:11px;
+    padding:6px 10px; border-radius:4px; opacity:0.82; cursor:pointer;
+    touch-action:none; user-select:none;
+  `;
+
+  const fileIn = document.createElement('input');
+  fileIn.type = 'file'; fileIn.accept = '.json,application/json';
+  fileIn.style.display = 'none';
+  fileIn.addEventListener('change', () => {
+    const f = fileIn.files[0]; if (!f) return;
+    const reader = new FileReader();
+    reader.onload = e => importJsonLayer(e.target.result);
+    reader.readAsText(f);
+    fileIn.value = '';
+  });
+
+  btn.addEventListener('click', () => fileIn.click());
+
+  // long-press → paste dialog
+  let pressT;
+  btn.addEventListener('touchstart', () => { pressT = setTimeout(() => {
+    const txt = prompt('Paste JSON layer:');
+    if (txt) importJsonLayer(txt);
+  }, 600); }, { passive:true });
+  btn.addEventListener('touchend', () => clearTimeout(pressT), { passive:true });
+
+  document.body.appendChild(fileIn);
+  document.body.appendChild(btn);
+})();
+
+// ═══════════════════════════════════════════════════════
+// ANIMATION LOOP
+// ═══════════════════════════════════════════════════════
+function animate(){
+  simulateStep();
+  tickHold(performance.now());
+  render();
+  updateFills();
+  requestAnimationFrame(animate);
+}
+
+updateFills();
+render();
+requestAnimationFrame(animate);
+setTimeout(openTray,400);
+
+if(location.search.includes('debug')){
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/eruda';
+  s.onload=()=>eruda.init();
+  document.body.appendChild(s);
+}
+
+window.resetAll=resetAll;
+window.openTray=openTray;
+window.closeTray=closeTray;
+})();
+</script>
 </body>
 </html>
