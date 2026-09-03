@@ -1,993 +1,2925 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>SUMI v3</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100dvh;background:#070b12;overflow:hidden;
-  user-select:none;-webkit-user-select:none;touch-action:none;
-  font-family:'Share Tech Mono','IBM Plex Mono',monospace}
-canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
-#build{position:fixed;top:6px;left:8px;font-size:9px;letter-spacing:0.12em;
-  color:rgba(236,229,210,0.4);z-index:20;pointer-events:none}
-#bstate{position:fixed;top:8px;right:10px;display:flex;gap:5px;z-index:20;pointer-events:none}
-.bbar{width:6px;height:42px;border-radius:3px;background:rgba(255,255,255,0.06);
-  overflow:hidden;position:relative}
-.bbar .fill{position:absolute;left:0;right:0;bottom:0;border-radius:3px;
-  transition:height 0.15s}
-#barW .fill{background:rgba(120,180,220,0.55)}
-#barP .fill{background:rgba(200,180,160,0.55)}
-.bbar-label{font-size:7px;color:rgba(255,255,255,0.2);text-align:center;margin-top:2px}
-#tray{position:fixed;left:0;right:0;bottom:0;
-  padding:11px 14px calc(18px + env(safe-area-inset-bottom));
-  background:rgba(7,11,18,0.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-  border-top:1px solid rgba(236,229,210,0.12);
-  display:flex;flex-direction:column;gap:9px;
-  transform:translateY(100%);opacity:0;
-  transition:transform 0.4s cubic-bezier(0.16,1,0.3,1),opacity 0.3s ease;
-  z-index:10;touch-action:none}
-#tray.visible{transform:translateY(0);opacity:1}
-#grab{position:absolute;top:5px;left:50%;transform:translateX(-50%);
-  width:36px;height:3px;border-radius:2px;background:rgba(236,229,210,0.25)}
-#swatchRow{display:flex;gap:7px;overflow-x:auto;padding:2px 0 1px;
-  -webkit-overflow-scrolling:touch;scrollbar-width:none}
-#swatchRow::-webkit-scrollbar{display:none}
-.swatch{width:26px;height:26px;border-radius:50%;flex-shrink:0;
-  border:2px solid rgba(255,255,255,0.12);
-  transition:transform 0.16s,border-color 0.16s}
-.swatch.active{border-color:rgba(236,229,210,0.85);transform:scale(1.18)}
-.rowDiv{width:1px;align-self:stretch;margin:2px 5px;background:rgba(255,255,255,0.08);flex-shrink:0}
-.size{width:30px;height:30px;border-radius:50%;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  border:2px solid rgba(255,255,255,0.1);transition:transform 0.16s,border-color 0.16s;touch-action:none}
-.size i{display:block;border-radius:50%;background:rgba(236,229,210,0.4)}
-.size.active{border-color:rgba(236,229,210,0.85);transform:scale(1.1)}
-.size.active i{background:rgba(236,229,210,0.7)}
-#resetBtn{width:30px;height:30px;border-radius:50%;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  border:2px solid rgba(216,100,80,0.35);background:rgba(120,50,40,0.12);
-  color:rgba(236,229,210,0.5);font-size:15px;line-height:1;
-  transition:transform 0.16s;touch-action:none}
-#resetBtn:active{transform:scale(0.88);background:rgba(120,50,40,0.3)}
-.bstyle{width:30px;height:30px;border-radius:5px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  border:2px solid rgba(255,255,255,0.1);font-size:13px;color:rgba(236,229,210,0.45);
-  transition:transform 0.16s,border-color 0.16s;touch-action:none}
-.bstyle.active{border-color:rgba(236,229,210,0.85);transform:scale(1.1);color:rgba(236,229,210,0.85)}
-#styleRow{display:flex;gap:8px;justify-content:center;padding:0 4px}
-#dipRow{display:flex;gap:8px;height:64px}
-.dip,#napkin{flex:1;border-radius:6px;position:relative;overflow:hidden;
-  display:flex;align-items:center;justify-content:center;
-  font-size:0.52rem;letter-spacing:0.12em;text-transform:uppercase;
-  touch-action:none;-webkit-user-select:none;cursor:pointer}
-.dip .fill{position:absolute;left:0;bottom:0;right:0;height:0%;transition:none}
-.dip span,#napkin .napLabel{position:relative;z-index:2;pointer-events:none}
-#dipInk{background:#141210;color:rgba(236,229,210,0.6)}
-#dipInk .fill{background:rgba(236,229,210,0.12)}
-#dipWater{background:#1a3048;color:rgba(180,210,240,0.6)}
-#dipWater .fill{background:rgba(120,180,220,0.2)}
-#napkin{background:rgba(236,229,210,0.12);color:rgba(236,229,210,0.4)}
-.napZones{position:absolute;inset:0;display:flex;z-index:1}
-.napZone{flex:1;touch-action:none;cursor:pointer}
-.napZone.mid{border-left:1px solid rgba(236,229,210,0.08);border-right:1px solid rgba(236,229,210,0.08)}
-.napZone.pressed{background:rgba(236,229,210,0.08)}
-#napkin .napLabel{font-size:0.46rem;opacity:0.5;letter-spacing:0.15em}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🧬 PORYGON ADAPTIVE V5 // CONSTELLATION SOLID</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0a0e27;
+            color: #F3EEC3;
+            font-family: 'IBM Plex Mono', monospace;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100dvh;
+            min-height: 0;
+        }
+
+        #canvas {
+            flex: 1 1 auto;
+            min-height: 0;
+            display: block;
+            width: 100%;
+            height: auto;
+            max-width: 100vw;
+            background: #000;
+            border-bottom: 2px solid #F3EEC3;
+            touch-action: none;
+        }
+
+        .controls-toggle {
+            width: 100%;
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #0a0e27;
+            color: #F3EEC3;
+            border-top: 2px solid #F3EEC3;
+            border-bottom: 1px solid #F3EEC3;
+            padding: 9px 14px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: .5px;
+            text-align: left;
+        }
+        .controls-toggle #controlsChev {
+            transition: transform .2s ease;
+        }
+        .controls-toggle.collapsed #controlsChev {
+            transform: rotate(-90deg);
+        }
+        .controls.collapsed {
+            height: 0;
+            max-height: 0;
+            min-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            overflow: hidden;
+            border-top: 0;
+        }
+
+        .controls {
+            background: #1a1f3a;
+            border-top: 2px solid #F3EEC3;
+            padding: 12px;
+            max-height: 45dvh;
+            min-height: 0;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 11px;
+        }
+
+        label {
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: bold;
+        }
+
+        input[type="file"] {
+            background: #0a0e27;
+            color: #F3EEC3;
+            border: 1px solid #F3EEC3;
+            padding: 8px;
+            border-radius: 2px;
+            cursor: pointer;
+            grid-column: 1 / -1;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #F3EEC3;
+        }
+
+        select {
+            background: #0a0e27;
+            color: #F3EEC3;
+            border: 1px solid #F3EEC3;
+            padding: 6px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            border-radius: 2px;
+        }
+
+        .slider-value {
+            font-size: 10px;
+            color: #00dd66;
+            text-align: right;
+        }
+
+        button {
+            background: #F3EEC3;
+            color: #0a0e27;
+            border: none;
+            padding: 10px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 2px;
+        }
+
+        button:active {
+            background: #00dd66;
+        }
+
+        button.ghost {
+            background: #0a0e27;
+            color: #F3EEC3;
+            border: 1px solid #F3EEC3;
+        }
+
+        #stats {
+            grid-column: 1 / -1;
+            background: #0a0e27;
+            border: 1px solid #F3EEC3;
+            padding: 8px;
+            font-size: 10px;
+            line-height: 1.4;
+            border-radius: 2px;
+        }
+
+        /* ── collapsible JSON drawer ── */
+        .drawer {
+            grid-column: 1 / -1;
+            border: 1px solid #F3EEC3;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .drawer-head {
+            background: #0a0e27;
+            padding: 9px 10px;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+        }
+        .drawer-head .chev {
+            transition: transform 0.22s ease;
+        }
+        .drawer.open .drawer-head .chev {
+            transform: rotate(90deg);
+        }
+         .drawer-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #05070f;
+        }
+         .drawer.open .drawer-body {
+            max-height: 44dvh;
+            overflow: auto;
+        }
+        .drawer-inner {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        #jsonOut {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 9px;
+            line-height: 1.35;
+            color: #00dd66;
+            white-space: pre;
+            overflow-x: auto;
+            background: #000;
+            border: 1px solid #0d4a2c;
+            border-radius: 2px;
+            padding: 8px;
+            max-height: 28vh;
+            overflow-y: auto;
+        }
+        .drawer-btns {
+            display: grid;
+            grid-template-columns: 12fr 12fr;
+            gap: 8px;
+        }
+        .drawer-btns button { padding: 8px; font-size: 10px; }
+
+        .lighting-drawer { width:100%; flex:0 0 auto; }
+        .lighting-inner { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .lighting-section-title {
+            grid-column:1 / -1;
+            padding:7px 8px 5px;
+            margin-top:2px;
+            border-bottom:1px solid #315040;
+            color:#00dd66;
+            font-size:10px;
+            font-weight:bold;
+            letter-spacing:1px;
+            text-transform:uppercase;
+        }
+        .section-label {
+            grid-column: 1 / -1;
+            color: #00dd66;
+            border-bottom: 1px solid #315040;
+            padding: 8px 0 5px;
+            margin-top: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .lighting-readout {
+            grid-column:1 / -1;
+            background:#05070f;
+            border:1px solid #315040;
+            padding:8px;
+            color:#F3EEC3;
+            font-size:10px;
+            line-height:1.35;
+        }
+        .lighting-drawer .control-group { min-width:0; }
+        .lighting-drawer .slider-value { float:right; }
+        @media (max-width: 600px) {
+            .lighting-inner { grid-template-columns:1fr; }
+            .lighting-section-title, .lighting-readout { grid-column:1; }
+
+            .controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-<canvas id="canvas"></canvas>
-<div id="build">SUMI_v3</div>
-<div id="bstate">
-  <div><div class="bbar" id="barW"><div class="fill"></div></div><div class="bbar-label">W</div></div>
-  <div><div class="bbar" id="barP"><div class="fill"></div></div><div class="bbar-label">P</div></div>
-</div>
-<div id="tray">
-  <div id="grab"></div>
-  <div id="swatchRow">
-    <div class="swatch active" style="background:#0d0b09" data-r="0.05" data-g="0.04" data-b="0.035"></div>
-    <div class="swatch" style="background:#765649" data-r="0.46" data-g="0.34" data-b="0.29"></div>
-    <div class="swatch" style="background:#4E555B" data-r="0.31" data-g="0.33" data-b="0.36"></div>
-    <div class="swatch" style="background:#586456" data-r="0.35" data-g="0.39" data-b="0.34"></div>
-    <div class="swatch" style="background:#714B48" data-r="0.44" data-g="0.29" data-b="0.28"></div>
-    <div class="rowDiv"></div>
-    <div class="size" data-r="3"><i style="width:5px;height:5px"></i></div>
-    <div class="size active" data-r="8"><i style="width:9px;height:9px"></i></div>
-    <div class="size" data-r="16"><i style="width:15px;height:15px"></i></div>
-    <div class="size" data-r="28"><i style="width:21px;height:21px"></i></div>
-    <div class="rowDiv"></div>
-    <div id="resetBtn">↺</div>
-  </div>
-  <div id="styleRow">
-    <div class="bstyle active" data-style="round" title="Round">丸</div>
-    <div class="bstyle" data-style="point" title="Point">穂</div>
-    <div class="bstyle" data-style="side" title="Side">側</div>
-    <div class="bstyle" data-style="rake" title="Rake">熊</div>
-  </div>
-  <div id="dipRow">
-    <div class="dip" id="dipInk"><div class="fill"></div><span>墨 ink</span></div>
-    <div id="napkin">
-      <div class="napZones">
-        <div class="napZone" data-drain="ink"></div>
-        <div class="napZone mid" data-drain="both"></div>
-        <div class="napZone" data-drain="water"></div>
-      </div>
-      <span class="napLabel">巾 napkin</span>
+    <div class="container">
+        <canvas id="canvas"></canvas>
+
+        <button id="controlsToggle" class="controls-toggle collapsed" type="button"><span>⚙️ CONTROLS</span><span id="controlsChev">▼</span></button>
+
+        <div class="controls collapsed" id="controls">
+            <div class="control-group" style="grid-column: 1 / -1;">
+                <label>📤 Upload Image</label>
+                <input type="file" id="imageInput" accept="image/*">
+            </div>
+
+            <div class="control-group" style="grid-column: 1 / -1;">
+                <label>🗺 Depth Map (optional — from pandra_depth.py)</label>
+                <input type="file" id="depthMapInput" accept="image/*">
+                <span class="slider-value" id="depthMapStatus">none</span>
+            </div>
+
+            <div class="control-group">
+                <label>🧭 Depth Source</label>
+                <select id="depthSource">
+                    <option value="auto" selected>Auto (Map if loaded)</option>
+                    <option value="image">Image-Derived</option>
+                    <option value="map">Depth Map</option>
+                    <option value="blend">Blend Image + Map</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>🗺 Map Influence</label>
+                <input type="range" id="depthMapInfluence" min="0" max="100" step="1" value="100">
+                <span class="slider-value" id="depthMapInfluenceVal">100</span>
+            </div>
+
+            <div class="control-group">
+                <label>↕ Map Direction</label>
+                <select id="depthMapDirection">
+                    <option value="normal" selected>White = Near</option>
+                    <option value="invert">White = Far</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>🎨 Color Mode</label>
+                <select id="colorMode">
+                    <option value="mono">Mono (phosphor)</option>
+                    <option value="true" selected>True Color</option>
+                    <option value="heat">Heat Map</option>
+                    <option value="depth">Depth Map</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>🧩 Geometry</label>
+                <select id="geometryMode">
+                    <option value="object">Convex Object</option>
+                    <option value="lowpoly" selected>Low-Poly Object</option>
+                    <option value="relief">Image Relief</option>
+                    <option value="surface">Full Surface</option>
+                    <option value="edges">Edge Facets</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>🫧 Background</label>
+                <select id="maskMode">
+                    <option value="auto" selected>Auto Cutout</option>
+                    <option value="alpha">Alpha Only</option>
+                    <option value="none">Keep Entire Image</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>✂️ Cutout Tolerance</label>
+                <input type="range" id="cutoutTol" min="8" max="220" step="1" value="40">
+                <span class="slider-value" id="cutoutTolVal">40</span>
+            </div>
+
+            <div class="control-group">
+                <label>🌡 Heat Source</label>
+                <select id="heatSource">
+                    <option value="depth">Depth (Z)</option>
+                    <option value="lum">Luminance</option>
+                    <option value="edge">Edge Strength</option>
+                    <option value="facing">Surface Facing</option>
+                    <option value="contrast">Local Contrast</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>🔍 Edge Threshold</label>
+                <input type="range" id="edgeThreshold" min="1" max="200" step="1" value="60">
+                <span class="slider-value" id="edgeVal">60</span>
+            </div>
+
+            <div class="control-group">
+                <label>📊 Analysis Detail <span style="color:#00aa55">lower = finer</span></label>
+                <input type="range" id="sampleRate" min="2" max="40" step="1" value="8">
+                <span class="slider-value" id="sampleVal">8</span>
+            </div>
+
+            <div class="section-label">🧬 PORYGON ADAPTIVE V5 ENGINE</div>
+
+            <div class="control-group">
+                <label>🧠 Adaptivity</label>
+                <input type="range" id="adaptivity" min="0" max="100" step="1" value="82">
+                <span class="slider-value" id="adaptivityVal">82</span>
+            </div>
+
+            <div class="control-group">
+                <label>🎯 Detail Bias</label>
+                <input type="range" id="detailBias" min="0" max="100" step="1" value="68">
+                <span class="slider-value" id="detailBiasVal">68</span>
+            </div>
+
+            <div class="control-group">
+                <label>🧶 Texture Reject <span style="color:#00aa55">speckle vs structure</span></label>
+                <input type="range" id="textureReject" min="0" max="100" step="1" value="0">
+                <span class="slider-value" id="textureRejectVal">0</span>
+            </div>
+
+            <div class="control-group">
+                <label>🔎 Focus</label>
+                <input type="range" id="focus" min="0" max="600" step="1" value="155">
+                <span class="slider-value" id="focusVal">1.55</span>
+            </div>
+
+            <div class="control-group">
+                <label>🧭 Edge Weight</label>
+                <input type="range" id="edgeWeight" min="0" max="600" step="1" value="100">
+                <span class="slider-value" id="edgeWeightVal">1.00</span>
+            </div>
+
+            <div class="control-group">
+                <label>🎨 Color Weight</label>
+                <input type="range" id="colorWeight" min="0" max="600" step="1" value="58">
+                <span class="slider-value" id="colorWeightVal">0.58</span>
+            </div>
+
+            <div class="control-group">
+                <label>🌗 Tone Weight</label>
+                <input type="range" id="toneWeight" min="0" max="600" step="1" value="72">
+                <span class="slider-value" id="toneWeightVal">0.72</span>
+            </div>
+
+            <div class="control-group">
+                <label>〽 Gradient Weight</label>
+                <input type="range" id="gradientWeight" min="0" max="600" step="1" value="52">
+                <span class="slider-value" id="gradientWeightVal">0.52</span>
+            </div>
+
+            <div class="control-group">
+                <label>🧱 Min Cell %</label>
+                <input type="range" id="minCell" min="5" max="50" step="1" value="18">
+                <span class="slider-value" id="minCellVal">1.8%</span>
+            </div>
+
+            <div class="control-group">
+                <label>🌲 Max Quad Depth</label>
+                <input type="range" id="maxQuadDepth" min="1" max="10" step="1" value="7">
+                <span class="slider-value" id="maxQuadDepthVal">7</span>
+            </div>
+
+            <div class="control-group">
+                <label>⚖ Balance Points</label>
+                <select id="balancePoints"><option value="on" selected>ON</option><option value="off">OFF</option></select>
+            </div>
+
+            <div class="control-group">
+                <label>📌 Edge Points</label>
+                <select id="edgePoints"><option value="on" selected>ON</option><option value="off">OFF</option></select>
+            </div>
+
+            <div class="control-group">
+                <label>🔺 Vertex Layout</label>
+                <select id="triangleSource"><option value="porygon" selected>Adaptive (PORYGON V5)</option><option value="legacy">Uniform Grid</option></select>
+            </div>
+
+            <div class="section-label">⟁ GEOMETRY / PRESENTATION</div>
+
+            <div class="control-group">
+                <label>🔺 Max Facets</label>
+                <input type="range" id="maxNodes" min="80" max="1200" step="20" value="700">
+                <span class="slider-value" id="maxNodesVal">700</span>
+            </div>
+
+            <div class="control-group">
+                <label>🔗 Max Facet Span</label>
+                <input type="range" id="maxDistance" min="10" max="200" step="5" value="60">
+                <span class="slider-value" id="distVal">60</span>
+            </div>
+
+            <div class="control-group">
+                <label>🔻 Sliver Reject</label>
+                <input type="range" id="minQuality" min="0" max="60" step="1" value="6">
+                <span class="slider-value" id="minQualityVal">6</span>
+            </div>
+
+            <div class="control-group">
+                <label>🧵 Seam Density</label>
+                <input type="range" id="seamDensity" min="6" max="60" step="1" value="22">
+                <span class="slider-value" id="seamDensityVal">22</span>
+            </div>
+
+            <div class="control-group">
+                <label>🪒 Bevel Width</label>
+                <input type="range" id="bevelWidth" min="10" max="300" step="5" value="100">
+                <span class="slider-value" id="bevelWidthVal">100</span>
+            </div>
+
+            <div class="control-group">
+                <label>⛰ Depth <span style="color:#00aa55">×10</span></label>
+                <input type="range" id="depthScale" min="-40" max="40" step=".5" value="7">
+                <span class="slider-value" id="depthVal">7</span>
+            </div>
+
+            <div class="control-group">
+                <label>🧱 Mold Inflation <span style="color:#00aa55">×10</span></label>
+                <input type="range" id="volumeScale" min="0" max="60" step="1" value="18">
+                <span class="slider-value" id="volumeVal">18</span>
+            </div>
+
+            <div class="control-group">
+                <label>🌊 Depth Smooth</label>
+                <input type="range" id="depthSmooth" min="0" max="100" step="5" value="65">
+                <span class="slider-value" id="smoothVal">65</span>
+            </div>
+
+            <div class="control-group">
+                <label>🎈 Form Roundness</label>
+                <input type="range" id="formRound" min="0" max="100" step="5" value="65">
+                <span class="slider-value" id="roundVal">65</span>
+            </div>
+
+            <div class="control-group">
+                <label>⚡ Lum Sculpt</label>
+                <input type="range" id="lumSculpt" min="0" max="100" step="1" value="30">
+                <span class="slider-value" id="lumSculptVal">30</span>
+            </div>
+
+            <div class="control-group">
+                <label>🔪 Edge Carve</label>
+                <input type="range" id="edgeCarve" min="0" max="100" step="1" value="20">
+                <span class="slider-value" id="edgeCarveVal">20</span>
+            </div>
+
+            <div class="control-group">
+                <label>🔬 Local Contrast</label>
+                <input type="range" id="localContrast" min="0" max="100" step="1" value="25">
+                <span class="slider-value" id="localContrastVal">25</span>
+            </div>
+
+            <div class="control-group">
+                <label>🧊 Surface Alpha</label>
+                <input type="range" id="surfAlpha" min="0" max="100" step="1" value="100">
+                <span class="slider-value" id="surfVal">100</span>
+            </div>
+
+            <div class="control-group">
+                <label>💡 Shading</label>
+                <input type="range" id="shadeAmt" min="0" max="100" step="5" value="80">
+                <span class="slider-value" id="shadeVal">80</span>
+            </div>
+
+            <div class="control-group">
+                <label>👻 Wire Alpha</label>
+                <input type="range" id="lineAlpha" min="0" max="100" step="5" value="25">
+                <span class="slider-value" id="alphaVal">25</span>
+            </div>
+
+            <div class="control-group">
+                <label>● Node Size</label>
+                <input type="range" id="nodeSize" min="0" max="5" step="0.5" value="0">
+                <span class="slider-value" id="nodeVal">0</span>
+            </div>
+
+            <div class="control-group">
+                <label>🔄 Spin Speed</label>
+                <input type="range" id="spinSpeed" min="0" max="5" step=".1" value="0.5">
+                <span class="slider-value" id="spinVal">0.5</span>
+            </div>
+
+            <button onclick="resetView()">⤾ Reset View</button>
+            <button onclick="resetDefaults()">↻ Reset All</button>
+            <button onclick="savePNG()">💾 Save PNG</button>
+            <button onclick="exportOBJ()">📦 Export OBJ</button>
+            <button onclick="exportMeshJSON()">▲ Export Mesh JSON</button>
+
+            <div id="stats">
+                <div>ENGINE: <span style="color:#00dd66">PORYGON ADAPTIVE V5</span> · Status: <span id="statusText">Waiting for image</span></div>
+                <div>Nodes: <span id="nodeCount">0</span> · Faces: <span id="faceCount">0</span> · Depth: <span id="depthSourceLabel" style="color:#00dd66">image</span></div>
+                <div>Seam: <span id="seamStatus" style="color:#00dd66">—</span></div>
+                <div>Cutout: <span id="cutoutStatus" style="color:#00dd66">—</span></div>
+                <div>Analysis: <span id="analysisStatus" style="color:#00aa55">—</span></div>
+                <div style="color:#00aa55">1 finger = orbit · 2 fingers = pan + pinch zoom · auto-spin is gentle turntable rotation</div>
+            </div>
+
+            <!-- ── JSON DRAWER ── -->
+            <div class="drawer" id="drawer">
+                <div class="drawer-head" id="drawerHead">
+                    <span><span class="chev">▶</span> &nbsp;JSON DATA</span>
+                    <span id="drawerSize" style="color:#00aa55;font-weight:normal">—</span>
+                </div>
+                <div class="drawer-body">
+                    <div class="drawer-inner">
+                        <div id="jsonOut">upload an image to generate mesh data</div>
+                        <div class="drawer-btns">
+                            <button class="ghost" onclick="copyJSON()" id="copyBtn">⧉ Copy JSON</button>
+                            <button class="ghost" onclick="downloadJSON()">⬇ Download JSON</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <!-- ── LIGHTING DRAWER ── -->
+            <div class="drawer lighting-drawer" id="lightingDrawer">
+                <div class="drawer-head" id="lightingHead">
+                    <span><span class="chev">▶</span> &nbsp;LIGHTING / MATERIAL</span>
+                    <span id="lightingSummary" style="color:#00aa55;font-weight:normal">FACETED</span>
+                </div>
+                <div class="drawer-body">
+                    <div class="drawer-inner lighting-inner">
+                        <div class="lighting-section-title">KEY LIGHT</div>
+
+                        <div class="control-group">
+                            <label>Light Preset</label>
+                            <select id="lightPreset">
+                                <option value="custom" selected>Custom</option>
+                                <option value="studio">Studio</option>
+                                <option value="hard">Hard Sun</option>
+                                <option value="rim">Rim Heavy</option>
+                                <option value="flat">Graphic Flat</option>
+                                <option value="crystal">Crystal</option>
+                                <option value="dusk">Dusk</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <label>Azimuth <span id="lightAzVal" class="slider-value">35</span></label>
+                            <input type="range" id="lightAz" min="-180" max="180" step="1" value="35">
+                        </div>
+
+                        <div class="control-group">
+                            <label>Elevation <span id="lightElVal" class="slider-value">55</span></label>
+                            <input type="range" id="lightEl" min="-40" max="90" step="1" value="55">
+                        </div>
+
+                        <div class="control-group">
+                            <label>Key Intensity <span id="keyIntVal" class="slider-value">100</span></label>
+                            <input type="range" id="keyIntensity" min="0" max="180" step="1" value="100">
+                        </div>
+
+                        <div class="control-group">
+                            <label>Key Warmth <span id="keyWarmVal" class="slider-value">12</span></label>
+                            <input type="range" id="keyWarmth" min="-100" max="100" step="1" value="12">
+                        </div>
+
+                        <div class="lighting-section-title">FILL LIGHT</div>
+
+                        <div class="control-group">
+                            <label>Fill Intensity <span id="fillVal" class="slider-value">22</span></label>
+                            <input type="range" id="fillLight" min="0" max="100" step="1" value="22">
+                        </div>
+
+                        <div class="control-group">
+                            <label>Fill Offset <span id="fillOffsetVal" class="slider-value">150</span></label>
+                            <input type="range" id="fillOffset" min="60" max="240" step="5" value="150">
+                        </div>
+
+                        <div class="lighting-section-title">SKY / BOUNCE</div>
+
+                        <div class="control-group">
+                            <label>Sky Intensity <span id="skyVal" class="slider-value">26</span></label>
+                            <input type="range" id="skyLight" min="0" max="100" step="1" value="26">
+                        </div>
+
+                        <div class="control-group">
+                            <label>Sky Tint <span id="skyTintVal" class="slider-value">-18</span></label>
+                            <input type="range" id="skyTint" min="-100" max="100" step="1" value="-18">
+                        </div>
+
+                        <div class="control-group">
+                            <label>Ground Bounce <span id="bounceVal" class="slider-value">12</span></label>
+                            <input type="range" id="bounceLight" min="0" max="100" step="1" value="12">
+                        </div>
+
+                        <div class="lighting-section-title">FACET RESPONSE</div>
+
+                        <div class="control-group">
+                            <label>Facet Contrast <span id="facetVal" class="slider-value">72</span></label>
+                            <input type="range" id="facetContrast" min="0" max="150" step="1" value="72">
+                        </div>
+
+                        <div class="control-group">
+                            <label>Tonal Bands <span id="bandsVal" class="slider-value">0</span></label>
+                            <input type="range" id="tonalBands" min="0" max="12" step="1" value="0">
+                        </div>
+
+                        <div class="control-group">
+                            <label>Facet Bias <span id="biasVal" class="slider-value">0</span></label>
+                            <input type="range" id="facetBias" min="-50" max="50" step="1" value="0">
+                        </div>
+
+                        <div class="control-group">
+                            <label>Shadow Floor <span id="floorVal" class="slider-value">6</span></label>
+                            <input type="range" id="shadowFloor" min="0" max="60" step="1" value="6">
+                        </div>
+
+                        <div class="lighting-section-title">OCCLUSION / FORM</div>
+
+                        <div class="control-group">
+                            <label>Geometric AO <span id="aoVal" class="slider-value">28</span></label>
+                            <input type="range" id="geoAO" min="0" max="100" step="1" value="28">
+                        </div>
+
+                        <div class="control-group">
+                            <label>Cavity Power <span id="cavityVal" class="slider-value">1.6</span></label>
+                            <input type="range" id="cavityPower" min="0.5" max="4" step="0.1" value="1.6">
+                        </div>
+
+                        <div class="control-group">
+                            <label>Form Lift <span id="formLiftVal" class="slider-value">0</span></label>
+                            <input type="range" id="formLift" min="-30" max="30" step="1" value="0">
+                        </div>
+
+                        <div class="lighting-section-title">RIM / GRAZING</div>
+
+                        <div class="control-group">
+                            <label>Rim Light <span id="rimVal" class="slider-value">18</span></label>
+                            <input type="range" id="rimLight" min="0" max="100" step="1" value="18">
+                        </div>
+
+                        <div class="control-group">
+                            <label>Rim Power <span id="rimPowerVal" class="slider-value">2</span></label>
+                            <input type="range" id="rimPower" min="0.5" max="6" step="0.1" value="2">
+                        </div>
+
+                        <div class="control-group">
+                            <label>Rim Warmth <span id="rimWarmVal" class="slider-value">0</span></label>
+                            <input type="range" id="rimWarmth" min="-100" max="100" step="1" value="0">
+                        </div>
+
+                        <div class="lighting-section-title">SPECULAR</div>
+
+                        <div class="control-group">
+                            <label>Specular <span id="specVal" class="slider-value">8</span></label>
+                            <input type="range" id="specular" min="0" max="100" step="1" value="8">
+                        </div>
+
+                        <div class="control-group">
+                            <label>Specular Power <span id="specPowerVal" class="slider-value">18</span></label>
+                            <input type="range" id="specPower" min="2" max="80" step="1" value="18">
+                        </div>
+
+                        <div class="control-group">
+                            <label>Specular Tint <span id="specTintVal" class="slider-value">0</span></label>
+                            <input type="range" id="specTint" min="0" max="100" step="1" value="0">
+                        </div>
+
+                        <div class="lighting-section-title">GROUND / 地面</div>
+
+                        <div class="control-group">
+                            <label>🟫 Ground</label>
+                            <select id="groundMode">
+                                <option value="off" selected>Off</option>
+                                <option value="on">On</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <label>⬆️ Ground Level <span style="color:#00aa55">sinks the figure in</span></label>
+                            <input type="range" id="groundLevel" min="-80" max="100" step="1" value="0">
+                            <span class="slider-value" id="groundLevelVal">0</span>
+                        </div>
+
+                        <div class="control-group">
+                            <label>↔️ Ground Size</label>
+                            <input type="range" id="groundSize" min="30" max="250" step="5" value="100">
+                            <span class="slider-value" id="groundSizeVal">100</span>
+                        </div>
+
+                        <div class="control-group">
+                            <label>🌑 Cast Shadow</label>
+                            <input type="range" id="groundShadow" min="0" max="90" step="1" value="35">
+                            <span class="slider-value" id="groundShadowVal">35</span>
+                        </div>
+
+                        <div class="control-group">
+                            <label>🎚️ Ground Tone</label>
+                            <input type="range" id="groundTone" min="0" max="100" step="1" value="16">
+                            <span class="slider-value" id="groundToneVal">16</span>
+                        </div>
+
+                        <div class="lighting-section-title">STYLE</div>
+
+                        <div class="control-group">
+                            <label>Lighting Model</label>
+                            <select id="lightingModel">
+                                <option value="physical" selected>Faceted Diffuse</option>
+                                <option value="graphic">Graphic Bands</option>
+                                <option value="crystal">Crystal Planes</option>
+                                <option value="soft">Soft Sculpt</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <label>Light Follows View</label>
+                            <select id="lightSpace">
+                                <option value="world" selected>World Space</option>
+                                <option value="view">Camera Space</option>
+                            </select>
+                        </div>
+
+                        <button class="ghost" type="button" onclick="resetLighting()">↻ Reset Lighting</button>
+                        <div id="lightingReadout" class="lighting-readout">Key 35° / 55° · Ambient 24 · Facet 72</div>
+                    </div>
+                </div>
+            </div>
+
     </div>
-    <div class="dip" id="dipWater"><div class="fill"></div><span>水 water</span></div>
-  </div>
-</div>
 
-<script>
-(()=>{
-// ═══════════════════════════════════════════════════════
-// SUMI_v3 — MoXi-INSPIRED PERCOLATION ENGINE
-// ═══════════════════════════════════════════════════════
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const el = id => document.getElementById(id);
 
-function hash21(x,y){
-  let s=Math.sin(x*127.1+y*311.7)*43758.5453;
-  return s-Math.floor(s);
-}
-function hash11(n){
-  let s=Math.sin(n*127.1+311.7)*43758.5453;
-  return s-Math.floor(s);
-}
-function valueNoise(x,y){
-  const ix=Math.floor(x),iy=Math.floor(y);
-  const fx=x-ix,fy=y-iy;
-  const ux=fx*fx*(3-2*fx),uy=fy*fy*(3-2*fy);
-  const a=hash21(ix,iy),b=hash21(ix+1,iy);
-  const c=hash21(ix,iy+1),d=hash21(ix+1,iy+1);
-  return a+(b-a)*ux+(c-a)*uy+(a-b-c+d)*ux*uy;
-}
+        // ── deterministic helpers (no Math.random) ──────────────
+        const fract = x => x - Math.floor(x);
+        const dU = (a, b) => fract(Math.sin(a * 127.1 + b * 311.7) * 43758.5453123);
+        const dS = (a, b) => dU(a, b) * 2 - 1;
 
-// ── constants ──
-const CELL=4;
+        // ── state ───────────────────────────────────────────────
+        let imageData = null;
+        let nodes = [];          // {x,y,jx,jy,lum,edge,r,g,b, localContrast}
+        let allTris = [];        // {a,b,c,maxLen}
+        let filteredTris = [];
+        let wireEdges = [];
+        let boundaryEdges = [];
+        let faceNeighbors = [];
+        let backPx = [], backPy = [];
+        let depthField = null;
+        let maskField = null;
+        let depthMapData = null;    // resampled external depth map (grayscale ImageData)
+        let depthMapSource = null;  // original uploaded depth image, kept for re-alignment
+        let externalDepthField = null; // smoothed 0..1 map used by geometry
+        let analysisInfo = { aw:0, ah:0, gamma:1 };
+        let seamRing = [];          // all seam node indices (flat)
+        let seamLoops = [];         // seam node indices grouped per closed loop
+        let seamSpacing = 22;       // px between seam ring vertices
 
-// paper
-const WATER_CAP=2.2;
-const PIGMENT_CAP=2.2;
+        let yaw = 0.6, pitch = -0.35, zoom = 1;
+        let panX = 0, panY = 0;
+        let dragging = false;
+        const ptrs = new Map();
+        let lastPinch = 0, lastCenter = null;
+        let rebuildTimer = null;
+        let lastTs = 0;
+        let resizeObserver = null;
+        let referenceFit = 1;
+        let lastViewportW = 0, lastViewportH = 0;
 
-// brush
-const BRUSH_RAD=2.0;
-const BRUSH_W_CAP=50000;
-const BRUSH_P_CAP=40000;
-const DEP_W=0.00001;
-const DEP_P=0.00001;
+        let vx = [], vy = [], vz = [], px = [], py = [], bx = [], by = [], bz = [];
 
-// render
-const INK_DARK=12.0;
-const PAP_R=236,PAP_G=229,PAP_B=210;
+        function resizeCanvas() {
+            const r = canvas.getBoundingClientRect();
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const w = Math.max(1, Math.round(r.width));
+            const h = Math.max(1, Math.round(r.height));
+            const bw = Math.max(1, Math.round(w * dpr));
+            const bh = Math.max(1, Math.round(h * dpr));
+            if (canvas.width !== bw || canvas.height !== bh) {
+                canvas.width = bw;
+                canvas.height = bh;
+            }
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            canvas._cssW = w;
+            canvas._cssH = h;
 
-// ── MoXi percolation constants ──
-const SPREAD_RATE=0.56;       // water spread per frame
-const EVAP_RATE=0.06;        // background evaporation
-const EDGE_EVAP_MULT=0.6;     // extra evap multiplier at wet-dry boundary
-const FIX_RATE=0.12;          // pigment fixation speed
-const HINDRANCE=0.55;         // paper grain pigment catching (0-1)
-const SIGMA_BASE=0.08;        // base pinning threshold
-const SIGMA_PIN=0.30;         // pinning texture contribution
-const SIGMA_GRAIN=0.12;       // grain contribution to pinning
-// blocking factor weights
-const K_BASE=0.04;
-const K_GRAIN=0.42;
-const K_PIG=0.28;
-const K_PIN=0.18;
+            const vw = Math.max(1, window.innerWidth);
+            const vh = Math.max(1, window.innerHeight);
+            const basis = Math.min(vw, vh * 0.55);
+            referenceFit = basis * 0.84;
+            lastViewportW = vw;
+            lastViewportH = vh;
+        }
+        resizeCanvas();
+        resizeObserver = new ResizeObserver(resizeCanvas);
+        resizeObserver.observe(canvas);
+        window.addEventListener('resize', resizeCanvas, { passive: true });
 
-// ── canvas setup ──
-const canvas=document.getElementById('canvas');
-const W_PX=Math.floor(window.innerWidth);
-const H_PX=Math.floor(window.innerHeight);
-canvas.width=W_PX;
-canvas.height=H_PX;
-const ctx=canvas.getContext('2d',{alpha:false});
+        // ── centralized live-control state ────────────────────────
+        const visualState = {
+            colorMode: 'true',
+            heatSource: 'depth',
+            depthSource: 'auto',
+            depthMapDirection: 'normal',
+            geometryMode: 'lowpoly',
+            maskMode: 'auto'
+        };
 
-const NX=Math.floor(W_PX/CELL);
-const NY=Math.floor(H_PX/CELL);
-const N=NX*NY;
+        function syncVisualState() {
+            const validColor = new Set(['mono','true','heat','depth']);
+            const validHeat = new Set(['depth','lum','edge','facing','contrast']);
+            const validDepth = new Set(['auto','image','map','blend']);
+            const validDir = new Set(['normal','invert']);
+            const validGeom = new Set(['object','lowpoly','relief','surface','edges']);
+            const validMask = new Set(['auto','alpha','none']);
+            const read = (id, set, fallback) => {
+                const v = el(id).value;
+                return set.has(v) ? v : fallback;
+            };
+            visualState.colorMode = read('colorMode', validColor, 'mono');
+            visualState.heatSource = read('heatSource', validHeat, 'depth');
+            visualState.depthSource = read('depthSource', validDepth, 'auto');
+            visualState.depthMapDirection = read('depthMapDirection', validDir, 'normal');
+            visualState.geometryMode = read('geometryMode', validGeom, 'lowpoly');
+            visualState.maskMode = read('maskMode', validMask, 'auto');
 
-// ── grid arrays ──
-const water=new Float32Array(N);
-const mPig=new Float32Array(N);       // mobile pigment amount
-const mR=new Float32Array(N);         // mobile pigment color
-const mG=new Float32Array(N);
-const mB=new Float32Array(N);
-const fPig=new Float32Array(N);       // fixed pigment concentration
-const fR=new Float32Array(N);         // fixed pigment color
-const fG=new Float32Array(N);
-const fB=new Float32Array(N);
-const tex=new Float32Array(N);        // paper grain (0-1)
-const absorb=new Float32Array(N);     // local absorbency
-const pinTex=new Float32Array(N);     // pinning texture (MoXi)
-const wDelta=new Float32Array(N);     // water spread delta buffer
-const pDelta=new Float32Array(N);     // pigment spread delta buffer
-
-// pre-baked paper pixel buffer
-const paperPixels=new Uint8ClampedArray(W_PX*H_PX*4);
-const imgData=ctx.createImageData(W_PX,H_PX);
-
-// ── brush ──
-const brush={w:BRUSH_W_CAP*40, p:BRUSH_P_CAP*0.8};
-let brushRadius=2;
-let inkR=0.05,inkG=0.04,inkB=0.035;
-let brushStyle='round';
-
-// ── dirty rect tracking ──
-let dirtyX0=NX,dirtyY0=NY,dirtyX1=0,dirtyY1=0;
-let hasWet=false;
-
-function expandDirty(x0,y0,x1,y1){
-  dirtyX0=Math.max(0,Math.min(dirtyX0,x0|0));
-  dirtyY0=Math.max(0,Math.min(dirtyY0,y0|0));
-  dirtyX1=Math.min(NX-1,Math.max(dirtyX1,Math.ceil(x1)));
-  dirtyY1=Math.min(NY-1,Math.max(dirtyY1,Math.ceil(y1)));
-  hasWet=true;
-}
-
-// ═══════════════════════════════════════════════════════
-// PAPER + PINNING TEXTURE GENERATION
-// ═══════════════════════════════════════════════════════
-function generatePaper(){
-  // ── paper grain (washi fiber texture) ──
-  let min=Infinity,max=-Infinity;
-  for(let gy=0;gy<NY;gy++){
-    for(let gx=0;gx<NX;gx++){
-      const i=gy*NX+gx;
-      let v=valueNoise(gx*0.15,gy*0.16)*0.15
-           +valueNoise(gx*0.4,gy*0.42)*0.30
-           +valueNoise(gx*0.9,gy*0.95)*0.30
-           +valueNoise(gx*2.0,gy*2.1)*0.15;
-      v+=valueNoise(gx*0.8,gy*0.04)*0.10;
-      tex[i]=v;
-      if(v<min)min=v;
-      if(v>max)max=v;
-    }
-  }
-  const range=max-min||1;
-  for(let i=0;i<N;i++){
-    tex[i]=(tex[i]-min)/range;
-    absorb[i]=0.96+0.04*tex[i];
-  }
-
-  // ── pinning texture (MoXi: random short line segments) ──
-  pinTex.fill(0);
-  const numLines=Math.floor(N*0.003);
-  for(let n=0;n<numLines;n++){
-    const sx=hash21(n*1.31,n*2.17)*NX;
-    const sy=hash21(n*3.71,n*0.53)*NY;
-    const angle=hash21(n*5.13,n*7.91)*Math.PI;
-    const len=3+hash21(n*0.37,n*4.29)*8;
-    const ca=Math.cos(angle),sa=Math.sin(angle);
-    const steps=Math.ceil(len);
-    for(let s=0;s<=steps;s++){
-      const px=Math.round(sx+ca*s);
-      const py=Math.round(sy+sa*s);
-      if(px>=0&&px<NX&&py>=0&&py<NY){
-        pinTex[py*NX+px]=1;
-      }
-    }
-  }
-  // light blur: average with neighbors for smoother transitions
-  const ptCopy=new Float32Array(pinTex);
-  for(let y=1;y<NY-1;y++){
-    for(let x=1;x<NX-1;x++){
-      const i=y*NX+x;
-      pinTex[i]=(ptCopy[i]*2+ptCopy[i-1]+ptCopy[i+1]+ptCopy[i-NX]+ptCopy[i+NX])/6;
-    }
-  }
-
-  // ── bake paper pixels ──
-  for(let gy=0;gy<NY;gy++){
-    for(let gx=0;gx<NX;gx++){
-      const t=tex[gy*NX+gx];
-      const pi=(gy*W_PX+gx)*4;
-      paperPixels[pi]=PAP_R-t*9|0;
-      paperPixels[pi+1]=PAP_G-t*7|0;
-      paperPixels[pi+2]=PAP_B-t*5|0;
-      paperPixels[pi+3]=255;
-    }
-  }
-}
-generatePaper();
-
-// ═══════════════════════════════════════════════════════
-// COORDINATE MAPPING
-// ═══════════════════════════════════════════════════════
-function clientToGrid(cx,cy){
-  const r=canvas.getBoundingClientRect();
-  return[(cx-r.left)/r.width*NX,(cy-r.top)/r.height*NY];
-}
-
-// ═══════════════════════════════════════════════════════
-// BRUSH DEPOSIT — anisotropic kernel → water/mPig layers
-// ═══════════════════════════════════════════════════════
-function addDeposit(gx,gy,pressure,orientation,speed){
-  if(brush.w<=0&&brush.p<=0)return;
-  pressure=Math.max(0.05,Math.min(1,pressure));
-
-  const baseRad=BRUSH_RAD*(brushRadius/16);
-  let a,b,orientOff=0;
-
-  switch(brushStyle){
-    case'point':
-      const pCube=pressure*pressure*pressure;
-      a=baseRad*(0.1+pCube*1.4);
-      b=a*(0.2+pCube*0.7);
-      break;
-    case'side':
-      orientOff=Math.PI*0.5;
-      a=baseRad*(1.2+pressure*1.8);
-      b=baseRad*(0.12+pressure*0.18);
-      break;
-    case'rake':
-      a=baseRad*(0.7+pressure*1.0);
-      b=a*(0.8+pressure*0.15);
-      break;
-    default:
-      a=baseRad*(0.55+pressure*0.85);
-      b=a*(0.6+pressure*0.3);
-  }
-
-  // per-stamp chaos: width jitter
-  const stampHash=hash21(gx*0.37+strokeSeed,gy*0.53-strokeSeed*0.2);
-  const catchJitter=1.0+0.25*(stampHash-0.5);
-  a*=catchJitter;
-  b*=catchJitter;
-
-  const search=Math.ceil(Math.max(a,b)*3)+2;
-  const x0=Math.floor(gx),y0=Math.floor(gy);
-  const theta=orientation+orientOff;
-  const cosT=Math.cos(theta),sinT=Math.sin(theta);
-
-  const wFrac=brush.w/(brush.w+brush.p+1e-12);
-  const dryness=1-wFrac;
-  const speedFac=1/(1+speed/30);
-  const xferScale=pressure*speedFac;
-
-  let reqW=brush.w*DEP_W*xferScale;
-  let reqP=brush.p*DEP_P*xferScale;
-  reqP*=0.25+0.75*wFrac;
-  reqW=Math.min(reqW,brush.w);
-  reqP=Math.min(reqP,brush.p);
-  if(reqW<1e-9&&reqP<1e-9)return;
-
-  const skipThresh=dryness*dryness*0.4+Math.min(0.12,speed*0.003);
-  const grainAmp=0.06+0.50*dryness;
-
-  // Precompute quadratic scaling factors to replace exponentiation inside loop
-  const ma = Math.max(0.3, a);
-  const mb = Math.max(0.3, b);
-  const invA2 = 1.0 / (ma * ma);
-  const invB2 = 1.0 / (mb * mb);
-
-  let totalWt=0;
-  const samples=[];
-  for(let dy=-search;dy<=search;dy++){
-    for(let dx=-search;dx<=search;dx++){
-      const px=x0+dx,py=y0+dy;
-      if(px<0||px>=NX||py<0||py>=NY)continue;
-      const fx=px-gx,fy=py-gy;
-      const u=fx*cosT+fy*sinT;
-      const v=-fx*sinT+fy*cosT;
-
-      const norm = (u * u) * invA2 + (v * v) * invB2;
-      if(norm>9)continue;
-
-      let wt=Math.exp(-0.5*norm);
-
-      if(brushStyle==='rake'){
-        const rakeFreq=Math.min(0.6,1.0/Math.max(0.5,baseRad*0.15));
-        wt*=Math.max(0,Math.cos(v*rakeFreq*Math.PI));
-      }
-      if(brushStyle==='point') wt*=wt*wt;
-
-      // bristle texture
-      const bristleFreq=brushStyle==='rake'?0:Math.min(0.7,1.5/Math.max(1.0,baseRad*0.4));
-      if(bristleFreq>0){
-        const bristleAmp=0.02+0.58*dryness;
-        wt*=(1-bristleAmp)+bristleAmp*Math.cos(v*bristleFreq*Math.PI);
-      }
-
-      // paper grain modulation
-      const grain=tex[py*NX+px];
-      wt*=(1-grainAmp)+grainAmp*grain;
-
-      // catch/drag chaos
-      const catchNoise=hash21(px*3.17+strokeSeed*0.43,py*5.31-strokeSeed*1.7);
-      const catchThresh=0.15*dryness*dryness;
-      if(catchNoise<catchThresh){
-        wt=catchNoise<catchThresh*0.4?0:wt*2.5;
-      }
-
-      // lane-based dry streaking
-      if(skipThresh>0.02){
-        const lane=Math.round(v/Math.max(2.0,b*0.5));
-        const laneNoise=hash21(lane*7.13+strokeSeed,lane*3.71-strokeSeed*0.7);
-        if(laneNoise<skipThresh) wt=0;
-      }
-
-      // edge sharpening when dry
-      if(norm>1.5){
-        const edgeSteep=1+2.0*dryness;
-        wt*=Math.pow(Math.max(0,1-norm/9),edgeSteep);
-      }
-
-      if(wt<0.005)continue;
-      samples.push({idx:py*NX+px,w:wt});
-      totalWt+=wt;
-    }
-  }
-  if(totalWt<=0)return;
-
-  // ── deposit to water + mobile pigment layers ──
-  let appliedW=0,appliedP=0;
-  for(const s of samples){
-    const frac=s.w/totalWt;
-    let wAdd=reqW*frac;
-    let pAdd=reqP*frac;
-
-    // blocking: accumulated pigment resists new deposit
-    const resist=Math.min(0.7,fPig[s.idx]/PIGMENT_CAP);
-    wAdd*=(1-resist*0.4);
-    pAdd*=(1-resist*0.4);
-
-    // water capacity
-    const room=Math.max(0,WATER_CAP-water[s.idx]);
-    if(wAdd>room){const sc=room/(wAdd+1e-12);wAdd*=sc;pAdd*=sc;}
-    if(wAdd<1e-12&&pAdd<1e-12)continue;
-
-    water[s.idx]+=wAdd;
-
-    // blend mobile pigment color
-    const existing=mPig[s.idx];
-    const total=existing+pAdd;
-    if(total>0){
-      const ew=existing/total,nw=pAdd/total;
-      mR[s.idx]=mR[s.idx]*ew+inkR*nw;
-      mG[s.idx]=mG[s.idx]*ew+inkG*nw;
-      mB[s.idx]=mB[s.idx]*ew+inkB*nw;
-    }
-    mPig[s.idx]=total;
-
-    appliedW+=wAdd;
-    appliedP+=pAdd;
-  }
-  brush.w=Math.max(0,brush.w-appliedW);
-  brush.p=Math.max(0,brush.p-appliedP);
-
-  // expand dirty rect
-  expandDirty(x0-search,y0-search,x0+search,y0+search);
-}
-
-// ═══════════════════════════════════════════════════════
-// STROKE INTERPOLATION
-// ═══════════════════════════════════════════════════════
-function drawSegment(x0,y0,x1,y1,pressure){
-  const dx=x1-x0,dy=y1-y0;
-  const dist=Math.hypot(dx,dy);
-  if(dist<0.001)return;
-  const orient=Math.atan2(dy,dx);
-  const steps=Math.max(1,Math.ceil(dist/1.5));
-  for(let i=1;i<=steps;i++){
-    const t=i/steps;
-    addDeposit(x0+dx*t,y0+dy*t,pressure,orient,dist);
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-// SIMULATION — MoXi-inspired percolation
-// ═══════════════════════════════════════════════════════
-function simulateStep(){
-  if(!hasWet)return;
-
-  const margin=2;
-  const sx0=Math.max(1,dirtyX0-margin);
-  const sy0=Math.max(1,dirtyY0-margin);
-  const sx1=Math.min(NX-2,dirtyX1+margin);
-  const sy1=Math.min(NY-2,dirtyY1+margin);
-
-  // zero delta buffers within dirty region
-  for(let y=sy0;y<=sy1;y++){
-    const row=y*NX;
-    for(let x=sx0;x<=sx1;x++){
-      wDelta[row+x]=0;
-      pDelta[row+x]=0;
-    }
-  }
-
-  // ── Pass 1: water percolation + pigment transport ──
-  for(let y=sy0;y<=sy1;y++){
-    for(let x=sx0;x<=sx1;x++){
-      const i=y*NX+x;
-      const w=water[i];
-      if(w<0.001)continue;
-
-      const kSrc=K_BASE+K_GRAIN*tex[i]+K_PIG*Math.min(1,fPig[i]/PIGMENT_CAP)+K_PIN*pinTex[i];
-      const pigConc=mPig[i]/(w+0.001);
-
-      const nb=[i-1,i+1,i-NX,i+NX];
-      for(let n=0;n<4;n++){
-        const j=nb[n];
-
-        if(water[j]<0.001){
-          const sigma=SIGMA_BASE+SIGMA_PIN*pinTex[j]+SIGMA_GRAIN*tex[j];
-          if(w<sigma)continue;
+            // update depth source indicator
+            const ds = visualState.depthSource;
+            const hasMap = !!depthMapData;
+            let dsLabel;
+            if (ds === 'auto') dsLabel = hasMap ? 'map (auto)' : 'image (auto)';
+            else if (ds === 'blend') dsLabel = hasMap ? 'blend' : 'image (no map)';
+            else if (ds === 'map') dsLabel = hasMap ? 'map' : 'image (no map)';
+            else dsLabel = 'image';
+            const dsl = el('depthSourceLabel');
+            if (dsl) dsl.textContent = dsLabel;
         }
 
-        const diff=w-water[j];
-        if(diff<=0)continue;
-
-        const kDst=K_BASE+K_GRAIN*tex[j]+K_PIG*Math.min(1,fPig[j]/PIGMENT_CAP)+K_PIN*pinTex[j];
-        const kAvg=(kSrc+kDst)*0.5;
-
-        let flow=SPREAD_RATE*diff*(1-kAvg);
-        flow=Math.min(flow,w*0.12);
-
-        wDelta[i]-=flow;
-        wDelta[j]+=flow;
-
-        const hind=HINDRANCE*tex[i];
-        let pigFlow=flow*pigConc*(1-hind);
-        pigFlow=Math.min(pigFlow,mPig[i]*0.12);
-        if(pigFlow>0.0001){
-          pDelta[i]-=pigFlow;
-          pDelta[j]+=pigFlow;
+        function invalidateVisuals(rebuildNeeded=false) {
+            syncVisualState();
+            colorCache.clear();
+            if (rebuildNeeded && imageData) scheduleRebuild();
         }
-      }
-    }
-  }
 
-  // ── Apply deltas ──
-  for(let y=sy0;y<=sy1;y++){
-    for(let x=sx0;x<=sx1;x++){
-      const i=y*NX+x;
-      if(wDelta[i]!==0) water[i]=Math.max(0,water[i]+wDelta[i]);
-      if(pDelta[i]!==0) mPig[i]=Math.max(0,mPig[i]+pDelta[i]);
-    }
-  }
-
-  // ── Pass 2: evaporation + fixation ──
-  let stillWet=false;
-  let newX0=NX,newY0=NY,newX1=0,newY1=0;
-
-  for(let y=sy0;y<=sy1;y++){
-    for(let x=sx0;x<=sx1;x++){
-      const i=y*NX+x;
-      const w=water[i];
-      if(w<0.001&&mPig[i]<0.001)continue;
-
-      if(w>0.001){
-        stillWet=true;
-        if(x<newX0)newX0=x;
-        if(y<newY0)newY0=y;
-        if(x>newX1)newX1=x;
-        if(y>newY1)newY1=y;
-
-        let wetN=0;
-        if(water[i-1]>0.01)wetN++;
-        if(water[i+1]>0.01)wetN++;
-        if(water[i-NX]>0.01)wetN++;
-        if(water[i+NX]>0.01)wetN++;
-        const edgeFac=1+(4-wetN)*EDGE_EVAP_MULT;
-        water[i]=Math.max(0,w-EVAP_RATE*w*edgeFac);
-
-        const dry=1-water[i]/WATER_CAP;
-        const fix=FIX_RATE*dry*dry*absorb[i];
-        const pRoom=Math.max(0,PIGMENT_CAP-fPig[i]);
-        const amount=Math.min(mPig[i]*fix,pRoom);
-        if(amount>0.0001){
-          const existing=fPig[i];
-          const total=existing+amount;
-          const ew=existing/total,nw=amount/total;
-          const bR=fR[i]*ew+mR[i]*nw;
-          const bG=fG[i]*ew+mG[i]*nw;
-          const bB=fB[i]*ew+mB[i]*nw;
-          fR[i]=existing>0.001?Math.min(fR[i],bR):bR;
-          fG[i]=existing>0.001?Math.min(fG[i],bG):bG;
-          fB[i]=existing>0.001?Math.min(fB[i],bB):bB;
-          fPig[i]=total;
-          mPig[i]-=amount;
+        const pairs = [
+            ['edgeThreshold', 'edgeVal', 'structural'],
+            ['sampleRate', 'sampleVal', 'structural'],
+            ['maxNodes', 'maxNodesVal', 'structural'],
+            ['maxDistance', 'distVal', 'filter'],
+            ['minQuality', 'minQualityVal', 'filter'],
+            ['seamDensity', 'seamDensityVal', 'structural'],
+            ['cutoutTol', 'cutoutTolVal', 'structural'],
+            ['groundLevel', 'groundLevelVal', 'live'],
+            ['groundSize', 'groundSizeVal', 'live'],
+            ['groundShadow', 'groundShadowVal', 'live'],
+            ['groundTone', 'groundToneVal', 'live'],
+            ['bevelWidth', 'bevelWidthVal', 'live'],
+            ['depthScale', 'depthVal', 'live'],
+            ['volumeScale', 'volumeVal', 'live'],
+            ['depthSmooth', 'smoothVal', 'structural'],
+            ['depthMapInfluence', 'depthMapInfluenceVal', 'live'],
+            ['formRound', 'roundVal', 'live'],
+            ['lumSculpt', 'lumSculptVal', 'live'],
+            ['edgeCarve', 'edgeCarveVal', 'live'],
+            ['localContrast', 'localContrastVal', 'live'],
+            ['surfAlpha', 'surfVal', 'live'],
+            ['shadeAmt', 'shadeVal', 'live'],
+            ['lineAlpha', 'alphaVal', 'live'],
+            ['nodeSize', 'nodeVal', 'live'],
+            ['spinSpeed', 'spinVal', 'live'],
+            ['adaptivity', 'adaptivityVal', 'structural'],
+            ['detailBias', 'detailBiasVal', 'structural'],
+            ['focus', 'focusVal', 'structural'],
+            ['edgeWeight', 'edgeWeightVal', 'structural'],
+            ['colorWeight', 'colorWeightVal', 'structural'],
+            ['toneWeight', 'toneWeightVal', 'structural'],
+            ['gradientWeight', 'gradientWeightVal', 'structural'],
+            ['minCell', 'minCellVal', 'structural'],
+            ['maxQuadDepth', 'maxQuadDepthVal', 'structural'],
+        ];
+        for (const [id, valId, kind] of pairs) {
+            el(id).addEventListener('input', e => {
+                el(valId).textContent = e.target.value;
+                if (!imageData) return;
+                if (kind === 'structural') scheduleRebuild();
+                else if (kind === 'filter') refilter();
+                // refresh JSON for any param that changes exported geometry
+                const jsonParams = new Set(['depthScale','depthMapInfluence','volumeScale','formRound','lumSculpt','edgeCarve','localContrast','bevelWidth']);
+                if (jsonParams.has(id)) refreshJSON();
+                // clear color cache when sculpt params change (affects depth color mode)
+                const colorParams = new Set(['lumSculpt','edgeCarve','localContrast','depthMapInfluence','depthScale','volumeScale','formRound','bevelWidth']);
+                if (colorParams.has(id)) colorCache.clear();
+            });
         }
-      }
 
-      if(water[i]<0.005&&mPig[i]>0.001){
-        const lockAmt=Math.min(mPig[i],Math.max(0,PIGMENT_CAP-fPig[i]));
-        if(lockAmt>0){
-          const ex=fPig[i],tot=ex+lockAmt;
-          if(tot>0){
-            const ew=ex/tot,nw=lockAmt/tot;
-            const bR=fR[i]*ew+mR[i]*nw;
-            const bG=fG[i]*ew+mG[i]*nw;
-            const bB=fB[i]*ew+mB[i]*nw;
-            fR[i]=ex>0.001?Math.min(fR[i],bR):bR;
-            fG[i]=ex>0.001?Math.min(fG[i],bG):bG;
-            fB[i]=ex>0.001?Math.min(fB[i],bB):bB;
-            fPig[i]=tot;
-          }
+        for (const id of ['colorMode','heatSource','depthSource','depthMapDirection','geometryMode','maskMode','groundMode']) {
+            el(id).addEventListener('change', () => {
+                invalidateVisuals(id === 'depthSource' || id === 'depthMapDirection' || id === 'geometryMode' || id === 'maskMode');
+            });
+            el(id).addEventListener('input', () => {
+                invalidateVisuals(id === 'depthSource' || id === 'depthMapDirection' || id === 'geometryMode' || id === 'maskMode');
+            });
         }
-        mPig[i]=0;
-        water[i]=0;
-      }
-    }
-  }
+        syncVisualState();
 
-  // ── update dirty rect ──
-  if(stillWet){
-    dirtyX0=Math.max(0,newX0-2);
-    dirtyY0=Math.max(0,newY0-2);
-    dirtyX1=Math.min(NX-1,newX1+2);
-    dirtyY1=Math.min(NY-1,newY1+2);
-  }else{
-    hasWet=false;
-    dirtyX0=NX;dirtyY0=NY;dirtyX1=0;dirtyY1=0;
-  }
-}
+        function scheduleRebuild() {
+            clearTimeout(rebuildTimer);
+            el('statusText').textContent = 'Rebuilding…';
+            rebuildTimer = setTimeout(rebuild, 220);
+        }
 
-// ═══════════════════════════════════════════════════════
-// RENDER — paper + fixed pigment + mobile pigment + wet sheen
-// ═══════════════════════════════════════════════════════
-function render(){
-  const px=imgData.data;
-  px.set(paperPixels);
+        // ── image upload ────────────────────────────────────────
+        el('imageInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const img = new Image();
+                img.onload = () => {
+                    const maxW = 520;
+                    let w = img.width, h = img.height;
+                    if (w > maxW || h > maxW) {
+                        const s = Math.min(maxW / w, maxW / h);
+                        w = Math.round(w * s);
+                        h = Math.round(h * s);
+                    }
+                    const t = document.createElement('canvas');
+                    t.width = w; t.height = h;
+                    const tc = t.getContext('2d');
+                    tc.drawImage(img, 0, 0, w, h);
+                    imageData = tc.getImageData(0, 0, w, h);
+                    if (depthMapSource) {
+                        resampleDepthMapToImage();
+                        el('depthMapStatus').textContent = '✓ loaded + aligned';
+                    }
+                    resetView();
+                    el('statusText').textContent = 'Building…';
+                    setTimeout(() => {
+                        try {
+                            rebuild();
+                        } catch (err) {
+                            console.error('CONSTELLATION rebuild failed:', err);
+                            el('statusText').textContent = 'Build error: ' + (err && err.message ? err.message : err);
+                        }
+                    }, 20);
+                };
+                img.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
 
-  for(let i=0;i<N;i++){
-    const fp=fPig[i];
-    const mp=mPig[i];
-    const w=water[i];
-    if(fp<0.003&&mp<0.003&&w<0.01)continue;
+        // ── depth map loader ───────────────────────────────────────
+        function resampleDepthMapToImage() {
+            if (!depthMapSource || !imageData) return;
+            const w = imageData.width, h = imageData.height;
+            const t = document.createElement('canvas');
+            t.width = w; t.height = h;
+            const tc = t.getContext('2d', { willReadFrequently: true });
+            tc.drawImage(depthMapSource, 0, 0, w, h);
+            depthMapData = tc.getImageData(0, 0, w, h);
+            externalDepthField = null;
+        }
 
-    const pi=i*4;
-    let r=px[pi],g=px[pi+1],b=px[pi+2];
+        el('depthMapInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const img = new Image();
+                img.onload = () => {
+                    depthMapSource = img;
+                    if (imageData) {
+                        resampleDepthMapToImage();
+                        el('depthMapStatus').textContent = '✓ loaded + aligned';
+                        scheduleRebuild();
+                    } else {
+                        depthMapData = null;
+                        externalDepthField = null;
+                        el('depthMapStatus').textContent = '✓ loaded — upload image';
+                    }
+                };
+                img.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
 
-    if(fp>0.003){
-      const fDark=1-Math.exp(-fp*INK_DARK);
-      r=r*(1-fDark)+fR[i]*255*fDark;
-      g=g*(1-fDark)+fG[i]*255*fDark;
-      b=b*(1-fDark)+fB[i]*255*fDark;
-    }
+        // ── PORYGON ADAPTIVE V5 PORT ─────────────────────────────
+        // The Python engine's core pipeline is translated here:
+        // multi-scale analysis → Sobel field → adaptive quadtree →
+        // importance-weighted vertices → edge-biased vertices →
+        // global Bowyer–Watson Delaunay.
+        const PORYGON = {
+            edge: 2.0,
+            adaptivity: 0.82,
+            detailBias: 0.68,
+            textureReject: 0,
+            minCell: 0.018,
+            maxDepth: 7,
+            edgeWeight: 1.00,
+            colorWeight: 0.58,
+            toneWeight: 0.72,
+            gradientWeight: 0.52,
+            focus: 1.55,
+            balance: true,
+            edgePoints: true
+        };
 
-    if(mp>0.003){
-      const mDark=Math.min(1,mp*0.5);
-      r=r*(1-mDark)+mR[i]*255*mDark;
-      g=g*(1-mDark)+mG[i]*255*mDark;
-      b=b*(1-mDark)+mB[i]*255*mDark;
-    }
+        const fractP = x => x - Math.floor(x);
+        const r2P = index => [
+            fractP(0.5 + 0.7548776662466927 * index),
+            fractP(0.5 + 0.5698402909980532 * index)
+        ];
+        const clampP = (v,a,b) => Math.max(a, Math.min(b,v));
 
-    if(w>0.02){
-      const sheen=Math.min(0.12,w*0.08);
-      r=Math.min(255,r*(1+sheen)+sheen*6);
-      g=Math.min(255,g*(1+sheen)+sheen*8);
-      b=Math.min(255,b*(1+sheen)+sheen*14);
-    }
+        function buildPorygonAnalysis(imgData) {
+            const width = imgData.width, height = imgData.height, data = imgData.data;
+            // Sample Rate sets how finely the image is analysed. Lower = finer
+            // detail (and slower). 8 reproduces the previous fixed behaviour.
+            const sr = Math.max(1, parseFloat(el('sampleRate').value) || 8);
+            const target = Math.max(64, Math.min(1600, 2880 / sr));
+            // Fractional, not an integer step: an integer subsample quantized
+            // the whole low half of the slider into "no change at all".
+            const scale = Math.max(1, Math.max(width, height) / target);
+            const aw = Math.max(4, Math.round(width / scale));
+            const ah = Math.max(4, Math.round(height / scale));
+            const size = aw * ah;
+            const lum = new Float32Array(size), red = new Float32Array(size), green = new Float32Array(size), blue = new Float32Array(size);
 
-    px[pi]=r|0;
-    px[pi+1]=g|0;
-    px[pi+2]=b|0;
-  }
-  ctx.putImageData(imgData,0,0);
-}
+            for (let ay=0; ay<ah; ay++) {
+                const sy=Math.min(height-1, Math.round(ay*scale));
+                for(let ax=0; ax<aw; ax++) {
+                    const sx=Math.min(width-1, Math.round(ax*scale)), si=(sy*width+sx)*4, i=ay*aw+ax;
+                    lum[i]=(0.299*data[si]+0.587*data[si+1]+0.114*data[si+2])/255;
+                    red[i]=data[si]/255; green[i]=data[si+1]/255; blue[i]=data[si+2]/255;
+                }
+            }
 
-// ═══════════════════════════════════════════════════════
-// TRAY UI
-// ═══════════════════════════════════════════════════════
-const tray=document.getElementById('tray');
-const fillInk=document.querySelector('#dipInk .fill');
-const fillWater=document.querySelector('#dipWater .fill');
-const barWFill=document.querySelector('#barW .fill');
-const barPFill=document.querySelector('#barP .fill');
+            const gx=new Float32Array(size), gy=new Float32Array(size), mag=new Float32Array(size), angle=new Float32Array(size);
+            for(let y=1;y<ah-1;y++) for(let x=1;x<aw-1;x++) {
+                const i=y*aw+x;
+                const sx=-lum[i-aw-1]+lum[i-aw+1]-2*lum[i-1]+2*lum[i+1]-lum[i+aw-1]+lum[i+aw+1];
+                const sy=-lum[i-aw-1]-2*lum[i-aw]-lum[i-aw+1]+lum[i+aw-1]+2*lum[i+aw]+lum[i+aw+1];
+                gx[i]=sx; gy[i]=sy; mag[i]=Math.hypot(sx,sy); angle[i]=(Math.atan2(sy,sx)*180/Math.PI+180)%180;
+            }
+            const sorted=Array.from(mag).sort((a,b)=>a-b);
+            const median=sorted.length?sorted[(sorted.length/2)|0]:0;
+            const p90=sorted.length?sorted[Math.min(sorted.length-1,Math.floor(sorted.length*.90))]:1;
+            const robust=Math.max(1e-6,p90-median);
+            // Edge Threshold scales sensitivity of the normalised edge field.
+            // Lower threshold = more of the image reads as edge, so the
+            // quadtree splits harder and vertices cluster on detail.
+            const thr = Math.max(1, parseFloat(el('edgeThreshold').value) || 60);
+            // Gamma reshape of the normalised edge field. A flat gain just
+            // saturated the strong edges and left the midtones untouched;
+            // gamma actually redistributes what counts as an edge.
+            // thr=60 gives gamma 1.0, i.e. identical to the previous field.
+            const edgeGamma = Math.max(0.15, Math.min(5, thr / 60));
+            const edge=new Float32Array(size);
+            for(let i=0;i<size;i++) edge[i]=Math.pow(clampP((mag[i]-median)/robust,0,1), edgeGamma);
 
-function updateFills(){
-  const wp=brush.w/BRUSH_W_CAP*100;
-  const pp=brush.p/BRUSH_P_CAP*100;
-  fillWater.style.height=wp.toFixed(0)+'%';
-  fillInk.style.height=pp.toFixed(0)+'%';
-  barWFill.style.height=Math.min(100,wp).toFixed(0)+'%';
-  barPFill.style.height=Math.min(100,pp).toFixed(0)+'%';
-}
+            const coherence=new Float32Array(size), hcover=new Float32Array(size), vcover=new Float32Array(size), coverage=new Float32Array(size);
+            for(let y=1;y<ah-1;y++) for(let x=1;x<aw-1;x++) {
+                const i=y*aw+x; let sx=0,sy=0,total=0;
+                for(let oy=-1;oy<=1;oy++) for(let ox=-1;ox<=1;ox++) {
+                    const j=(y+oy)*aw+x+ox, w=edge[j]; if(w<=0) continue;
+                    const a=angle[j]*Math.PI/90;
+                    sx+=Math.cos(a)*w; sy+=Math.sin(a)*w; total+=w;
+                }
+                coherence[i]=total>1e-9?clampP(Math.hypot(sx,sy)/total,0,1):0;
+            }
+            for(let y=0;y<ah;y++) for(let x=0;x<aw;x++) {
+                let best=0;
+                for(let dx=-2;dx<=2;dx++){const xx=x+dx;if(xx>=0&&xx<aw)best=Math.max(best,edge[y*aw+xx]);}
+                hcover[y*aw+x]=best;
+            }
+            for(let y=0;y<ah;y++) for(let x=0;x<aw;x++) {
+                let best=0;
+                for(let dy=-2;dy<=2;dy++){const yy=y+dy;if(yy>=0&&yy<ah)best=Math.max(best,edge[yy*aw+x]);}
+                vcover[y*aw+x]=best;
+            }
+            for(let i=0;i<size;i++) coverage[i]=clampP(.5*hcover[i]+.5*vcover[i],0,1);
+            analysisInfo = { aw, ah, gamma:edgeGamma };
+            return {aw,ah,lum,red,green,blue,gx,gy,mag,angle,edge,coherence,coverage,scale};
+        }
 
-let holding=null,tickLast=0,trayTimer=null;
-const RAMP=0.6;
+        function regionStatsP(a,width,height,cell){
+            const {aw,ah,lum,red,green,blue,edge,coverage,coherence,angle}=a;
+            const ax0=clampP(Math.floor(cell.x0/width*aw),0,aw-1), ay0=clampP(Math.floor(cell.y0/height*ah),0,ah-1);
+            const ax1=clampP(Math.ceil(cell.x1/width*aw),ax0+1,aw), ay1=clampP(Math.ceil(cell.y1/height*ah),ay0+1,ah);
+            let count=0,sl=0,sl2=0,sr=0,sr2=0,sg=0,sg2=0,sb=0,sb2=0,se=0,sc=0,sco=0,dx=0,dy=0,dt=0;
+            for(let y=ay0;y<ay1;y++) for(let x=ax0;x<ax1;x++) {
+                const i=y*aw+x,l=lum[i],r=red[i],g=green[i],b=blue[i],e=edge[i];
+                sl+=l;sl2+=l*l;sr+=r;sr2+=r*r;sg+=g;sg2+=g*g;sb+=b;sb2+=b*b;se+=e;sc+=coverage[i];sco+=coherence[i]*e;
+                const ang=angle[i]*Math.PI/90; dx+=Math.cos(ang)*e; dy+=Math.sin(ang)*e; dt+=e; count++;
+            }
+            if(!count) return {edge:0,tone:0,color:0,coverage:0,coherence:0,disagreement:0,mean_lum:0};
+            const ml=sl/count;
+            const tv=Math.max(0,sl2/count-ml*ml);
+            const cv=(Math.max(0,sr2/count-(sr/count)**2)+Math.max(0,sg2/count-(sg/count)**2)+Math.max(0,sb2/count-(sb/count)**2))/3;
+            const dc=dt>1e-9?clampP(Math.hypot(dx,dy)/dt,0,1):0;
+            return {edge:se/count,tone:clampP(Math.sqrt(tv)*3.8,0,1),color:clampP(Math.sqrt(cv)*4.5,0,1),coverage:sc/count,coherence:dt>1e-6?clampP(sco/dt,0,1):0,disagreement:1-dc,mean_lum:ml};
+        }
 
-function keepOpen(){clearTimeout(trayTimer)}
-function schedClose(ms=3500){clearTimeout(trayTimer);trayTimer=setTimeout(closeTray,ms)}
-function openTray(){tray.classList.add('visible');schedClose(4500)}
-function closeTray(){clearTimeout(trayTimer);tray.classList.remove('visible');holding=null}
+        // Structure-tensor coherence separates a real boundary from texture.
+        // A beak edge has gradients all pointing the same way (high coherence);
+        // speckled down has gradients scattering every direction (low coherence)
+        // at the same gradient MAGNITUDE. Edge Threshold scales both equally,
+        // which is why texture and detail could never be traded independently.
+        function effectiveEdgeP(s){
+            const t=PORYGON.textureReject;
+            if(t<=0) return s.edge;
+            return s.edge*(1-t+t*clampP(s.coherence,0,1));
+        }
 
-function tickHold(now){
-  if(!holding)return;
-  const dt=Math.min(0.1,(now-tickLast)/1000);
-  tickLast=now;
-  const step=RAMP*dt;
-  switch(holding){
-    case'ink':brush.p=Math.min(BRUSH_P_CAP,brush.p+step*BRUSH_P_CAP);break;
-    case'water':brush.w=Math.min(BRUSH_W_CAP,brush.w+step*BRUSH_W_CAP);break;
-    case'napInk':brush.p=Math.max(0,brush.p-step*BRUSH_P_CAP);break;
-    case'napWater':brush.w=Math.max(0,brush.w-step*BRUSH_W_CAP);break;
-    case'napBoth':
-      brush.p=Math.max(0,brush.p-step*BRUSH_P_CAP);
-      brush.w=Math.max(0,brush.w-step*BRUSH_W_CAP);break;
-  }
-}
+        function complexityScoreP(s){
+            const structural=effectiveEdgeP(s)*PORYGON.edgeWeight+s.coverage*.55;
+            const appearance=s.tone*PORYGON.toneWeight+s.color*PORYGON.colorWeight;
+            const direction=s.disagreement*PORYGON.gradientWeight;
+            return clampP((structural*PORYGON.detailBias+appearance*(1-PORYGON.detailBias)+direction*.62)/2.35,0,1);
+        }
 
-function startHold(which){tickLast=performance.now();holding=which;keepOpen()}
-function stopHold(){holding=null;schedClose()}
+        function buildPorygonQuadtree(width,height,a){
+            const minCell=Math.max(5,Math.max(width,height)*PORYGON.minCell);
+            const root={x0:0,y0:0,x1:width,y1:height,depth:0,score:0,stats:null,children:[]};
+            const broad=[], stack=[root];
+            while(stack.length){
+                const cell=stack.pop(); cell.stats=regionStatsP(a,width,height,cell); cell.score=complexityScoreP(cell.stats); broad.push(cell);
+                const cw=cell.x1-cell.x0,ch=cell.y1-cell.y0;
+                const canSplit=cell.depth<PORYGON.maxDepth&&(cw>minCell*2||ch>minCell*2);
+                const threshold=.62-.50*PORYGON.adaptivity+.02*cell.depth;
+                const forceDetail=effectiveEdgeP(cell.stats)>.34&&cell.stats.disagreement>.16;
+                if(canSplit&&(cell.score>threshold||forceDetail)){
+                    const mx=(cell.x0+cell.x1)*.5,my=(cell.y0+cell.y1)*.5;
+                    cell.children=[
+                        {x0:cell.x0,y0:cell.y0,x1:mx,y1:my,depth:cell.depth+1,score:0,stats:null,children:[]},
+                        {x0:mx,y0:cell.y0,x1:cell.x1,y1:my,depth:cell.depth+1,score:0,stats:null,children:[]},
+                        {x0:cell.x0,y0:my,x1:mx,y1:cell.y1,depth:cell.depth+1,score:0,stats:null,children:[]},
+                        {x0:mx,y0:my,x1:cell.x1,y1:cell.y1,depth:cell.depth+1,score:0,stats:null,children:[]}
+                    ]; stack.push(...cell.children);
+                }
+            }
+            return broad.filter(c=>!c.children.length);
+        }
 
-function bindHold(el,which){
-  const press=e=>{e.preventDefault();e.stopPropagation();startHold(which);el.classList.add('pressed')};
-  const release=e=>{e.preventDefault();stopHold();el.classList.remove('pressed')};
-  el.addEventListener('pointerdown',press);
-  el.addEventListener('pointerup',release);
-  el.addEventListener('pointercancel',release);
-}
+        function findEdgePointP(a,cell,width,height,seed){
+            let best=-1,bx=cell.x0,by=cell.y0;
+            for(let k=0;k<18;k++){
+                const [u,v]=r2P(seed*31+k*17),x=cell.x0+u*(cell.x1-cell.x0),y=cell.y0+v*(cell.y1-cell.y0);
+                const ax=clampP(Math.floor(x/width*a.aw),0,a.aw-1), ay=clampP(Math.floor(y/height*a.ah),0,a.ah-1),e=a.edge[ay*a.aw+ax];
+                const cx=(cell.x0+cell.x1)*.5,cy=(cell.y0+cell.y1)*.5,dist=Math.hypot(x-cx,y-cy),md=Math.max(1,Math.hypot(cell.x1-cell.x0,cell.y1-cell.y0)*.5);
+                const centrality=1-clampP(dist/md,0,1),score=e*(.75+.25*centrality);
+                if(score>best){best=score;bx=x;by=y;}
+            }
+            return [bx,by,best];
+        }
 
-bindHold(document.getElementById('dipInk'),'ink');
-bindHold(document.getElementById('dipWater'),'water');
-document.querySelectorAll('#napkin .napZone').forEach(z=>{
-  const d=z.dataset.drain;
-  bindHold(z,d==='ink'?'napInk':d==='water'?'napWater':'napBoth');
-});
+        // Chamfer distance transform. Out-of-bounds counts as background, so a
+        // fully-foreground mask still produces a valid field instead of all-INF.
+        function distanceFieldP(mask,w,h){
+            const d=new Float32Array(w*h), INF=1e9, D=1, S=1.4142;
+            for(let i=0;i<w*h;i++) d[i]=mask[i]?INF:0;
 
-document.querySelectorAll('#swatchRow .swatch').forEach(sw=>{
-  sw.addEventListener('pointerdown',e=>{
-    e.preventDefault();e.stopPropagation();
-    document.querySelectorAll('#swatchRow .swatch').forEach(s=>s.classList.remove('active'));
-    sw.classList.add('active');
-    inkR=parseFloat(sw.dataset.r);
-    inkG=parseFloat(sw.dataset.g);
-    inkB=parseFloat(sw.dataset.b);
-    schedClose();
-  });
-});
+            for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+                const p=y*w+x; if(!mask[p]) continue;
+                let v=d[p];
+                v = Math.min(v, x>0     ? d[p-1]+D   : D);
+                v = Math.min(v, y>0     ? d[p-w]+D   : D);
+                v = Math.min(v, (x>0&&y>0)     ? d[p-w-1]+S : S);
+                v = Math.min(v, (x<w-1&&y>0)   ? d[p-w+1]+S : S);
+                d[p]=v;
+            }
+            for(let y=h-1;y>=0;y--)for(let x=w-1;x>=0;x--){
+                const p=y*w+x; if(!mask[p]) continue;
+                let v=d[p];
+                v = Math.min(v, x<w-1   ? d[p+1]+D   : D);
+                v = Math.min(v, y<h-1   ? d[p+w]+D   : D);
+                v = Math.min(v, (x<w-1&&y<h-1) ? d[p+w+1]+S : S);
+                v = Math.min(v, (x>0&&y<h-1)   ? d[p+w-1]+S : S);
+                d[p]=v;
+            }
 
-document.querySelectorAll('#swatchRow .size').forEach(sz=>{
-  sz.addEventListener('pointerdown',e=>{
-    e.preventDefault();e.stopPropagation();
-    brushRadius=Number(sz.dataset.r);
-    document.querySelectorAll('#swatchRow .size').forEach(s=>s.classList.remove('active'));
-    sz.classList.add('active');
-    schedClose();
-  });
-});
+            // Normalize by the 85th percentile rather than the single deepest
+            // pixel. Without this, a torso saturates maxD and every limb divides
+            // down to near-zero thickness.
+            const vals=[];
+            for(let i=0;i<w*h;i++) if(mask[i]) vals.push(d[i]);
+            vals.sort((a,b)=>a-b);
+            const pct = vals.length ? vals[Math.min(vals.length-1, Math.floor(vals.length*0.85))] : 1;
+            const norm = Math.max(2, pct);
 
-document.querySelectorAll('#styleRow .bstyle').forEach(bs=>{
-  bs.addEventListener('pointerdown',e=>{
-    e.preventDefault();e.stopPropagation();
-    document.querySelectorAll('#styleRow .bstyle').forEach(s=>s.classList.remove('active'));
-    bs.classList.add('active');
-    brushStyle=bs.dataset.style;
-    schedClose();
-  });
-});
+            const form=new Float32Array(w*h);
+            for(let i=0;i<w*h;i++) form[i] = mask[i] ? Math.pow(Math.min(1, d[i]/norm), 0.75) : 0;
+            return { raw:d, form };
+        }
 
-function resetAll(){
-  water.fill(0);mPig.fill(0);fPig.fill(0);
-  mR.fill(0);mG.fill(0);mB.fill(0);
-  fR.fill(0);fG.fill(0);fB.fill(0);
-  hasWet=false;dirtyX0=NX;dirtyY0=NY;dirtyX1=0;dirtyY1=0;
-  updateFills();render();
-}
-document.getElementById('resetBtn').addEventListener('pointerdown',e=>{
-  e.preventDefault();e.stopPropagation();resetAll();
-});
+        // ── silhouette contour → ordered seam ring ────────────────
+        // Moore-neighborhood boundary trace. Produces the ordered ring of
+        // pixels where the two mold halves must meet.
+        function traceOneContour(mask,w,h,start){
+            const fg=(x,y)=> x>=0&&y>=0&&x<w&&y<h&&mask[y*w+x]===1;
+            // Clockwise 8-neighbourhood.
+            const dirs=[[-1,-1],[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0]];
+            const sx=start%w, sy=(start/w)|0;
+            const contour=[[sx,sy]];
+            // Proper Moore tracing resumes the scan from the BACKTRACK pixel.
+            // Offsetting from the movement direction instead makes the walk
+            // fold back on itself the moment the shape touches a frame edge,
+            // returning a 3-pixel stub instead of the outline.
+            let bx=sx-1, by=sy;      // start was found in raster order, so left is background
+            let cx=sx, cy=sy;
+            let firstState=null;
+            const maxSteps=Math.min(400000, w*h*4);
+            for(let step=0; step<maxSteps; step++){
+                let bi=0;
+                for(let k=0;k<8;k++){
+                    if(cx+dirs[k][0]===bx && cy+dirs[k][1]===by){ bi=k; break; }
+                }
+                let found=false;
+                for(let k=1;k<=8;k++){
+                    const dd=(bi+k)%8;
+                    const nx=cx+dirs[dd][0], ny=cy+dirs[dd][1];
+                    if(fg(nx,ny)){
+                        const pd=(bi+k-1+8)%8;
+                        bx=cx+dirs[pd][0]; by=cy+dirs[pd][1];
+                        cx=nx; cy=ny; found=true; break;
+                    }
+                }
+                if(!found) break;                       // isolated pixel
+                // Jacob's criterion: stop when the (position, backtrack) state
+                // repeats, not merely when the start pixel is touched again —
+                // a thin neck legitimately revisits its start mid-walk.
+                const st=cx+','+cy+','+bx+','+by;
+                if(firstState===null) firstState=st;
+                else if(st===firstState) break;
+                if(cx===sx && cy===sy) continue;
+                contour.push([cx,cy]);
+            }
+            return contour;
+        }
 
-let tapCount=0,tapTimer=null;
-canvas.addEventListener('pointerdown',e=>{
-  if(e.pointerType==='mouse')return;
-  tapCount++;clearTimeout(tapTimer);
-  tapTimer=setTimeout(()=>{tapCount=0},300);
-  if(tapCount>=2){tapCount=0;openTray()}
-});
-let swipeY=0;
-canvas.addEventListener('pointerdown',e=>{swipeY=e.clientY});
-canvas.addEventListener('pointerup',e=>{
-  if(swipeY-e.clientY>45&&swipeY>window.innerHeight*0.88)openTray();
-});
-document.getElementById('grab').addEventListener('pointerdown',e=>{
-  e.preventDefault();e.stopPropagation();closeTray();
-});
+        // Trace every connected foreground component. A fragmented cutout must
+        // still get a closed seam around each piece, or the stray pieces render
+        // as open shells.
+        function traceContours(mask,w,h){
+            const seenComp=new Uint8Array(w*h);
+            const contours=[];
+            const minArea=Math.max(24, Math.round(w*h*0.0008));
+            for(let i=0;i<w*h;i++){
+                if(!mask[i]||seenComp[i]) continue;
+                // flood fill this component, recording its topmost-leftmost pixel
+                const stack=[i]; seenComp[i]=1;
+                let area=0, top=i;
+                while(stack.length){
+                    const p=stack.pop(); area++;
+                    if(p<top) top=p;
+                    const x=p%w, y=(p/w)|0;
+                    if(x>0     && mask[p-1] && !seenComp[p-1]) { seenComp[p-1]=1; stack.push(p-1); }
+                    if(x<w-1   && mask[p+1] && !seenComp[p+1]) { seenComp[p+1]=1; stack.push(p+1); }
+                    if(y>0     && mask[p-w] && !seenComp[p-w]) { seenComp[p-w]=1; stack.push(p-w); }
+                    if(y<h-1   && mask[p+w] && !seenComp[p+w]) { seenComp[p+w]=1; stack.push(p+w); }
+                }
+                if(area<minArea) continue;   // ignore speckle
+                const c=traceOneContour(mask,w,h,top);
+                if(c.length>=3) contours.push(c);
+            }
+            return contours;
+        }
 
-// ═══════════════════════════════════════════════════════
-// DRAWING — pointer events
-// ═══════════════════════════════════════════════════════
-let drawing=false,lastGX=0,lastGY=0,lastTime=0,strokeSeed=0;
+        // Resample a traced contour to evenly-spaced points so the seam ring
+        // has predictable vertex density regardless of image size.
+        function resampleContour(contour, spacing){
+            if(contour.length<3) return contour.slice();
+            const segs=[]; let total=0;
+            for(let i=0;i<contour.length;i++){
+                const a=contour[i], b=contour[(i+1)%contour.length];
+                const dl=Math.hypot(b[0]-a[0], b[1]-a[1]);
+                segs.push(dl); total+=dl;
+            }
+            if(total<1e-6) return contour.slice();
+            const n=Math.max(8, Math.round(total/spacing));
+            const step=total/n;
+            const out=[];
+            let si=0, acc=0;
+            for(let k=0;k<n;k++){
+                const target=k*step;
+                while(si<segs.length-1 && acc+segs[si]<target){ acc+=segs[si]; si++; }
+                const t = segs[si]>1e-9 ? (target-acc)/segs[si] : 0;
+                const a=contour[si], b=contour[(si+1)%contour.length];
+                out.push([a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t]);
+            }
+            return out;
+        }
 
-function getPressure(e){
-  if(e.pressure>0&&e.pressure!==0.5)return e.pressure;
-  if(e.width&&e.width>1)return Math.min(1,Math.max(0.08,(e.width-8)/42));
-  return 0.5;
-}
+        // ── mask builder (auto cutout / alpha) ─────────────────
+        // Reports what the last auto cutout did, for the stats panel.
+        let cutoutInfo = { ok:false, keptPct:0, bg:'—', tol:0 };
 
-canvas.addEventListener('pointerdown',e=>{
-  e.preventDefault();
-  canvas.setPointerCapture(e.pointerId);
-  const[gx,gy]=clientToGrid(e.clientX,e.clientY);
-  drawing=true;lastGX=gx;lastGY=gy;lastTime=performance.now();
-  strokeSeed=performance.now()%1000;
-  addDeposit(gx,gy,getPressure(e),0,0);
-});
+        function buildMask(imgData, maskMode) {
+            const w = imgData.width, h = imgData.height, d = imgData.data;
+            const N = w * h;
+            const mask = new Uint8Array(N);
+            if (maskMode === 'none') { mask.fill(1); cutoutInfo={ok:false,keptPct:100,bg:'—',tol:0}; return mask; }
+            if (maskMode === 'alpha') {
+                let k=0;
+                for (let i = 0; i < N; i++) { mask[i] = d[i*4+3] > 20 ? 1 : 0; k+=mask[i]; }
+                cutoutInfo={ok:true,keptPct:k/N*100,bg:'alpha',tol:0};
+                return mask;
+            }
 
-canvas.addEventListener('pointermove',e=>{
-  if(!drawing)return;
-  const[gx,gy]=clientToGrid(e.clientX,e.clientY);
-  drawSegment(lastGX,lastGY,gx,gy,getPressure(e));
-  lastGX=gx;lastGY=gy;lastTime=performance.now();
-});
+            // ── border sample ──────────────────────────────────
+            const border = [];
+            for (let x = 0; x < w; x++) { border.push(x); border.push((h-1)*w + x); }
+            for (let y = 1; y < h-1; y++) { border.push(y*w); border.push(y*w + w-1); }
+            const rs=[], gs=[], bs=[];
+            for (const p of border) {
+                if (d[p*4+3] < 20) continue;
+                rs.push(d[p*4]); gs.push(d[p*4+1]); bs.push(d[p*4+2]);
+            }
+            if (!rs.length) { mask.fill(1); cutoutInfo={ok:false,keptPct:100,bg:'—',tol:0}; return mask; }
 
-canvas.addEventListener('pointerup',e=>{
-  drawing=false;
-  try{canvas.releasePointerCapture(e.pointerId)}catch(_){}
-});
-canvas.addEventListener('pointercancel',()=>{drawing=false});
+            // Median, not mean — a subject touching the frame edge drags a mean
+            // badly but barely moves a median.
+            const med = arr => { const c=arr.slice().sort((x,y)=>x-y); return c[c.length>>1]; };
+            const br = med(rs), bgC = med(gs), bbC = med(bs);
 
-// ═══════════════════════════════════════════════════════
-// JSON STROKE IMPORT
-// ═══════════════════════════════════════════════════════
-function importJsonLayer(jsonStr) {
-  let data;
-  try { data = JSON.parse(jsonStr); }
-  catch(e) { alert('JSON parse error: ' + e.message); return; }
+            const dist = (i, r, g, b) => {
+                const dr=d[i*4]-r, dg=d[i*4+1]-g, db=d[i*4+2]-b;
+                return Math.sqrt(dr*dr + dg*dg + db*db);
+            };
 
-  function hexToRgb(hex) {
-    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    if (!m) return null;
-    return [parseInt(m[1],16)/255, parseInt(m[2],16)/255, parseInt(m[3],16)/255];
-  }
+            // Spread of the border itself (MAD). A textured or vignetted
+            // background needs a looser gate than a clipped flat one — this is
+            // what makes black-vs-white behave the same.
+            const devs = [];
+            for (const p of border) { if (d[p*4+3] >= 20) devs.push(dist(p, br, bgC, bbC)); }
+            devs.sort((x,y)=>x-y);
+            const mad = devs.length ? devs[devs.length>>1] : 0;
 
-  if (Array.isArray(data)) {
-    let n = 0;
-    for (const d of data) {
-      const gx = Math.round(d.x), gy = Math.round(d.y);
-      if (gx < 0 || gy < 0 || gx >= NX || gy >= NY) continue;
-      const idx = gy * NX + gx;
-      const sat = Math.min(1, Math.max(0, d.sat || 0));
-      const pig = Math.min(sat * PIGMENT_CAP, Math.max(0, d.pig || 0));
-      const toPixel = v => (v == null ? 0 : v <= 1.0 ? v * 255 : v);
-      const ir = toPixel(d.r), ig = toPixel(d.g), ib = toPixel(d.b);
+            const userTol = parseFloat(el('cutoutTol').value);
+            const refTol   = Math.max(userTol, mad * 3 + 8);
+            const stepTol  = Math.max(8, refTol * 0.35);   // per-hop gradient budget
+            const maxDrift = refTol * 3;                   // hard cap from reference
 
-      const existing = fPig[idx];
-      const total = existing + pig;
-      if (total > 1e-6) {
-        const ew = existing / total, nw = pig / total;
-        fR[idx] = fR[idx] * ew + (ir/255) * nw;
-        fG[idx] = fG[idx] * ew + (ig/255) * nw;
-        fB[idx] = fB[idx] * ew + (ib/255) * nw;
-        fPig[idx] = Math.min(PIGMENT_CAP, total);
-      } else {
-        fPig[idx] = Math.min(PIGMENT_CAP, pig);
-        fR[idx] = ir/255; fG[idx] = ig/255; fB[idx] = ib/255;
-      }
-      n++;
-    }
-    console.log(`JSON import (legacy): ${n} cells`);
-    return;
-  }
+            // ── luminance gradient, used to gate the walk ──────
+            // Vignettes and contact shadows are smooth ramps; a subject edge is
+            // a cliff. Gating on gradient lets the fill walk down the ramp
+            // without stepping onto the subject.
+            const lum = new Float32Array(N);
+            for (let i = 0; i < N; i++) lum[i] = 0.299*d[i*4] + 0.587*d[i*4+1] + 0.114*d[i*4+2];
+            const grad = new Float32Array(N);
+            for (let y = 1; y < h-1; y++) for (let x = 1; x < w-1; x++) {
+                const i = y*w + x;
+                const gx = -lum[i-w-1] + lum[i-w+1] - 2*lum[i-1] + 2*lum[i+1] - lum[i+w-1] + lum[i+w+1];
+                const gy = -lum[i-w-1] - 2*lum[i-w] - lum[i-w+1] + lum[i+w-1] + 2*lum[i+w] + lum[i+w+1];
+                grad[i] = Math.hypot(gx, gy);
+            }
+            const EDGE_GATE = 90;
 
-  const _brushW = brush.w, _brushP = brush.p;
-  const _inkR = inkR, _inkG = inkG, _inkB = inkB;
-  const _brushRadius = brushRadius, _brushStyle = brushStyle, _strokeSeed = strokeSeed;
+            // ── gradient-gated region grow from the border ─────
+            const vis = new Uint8Array(N);
+            const q = new Int32Array(N);
+            let qh = 0, qt = 0;
+            for (const p of border) {
+                if (!vis[p] && d[p*4+3] >= 20 && dist(p, br, bgC, bbC) < refTol) { vis[p]=1; q[qt++]=p; }
+            }
+            while (qh < qt) {
+                const p = q[qh++];
+                const x = p % w, y = (p / w) | 0;
+                const pr = d[p*4], pg = d[p*4+1], pb = d[p*4+2];
+                const tryN = n => {
+                    if (vis[n]) return;
+                    const dRef = dist(n, br, bgC, bbC);
+                    if (dRef < refTol) { vis[n]=1; q[qt++]=n; return; }
+                    // Walk a smooth ramp: close to the pixel we came from, still
+                    // within the drift cap, and not across a hard edge.
+                    if (dRef < maxDrift && dist(n, pr, pg, pb) < stepTol && grad[n] < EDGE_GATE) {
+                        vis[n]=1; q[qt++]=n;
+                    }
+                };
+                if (x > 0)     tryN(p-1);
+                if (x < w-1)   tryN(p+1);
+                if (y > 0)     tryN(p-w);
+                if (y < h-1)   tryN(p+w);
+            }
 
-  if (data.paper && data.paper.wetness > 0) {
-    const wet = Math.min(0.6, data.paper.wetness);
-    for (let cy = 0; cy < NY; cy++) {
-      for (let cx = 0; cx < NX; cx++) {
-        const idx = cy * NX + cx;
-        water[idx] = Math.min(1, water[idx] + wet * (0.75 + 0.25 * valueNoise(cx*1.3, cy*2.7)));
-      }
-    }
-    expandDirty(0, 0, NX-1, NY-1);
-    hasWet = true;
-  }
+            for (let i = 0; i < N; i++) mask[i] = vis[i] ? 0 : 1;
 
-  let strokeCount = 0, dabCount = 0;
-  for (let si = 0; si < (data.strokes || []).length; si++) {
-    const stroke = data.strokes[si];
-    if (!stroke.path || stroke.path.length < 1) continue;
+            // ── drop speckle islands ───────────────────────────
+            // Keep anything that is a meaningful fraction of the largest piece,
+            // so genuinely separate limbs survive but JPEG noise does not.
+            const comp = new Int32Array(N).fill(-1);
+            const sizes = [];
+            const stack = new Int32Array(N);
+            for (let i = 0; i < N; i++) {
+                if (!mask[i] || comp[i] >= 0) continue;
+                const id = sizes.length; let sp = 0, area = 0;
+                stack[sp++] = i; comp[i] = id;
+                while (sp) {
+                    const p = stack[--sp]; area++;
+                    const x = p % w, y = (p / w) | 0;
+                    if (x > 0   && mask[p-1] && comp[p-1] < 0) { comp[p-1]=id; stack[sp++]=p-1; }
+                    if (x < w-1 && mask[p+1] && comp[p+1] < 0) { comp[p+1]=id; stack[sp++]=p+1; }
+                    if (y > 0   && mask[p-w] && comp[p-w] < 0) { comp[p-w]=id; stack[sp++]=p-w; }
+                    if (y < h-1 && mask[p+w] && comp[p+w] < 0) { comp[p+w]=id; stack[sp++]=p+w; }
+                }
+                sizes.push(area);
+            }
+            if (sizes.length > 1) {
+                const largest = Math.max(...sizes);
+                const keepMin = Math.max(24, largest * 0.02);
+                for (let i = 0; i < N; i++) if (mask[i] && sizes[comp[i]] < keepMin) mask[i] = 0;
+            }
 
-    const rgb = hexToRgb(stroke.color || '#292420');
-    if (rgb) {
-      inkR = rgb[0]; inkG = rgb[1]; inkB = rgb[2];
-    }
-    brush.w = Math.min(BRUSH_W_CAP, Math.max(0, (stroke.water ?? 0.8) * BRUSH_W_CAP));
-    brush.p = Math.min(BRUSH_P_CAP, Math.max(0, (stroke.pigment ?? 0.5) * BRUSH_P_CAP));
-    brushRadius = stroke.brush ?? brushRadius;
-    brushStyle = (stroke.style && ['round','point','side','rake'].includes(stroke.style)) ? stroke.style : brushStyle;
-    const press = Math.min(1, Math.max(0, stroke.pressure ?? 0.5));
-    strokeSeed = (performance.now() % 1000 + si * 137) % 1000;
+            let fg = 0; for (let i = 0; i < N; i++) fg += mask[i];
+            // Only bail if the cutout ate essentially everything. The old 8%
+            // guard threw away legitimate results for small subjects.
+            if (fg < N * 0.005) { mask.fill(1); fg = N; }
 
-    const pts = stroke.path.map(([nx, ny]) => [
-      nx * (NX - 1),
-      ny * (NY - 1)
-    ]);
+            const hex = v => v.toString(16).padStart(2,'0');
+            cutoutInfo = {
+                ok: fg < N * 0.995,
+                keptPct: fg / N * 100,
+                bg: '#' + hex(br) + hex(bgC) + hex(bbC),
+                tol: Math.round(refTol)
+            };
+            return mask;
+        }
 
-    if (pts.length === 1) {
-      addDeposit(pts[0][0], pts[0][1], press, 0, 0);
-      dabCount++;
-    } else {
-      addDeposit(pts[0][0], pts[0][1], press, 0, 0);
-      dabCount++;
-      for (let p = 0; p < pts.length - 1; p++) {
-        drawSegment(pts[p][0], pts[p][1], pts[p+1][0], pts[p+1][1], press);
-        const dx = pts[p+1][0] - pts[p][0];
-        const dy = pts[p+1][1] - pts[p][1];
-        const dist = Math.hypot(dx, dy);
-        dabCount += Math.max(1, Math.ceil(dist / 1.5));
-      }
-    }
-    strokeCount++;
-  }
+        function buildPorygonNodes(width,height,imgData,analysis,leaves){
+            const data=imgData.data, points=[], seen=new Set();
+            const mask=buildMask(imgData,visualState.maskMode); maskField=mask;
+            const df=distanceFieldP(mask,width,height);
+            const formField=df.form, rawDist=df.raw;
+            const smooth=analysis.lum; // analysis is already multi-scale smoothed by the engine's adaptive sampling
 
-  brush.w = _brushW; brush.p = _brushP;
-  inkR = _inkR; inkG = _inkG; inkB = _inkB;
-  brushRadius = _brushRadius; brushStyle = _brushStyle; strokeSeed = _strokeSeed;
+            seamRing=[];
+            seamSpacing=Math.max(4, parseFloat(el('seamDensity').value));
+            const seamGap=seamSpacing*0.55;
 
-  updateFills();
-  console.log(`JSON import: ${strokeCount} strokes, ~${dabCount} dabs`);
-}
+            const makeNode=(x,y,boundary)=>{
+                const p=y*width+x, si=p*4;
+                const ax=clampP(Math.floor(x/width*analysis.aw),0,analysis.aw-1);
+                const ay=clampP(Math.floor(y/height*analysis.ah),0,analysis.ah-1);
+                const ai=ay*analysis.aw+ax;
+                const raw=(.299*data[si]+.587*data[si+1]+.114*data[si+2])/255;
+                return {
+                    x,y,jx:x,jy:y,
+                    lum:smooth[ai], rawLum:raw, edge:analysis.edge[ai],
+                    gx:analysis.gx[ai], gy:analysis.gy[ai],
+                    facing:1/(1+Math.hypot(analysis.gx[ai],analysis.gy[ai])*1.5),
+                    unifiedDepth:smooth[ai],
+                    form: boundary ? 0 : formField[p],
+                    rawDist: boundary ? 0 : rawDist[p],
+                    r:data[si], g:data[si+1], b:data[si+2],
+                    boundary, depthMap:null, localContrast:0
+                };
+            };
 
-// ── JSON import UI ──
-(function buildJsonUI() {
-  const btn = document.createElement('button');
-  btn.textContent = '⊕ JSON';
-  btn.style.cssText = `
-    position:fixed; bottom:14px; right:14px; z-index:999;
-    background:#070b12; color:#ecd19a; border:1px solid #ecd19a;
-    font-family:'IBM Plex Mono',monospace; font-size:11px;
-    padding:6px 10px; border-radius:4px; opacity:0.82; cursor:pointer;
-    touch-action:none; user-select:none;
-  `;
+            const add=(x,y,boundary=false)=>{
+                x=Math.round(clampP(x,0,width-1)); y=Math.round(clampP(y,0,height-1)); const p=y*width+x;
+                if(visualState.maskMode!=='none'&&!mask[p]) return false;
+                // Keep interior vertices clear of the seam so the boundary
+                // triangles are well-shaped instead of degenerate slivers.
+                if(!boundary && seamRing.length && rawDist[p] < seamGap) return false;
+                const key=x+'_'+y;if(seen.has(key))return false;seen.add(key);
+                points.push(makeNode(x,y,boundary));
+                return true;
+            };
 
-  const fileIn = document.createElement('input');
-  fileIn.type = 'file'; fileIn.accept = '.json,application/json';
-  fileIn.style.display = 'none';
-  fileIn.addEventListener('change', () => {
-    const f = fileIn.files[0]; if (!f) return;
-    const reader = new FileReader();
-    reader.onload = e => importJsonLayer(e.target.result);
-    reader.readAsText(f);
-    fileIn.value = '';
-  });
+            // ── seam ring ────────────────────────────────────────
+            // Ordered silhouette contour, resampled to even spacing. Every
+            // ring vertex is depth-zero, so the front and back shells pinch
+            // shut along it — the mold seam.
+            const contours = traceContours(mask,width,height);
+            seamLoops = [];
+            for(const contour of contours){
+                const ring = resampleContour(contour, seamSpacing);
+                const loop = [];
+                for(const [fx,fy] of ring){
+                    const x=Math.round(clampP(fx,0,width-1)), y=Math.round(clampP(fy,0,height-1));
+                    const p=y*width+x;
+                    if(!mask[p]) continue;
+                    const key=x+'_'+y; if(seen.has(key)) continue; seen.add(key);
+                    const idx=points.length;
+                    loop.push(idx);
+                    seamRing.push(idx);
+                    points.push(makeNode(x,y,true));
+                }
+                if(loop.length>=3) seamLoops.push(loop);
+            }
 
-  btn.addEventListener('click', () => fileIn.click());
+            // Fallback if the trace failed: pin the image corners as before.
+            if(!seamRing.length){
+                const anchors=[[0,0],[width-1,0],[0,height-1],[width-1,height-1],[width>>1,0],[width>>1,height-1],[0,height>>1],[width-1,height>>1]];
+                for(const [x,y] of anchors) add(x,y,true);
+            }
 
-  let pressT;
-  btn.addEventListener('touchstart', () => { pressT = setTimeout(() => {
-    const txt = prompt('Paste JSON layer:');
-    if (txt) importJsonLayer(txt);
-  }, 600); }, { passive:true });
-  btn.addEventListener('touchend', () => clearTimeout(pressT), { passive:true });
+            // ── uniform layout: even facets instead of detail-clustered ──
+            if (el('triangleSource').value === 'legacy') {
+                const budget = parseInt(el('maxNodes').value||'700');
+                let fgArea = 0;
+                for (let i=0;i<width*height;i++) fgArea += mask[i];
+                if (!fgArea) fgArea = width*height;
+                const step = Math.max(4, Math.sqrt(fgArea / Math.max(1, budget - points.length)));
+                for (let y=step*0.5; y<height && points.length<budget; y+=step)
+                    for (let x=step*0.5; x<width && points.length<budget; x+=step)
+                        add(x, y, false);
+                return points;
+            }
 
-  document.body.appendChild(fileIn);
-  document.body.appendChild(btn);
-})();
+            const ranked=[...leaves].sort((a,b)=>b.score-a.score||b.depth-a.depth),remaining=Math.max(0,parseInt(el('maxNodes').value||'700')-points.length);
+            if(!ranked.length||remaining<=0)return points;
+            const weights=ranked.map(c=>Math.max(.01,.18+Math.pow(c.score,1.15)*(1+PORYGON.focus)+c.depth*.025)*(PORYGON.edgePoints?(1+PORYGON.edge*effectiveEdgeP(c.stats)*.35):1));
+            const total=weights.reduce((s,v)=>s+v,0)||1;
+            const quotas=weights.map(w=>Math.floor(remaining*w/total));
+            let leftover=remaining-quotas.reduce((s,v)=>s+v,0);
+            [...weights.map((w,i)=>[remaining*w/total-quotas[i],i])].sort((a,b)=>b[0]-a[0]).forEach(([_,i])=>{if(leftover>0){quotas[i]++;leftover--;}});
+            let globalIndex=0;
+            for(let ri=0;ri<ranked.length&&points.length<parseInt(el('maxNodes').value||'700');ri++){
+                const cell=ranked[ri],quota=quotas[ri];
+                for(let localIndex=0;localIndex<quota&&points.length<parseInt(el('maxNodes').value||'700');localIndex++){
+                    const useEdge=PORYGON.edgePoints&&effectiveEdgeP(cell.stats)>.18&&(localIndex===0||(localIndex%3===0&&PORYGON.edge>=1));
+                    if(useEdge){const [ex,ey,es]=findEdgePointP(analysis,cell,width,height,globalIndex+cell.depth*97+localIndex*43);if(es>.05&&add(ex,ey,false)){globalIndex++;continue;}}
+                    let [jx,jy]=r2P(points.length*17+localIndex*43+cell.depth*97);
+                    if(PORYGON.balance){const m=.10;jx=m+jx*(1-2*m);jy=m+jy*(1-2*m);}
+                    add(cell.x0+jx*(cell.x1-cell.x0),cell.y0+jy*(cell.y1-cell.y0),false);globalIndex++;
+                }
+            }
+            return points;
+        }
 
-// ═══════════════════════════════════════════════════════
-// ANIMATION LOOP
-// ═══════════════════════════════════════════════════════
-function animate(){
-  simulateStep();
-  tickHold(performance.now());
-  render();
-  updateFills();
-  requestAnimationFrame(animate);
-}
+        function delaunayP(points,width,height){
+            const n=points.length;if(n<3)return[];const scale=Math.max(width,height)*20;
+            const work=points.map(p=>[p.x,p.y]);work.push([width/2-2*scale,height/2-scale],[width/2+2*scale,height/2-scale],[width/2,height/2+2*scale]);
+            const tris=[[n,n+1,n+2]];
+            for(let pi=0;pi<n;pi++){
+                const [qx,qy]=work[pi],bad=[];
+                for(let ti=0;ti<tris.length;ti++){
+                    const t=tris[ti],cc=circumcircleP(work[t[0]],work[t[1]],work[t[2]]);if(!cc)continue;
+                    const dx=qx-cc[0],dy=qy-cc[1];if(dx*dx+dy*dy<=cc[2]+1e-7)bad.push(ti);
+                }
+                const edgeCounts=new Map();
+                for(const ti of bad){const [a,b,c]=tris[ti];for(const [u,v] of [[a,b],[b,c],[c,a]]){const k=u<v?u+'_'+v:v+'_'+u;edgeCounts.set(k,(edgeCounts.get(k)||0)+1);}}
+                bad.sort((a,b)=>b-a);for(const ti of bad)tris.splice(ti,1);
+                for(const [k,c] of edgeCounts)if(c===1){const u=k.indexOf('_'),a=+k.slice(0,u),b=+k.slice(u+1);tris.push([a,b,pi]);}
+            }
+            const out=[];
+            for(const [a,b,c] of tris)if(a<n&&b<n&&c<n){const la=Math.hypot(work[a][0]-work[b][0],work[a][1]-work[b][1]),lb=Math.hypot(work[b][0]-work[c][0],work[b][1]-work[c][1]),lc=Math.hypot(work[c][0]-work[a][0],work[c][1]-work[a][1]);const ax=work[b][0]-work[a][0],ay=work[b][1]-work[a][1],bx=work[c][0]-work[a][0],by=work[c][1]-work[a][1],area2=Math.abs(ax*by-ay*bx),sumSq=la*la+lb*lb+lc*lc;out.push({a,b,c,maxLen:Math.max(la,lb,lc),quality:sumSq>1e-9?(2*Math.sqrt(3)*area2)/sumSq:0});}
+            return out;
+        }
+        function circumcircleP(a,b,c){const [ax,ay]=a,[bx,by]=b,[cx,cy]=c,d=2*(ax*(by-cy)+bx*(cy-ay)+cx*(ay-by));if(Math.abs(d)<1e-12)return null;const aa=ax*ax+ay*ay,bb=bx*bx+by*by,cc=cx*cx+cy*cy;const ux=(aa*(by-cy)+bb*(cy-ay)+cc*(ay-by))/d,uy=(aa*(cx-bx)+bb*(ax-cx)+cc*(bx-ax))/d;return[ux,uy,(ux-ax)**2+(uy-ay)**2];}
 
-updateFills();
-render();
-requestAnimationFrame(animate);
-setTimeout(openTray,400);
+        function syncPorygonControls(){
+            PORYGON.adaptivity=+el('adaptivity').value/100;PORYGON.detailBias=+el('detailBias').value/100;PORYGON.textureReject=+el('textureReject').value/100;PORYGON.focus=+el('focus').value/100;PORYGON.edgeWeight=+el('edgeWeight').value/100;PORYGON.colorWeight=+el('colorWeight').value/100;PORYGON.toneWeight=+el('toneWeight').value/100;PORYGON.gradientWeight=+el('gradientWeight').value/100;PORYGON.minCell=+el('minCell').value/1000;PORYGON.maxDepth=+el('maxQuadDepth').value;PORYGON.balance=el('balancePoints').value==='on';PORYGON.edgePoints=el('edgePoints').value==='on';
+            PORYGON.edge=clampP(2*Math.pow(60/Math.max(1,+el('edgeThreshold').value),0.5),0.25,5);
+            el('adaptivityVal').textContent=(PORYGON.adaptivity*100).toFixed(0);el('detailBiasVal').textContent=(PORYGON.detailBias*100).toFixed(0);el('textureRejectVal').textContent=(PORYGON.textureReject*100).toFixed(0);el('focusVal').textContent=PORYGON.focus.toFixed(2);el('edgeWeightVal').textContent=PORYGON.edgeWeight.toFixed(2);el('colorWeightVal').textContent=PORYGON.colorWeight.toFixed(2);el('toneWeightVal').textContent=PORYGON.toneWeight.toFixed(2);el('gradientWeightVal').textContent=PORYGON.gradientWeight.toFixed(2);el('minCellVal').textContent=(PORYGON.minCell*100).toFixed(1)+'%';el('maxQuadDepthVal').textContent=PORYGON.maxDepth;
+        }
+        ['adaptivity','detailBias','textureReject','focus','edgeWeight','colorWeight','toneWeight','gradientWeight','minCell','maxQuadDepth','balancePoints','edgePoints'].forEach(id=>{el(id).addEventListener('input',()=>{syncPorygonControls();if(imageData)scheduleRebuild();});el(id).addEventListener('change',()=>{syncPorygonControls();if(imageData)scheduleRebuild();});});
+        syncPorygonControls();
 
-if(location.search.includes('debug')){
-  const s=document.createElement('script');
-  s.src='https://cdn.jsdelivr.net/npm/eruda';
-  s.onload=()=>eruda.init();
-  document.body.appendChild(s);
-}
+        function rebuild(){
+            if(!imageData)return;
+            syncVisualState();syncPorygonControls();
+            const t0=performance.now();
+            const analysis=buildPorygonAnalysis(imageData);
+            const leaves=buildPorygonQuadtree(imageData.width,imageData.height,analysis);
+            nodes=buildPorygonNodes(imageData.width,imageData.height,imageData,analysis,leaves);
+            allTris=delaunayP(nodes,imageData.width,imageData.height);
+            // Build depth fields and per-node local contrast
+            buildSmoothedDepthField();
+            if (depthMapData) buildExternalDepthField();
+            computeLocalContrast();
+            // Populate node depthMap values from external field
+            if (externalDepthField && imageData) {
+                for (const nd of nodes) {
+                    const ix = Math.max(0, Math.min(imageData.width - 1, Math.round(nd.x)));
+                    const iy = Math.max(0, Math.min(imageData.height - 1, Math.round(nd.y)));
+                    nd.depthMap = externalDepthField[iy * imageData.width + ix];
+                }
+            }
+            vx=new Float32Array(nodes.length);vy=new Float32Array(nodes.length);vz=new Float32Array(nodes.length);bx=new Float32Array(nodes.length);by=new Float32Array(nodes.length);bz=new Float32Array(nodes.length);px=new Float32Array(nodes.length);py=new Float32Array(nodes.length);backPx=new Float32Array(nodes.length);backPy=new Float32Array(nodes.length);
+            colorCache.clear();refilter();
+            el('statusText').textContent=`✓ PORYGON V5 · ${leaves.length} leaves · ${(performance.now()-t0).toFixed(0)}ms`;
+        }
 
-window.resetAll=resetAll;
-window.openTray=openTray;
-window.closeTray=closeTray;
-})();
-</script>
+        function refilter() {
+            const maxDist = parseInt(el('maxDistance').value);
+            const minQual = parseFloat(el('minQuality').value) / 100;
+            filteredTris = allTris.filter(t => {
+                if (t.maxLen > maxDist) return false;
+                if (minQual > 0 && t.quality < minQual) return false;
+                if (!maskField || visualState.maskMode === 'none') return true;
+                const A=nodes[t.a], B=nodes[t.b], C=nodes[t.c];
+                const pts=[[A.x,A.y],[B.x,B.y],[C.x,C.y],
+                           [(A.x+B.x)/2,(A.y+B.y)/2],
+                           [(B.x+C.x)/2,(B.y+C.y)/2],
+                           [(C.x+A.x)/2,(C.y+A.y)/2],
+                           [(A.x+B.x+C.x)/3,(A.y+B.y+C.y)/3]];
+                for(const [x,y] of pts){
+                    const ix=Math.max(0,Math.min(imageData.width-1,Math.round(x)));
+                    const iy=Math.max(0,Math.min(imageData.height-1,Math.round(y)));
+                    if(maskField[iy*imageData.width+ix]===0) return false;
+                }
+                return true;
+            });
+
+            wireEdges = [];
+            boundaryEdges = [];
+            const seen = new Set();
+            const counts = new Map();
+            for (const t of filteredTris) {
+                const push = (a,b) => {
+                    const k=a<b?a+'_'+b:b+'_'+a;
+                    counts.set(k,(counts.get(k)||0)+1);
+                    if(!seen.has(k)){seen.add(k);wireEdges.push([a,b]);}
+                };
+                push(t.a,t.b); push(t.b,t.c); push(t.c,t.a);
+            }
+            for(const [k,c] of counts){
+                if(c===1){const u=k.indexOf('_');boundaryEdges.push([+k.slice(0,u),+k.slice(u+1)]);}
+            }
+
+            // Build lightweight face adjacency for geometric cavity/AO evaluation.
+            faceNeighbors = Array.from({length: filteredTris.length}, () => []);
+            const edgeOwner = new Map();
+            filteredTris.forEach((t, fi) => {
+                for (const [a,b] of [[t.a,t.b],[t.b,t.c],[t.c,t.a]]) {
+                    const k=a<b ? a+'_'+b : b+'_'+a;
+                    const prev=edgeOwner.get(k);
+                    if (prev !== undefined) {
+                        faceNeighbors[fi].push(prev);
+                        faceNeighbors[prev].push(fi);
+                    } else edgeOwner.set(k,fi);
+                }
+            });
+            for (let i=0;i<faceNeighbors.length;i++) {
+                if (faceNeighbors[i].length > 3) faceNeighbors[i] = faceNeighbors[i].slice(0,3);
+            }
+
+            colorCache.clear();
+            el('nodeCount').textContent = nodes.length;
+            el('faceCount').textContent = filteredTris.length;
+
+            // Seam integrity: a seam vertex with no surviving triangle is a hole
+            // in the mold. This is the fastest signal that Sliver Reject or Max
+            // Facet Span is filtering too hard.
+            const used = new Set();
+            for (const t of filteredTris) { used.add(t.a); used.add(t.b); used.add(t.c); }
+            let orphan = 0;
+            for (const idx of seamRing) if (!used.has(idx)) orphan++;
+            const anEl = el('analysisStatus');
+            if (anEl) anEl.textContent = `${analysisInfo.aw}\u00d7${analysisInfo.ah} grid \u00b7 edge \u03b3 ${analysisInfo.gamma.toFixed(2)}`;
+
+            const cutEl = el('cutoutStatus');
+            if (cutEl) {
+                if (visualState.maskMode === 'none') {
+                    cutEl.textContent = 'off — whole image kept';
+                    cutEl.style.color = '#888888';
+                } else if (!cutoutInfo.ok) {
+                    cutEl.textContent = `nothing removed (bg ${cutoutInfo.bg}) — raise Cutout Tolerance`;
+                    cutEl.style.color = '#ffaa33';
+                } else {
+                    cutEl.textContent = `${cutoutInfo.keptPct.toFixed(0)}% kept · bg ${cutoutInfo.bg} · tol ${cutoutInfo.tol}`;
+                    cutEl.style.color = '#00dd66';
+                }
+            }
+
+            const sealEl = el('seamStatus');
+            if (sealEl) {
+                if (!seamRing.length) {
+                    sealEl.textContent = 'no seam';
+                    sealEl.style.color = '#886600';
+                } else if (orphan === 0) {
+                    sealEl.textContent = `sealed · ${seamLoops.length} loop${seamLoops.length===1?'':'s'} · ${seamRing.length}v`;
+                    sealEl.style.color = '#00dd66';
+                } else {
+                    sealEl.textContent = `${orphan}/${seamRing.length} open — raise Max Facet Span or lower Sliver Reject`;
+                    sealEl.style.color = '#ffaa33';
+                }
+            }
+
+            el('statusText').textContent = nodes.length ? '✓ Live turntable' : 'No nodes — lower threshold';
+            refreshJSON();
+        }
+
+        // ── color modes ─────────────────────────────────────────
+        const HEAT = [
+            [0, 8, 30], [58, 12, 122], [161, 22, 146],
+            [232, 87, 61], [252, 189, 68], [255, 255, 226],
+        ];
+        function heatColor(t) {
+            t = Math.max(0, Math.min(0.9999, t));
+            const f = t * (HEAT.length - 1);
+            const i = Math.floor(f), k = f - i;
+            const A = HEAT[i], B = HEAT[i + 1];
+            return [
+                A[0] + (B[0] - A[0]) * k,
+                A[1] + (B[1] - A[1]) * k,
+                A[2] + (B[2] - A[2]) * k,
+            ];
+        }
+
+        // ── depth source blending ────────────────────────────────
+        // Builds the smoothed external depth field from depthMapData
+        function buildExternalDepthField() {
+            if (!depthMapData || !imageData) { externalDepthField = null; return; }
+            const w = imageData.width, h = imageData.height;
+            const dd = depthMapData.data;
+            const raw = new Float32Array(w * h);
+            for (let i = 0; i < w * h; i++) {
+                raw[i] = (0.299 * dd[i * 4] + 0.587 * dd[i * 4 + 1] + 0.114 * dd[i * 4 + 2]) / 255;
+            }
+            // Apply depthSmooth gaussian-ish blur
+            const radius = Math.round(parseFloat(el('depthSmooth').value) / 100 * Math.max(w, h) * 0.06);
+            if (radius > 0) {
+                const tmp = new Float32Array(w * h);
+                // horizontal pass
+                for (let y = 0; y < h; y++) {
+                    for (let x = 0; x < w; x++) {
+                        let s = 0, c = 0;
+                        for (let dx = -radius; dx <= radius; dx++) {
+                            const xx = Math.max(0, Math.min(w - 1, x + dx));
+                            s += raw[y * w + xx]; c++;
+                        }
+                        tmp[y * w + x] = s / c;
+                    }
+                }
+                // vertical pass
+                for (let y = 0; y < h; y++) {
+                    for (let x = 0; x < w; x++) {
+                        let s = 0, c = 0;
+                        for (let dy = -radius; dy <= radius; dy++) {
+                            const yy = Math.max(0, Math.min(h - 1, y + dy));
+                            s += tmp[yy * w + x]; c++;
+                        }
+                        raw[y * w + x] = s / c;
+                    }
+                }
+            }
+            externalDepthField = raw;
+        }
+
+        // Builds a smoothed luminance depth field from the source image
+        function buildSmoothedDepthField() {
+            if (!imageData) { depthField = null; return; }
+            const w = imageData.width, h = imageData.height, d = imageData.data;
+            const raw = new Float32Array(w * h);
+            for (let i = 0; i < w * h; i++) {
+                raw[i] = (0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2]) / 255;
+            }
+            const radius = Math.round(parseFloat(el('depthSmooth').value) / 100 * Math.max(w, h) * 0.06);
+            if (radius > 0) {
+                const tmp = new Float32Array(w * h);
+                for (let y = 0; y < h; y++) {
+                    for (let x = 0; x < w; x++) {
+                        let s = 0, c = 0;
+                        for (let dx = -radius; dx <= radius; dx++) {
+                            const xx = Math.max(0, Math.min(w - 1, x + dx));
+                            s += raw[y * w + xx]; c++;
+                        }
+                        tmp[y * w + x] = s / c;
+                    }
+                }
+                for (let y = 0; y < h; y++) {
+                    for (let x = 0; x < w; x++) {
+                        let s = 0, c = 0;
+                        for (let dy = -radius; dy <= radius; dy++) {
+                            const yy = Math.max(0, Math.min(h - 1, y + dy));
+                            s += tmp[yy * w + x]; c++;
+                        }
+                        raw[y * w + x] = s / c;
+                    }
+                }
+            }
+            depthField = raw;
+        }
+
+        // Computes per-node local contrast (deviation from neighborhood average)
+        function computeLocalContrast() {
+            if (!nodes.length || !imageData) return;
+            const w = imageData.width, h = imageData.height, d = imageData.data;
+            const radius = Math.max(3, Math.round(Math.max(w, h) * 0.025));
+            for (const nd of nodes) {
+                const cx = Math.round(nd.x), cy = Math.round(nd.y);
+                let sum = 0, cnt = 0;
+                const x0 = Math.max(0, cx - radius), x1 = Math.min(w - 1, cx + radius);
+                const y0 = Math.max(0, cy - radius), y1 = Math.min(h - 1, cy + radius);
+                for (let yy = y0; yy <= y1; yy += 2) {
+                    for (let xx = x0; xx <= x1; xx += 2) {
+                        const si = (yy * w + xx) * 4;
+                        sum += (0.299 * d[si] + 0.587 * d[si + 1] + 0.114 * d[si + 2]) / 255;
+                        cnt++;
+                    }
+                }
+                const avg = cnt > 0 ? sum / cnt : nd.rawLum;
+                nd.localContrast = nd.rawLum - avg; // signed: positive = brighter than surroundings
+            }
+        }
+
+        // Returns the depth signal (0..1) for a node based on the current depth source setting
+        function getNodeDepthSource(nd) {
+            const src = visualState.depthSource;
+            const hasMap = !!externalDepthField;
+            const invert = visualState.depthMapDirection === 'invert';
+            const influence = parseFloat(el('depthMapInfluence').value) / 100;
+
+            // Get image-derived depth (smoothed luminance)
+            let imgDepth = nd.lum;
+            if (depthField && imageData) {
+                const ix = Math.max(0, Math.min(imageData.width - 1, Math.round(nd.x)));
+                const iy = Math.max(0, Math.min(imageData.height - 1, Math.round(nd.y)));
+                imgDepth = depthField[iy * imageData.width + ix];
+            }
+
+            // Get external depth map value
+            let mapDepth = imgDepth;
+            if (hasMap && imageData) {
+                const ix = Math.max(0, Math.min(imageData.width - 1, Math.round(nd.x)));
+                const iy = Math.max(0, Math.min(imageData.height - 1, Math.round(nd.y)));
+                mapDepth = externalDepthField[iy * imageData.width + ix];
+                if (invert) mapDepth = 1 - mapDepth;
+            }
+
+            if (src === 'auto') return hasMap ? mapDepth * influence + imgDepth * (1 - influence) : imgDepth;
+            if (src === 'image') return imgDepth;
+            if (src === 'map') return hasMap ? mapDepth : imgDepth;
+            if (src === 'blend') return hasMap ? mapDepth * influence + imgDepth * (1 - influence) : imgDepth;
+            return imgDepth;
+        }
+
+        function _getNodeDepthSignal(nd) {
+            return getNodeDepthSource(nd);
+        }
+
+        const colorCache = new Map();
+        const COLOR_CACHE_MAX = 8000;
+
+        function faceColor(t, mode, heatSrc) {
+            const key = mode + '|' + heatSrc + '|' + visualState.depthSource + '|' + visualState.depthMapDirection + '|' + el('depthMapInfluence').value + '|' + el('lumSculpt').value + '|' + el('edgeCarve').value + '|' + el('localContrast').value + '|' + t.a + '|' + t.b + '|' + t.c;
+            const hit = colorCache.get(key);
+            if (hit) return hit;
+
+            if (colorCache.size >= COLOR_CACHE_MAX) colorCache.clear();
+
+            const A = nodes[t.a], B = nodes[t.b], C = nodes[t.c];
+            let c;
+            if (mode === 'true') {
+                const sx=Math.max(0,Math.min(imageData.width-1,Math.round((A.x+B.x+C.x)/3)));
+                const sy=Math.max(0,Math.min(imageData.height-1,Math.round((A.y+B.y+C.y)/3)));
+                const si=(sy*imageData.width+sx)*4;
+                c=[imageData.data[si],imageData.data[si+1],imageData.data[si+2]];
+            } else if (mode === 'heat') {
+                let v;
+                if (heatSrc === 'depth') v = (_getNodeDepthSignal(A) + _getNodeDepthSignal(B) + _getNodeDepthSignal(C)) / 3;
+                else if (heatSrc === 'lum') v = (A.lum + B.lum + C.lum) / 3;
+                else if (heatSrc === 'edge') v = (A.edge + B.edge + C.edge) / 3;
+                else if (heatSrc === 'facing') v = (A.facing + B.facing + C.facing) / 3;
+                else if (heatSrc === 'contrast') v = Math.max(0, Math.min(1, 0.5 + ((A.localContrast||0) + (B.localContrast||0) + (C.localContrast||0)) / 3 * 3));
+                else v = (A.lum + B.lum + C.lum) / 3;
+                c = heatColor(v);
+            } else if (mode === 'depth') {
+                const dA = _getNodeDepthSignal(A);
+                const dB = _getNodeDepthSignal(B);
+                const dC = _getNodeDepthSignal(C);
+                const v = (dA + dB + dC) / 3;
+                const g = 30 + Math.max(0, Math.min(1, v)) * 225;
+                c = [g, g, g];
+            } else {
+                c = [0, 255, 136];
+            }
+            colorCache.set(key, c);
+            return c;
+        }
+
+        // ── orbit + pan + pinch ─────────────────────────────────
+        function centroid() {
+            let sx = 0, sy = 0;
+            for (const p of ptrs.values()) { sx += p.x; sy += p.y; }
+            return { x: sx / ptrs.size, y: sy / ptrs.size };
+        }
+
+        canvas.addEventListener('pointerdown', e => {
+            e.preventDefault();
+            try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+            ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            dragging = true;
+            if (ptrs.size === 2) {
+                const [p1, p2] = [...ptrs.values()];
+                lastPinch = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                lastCenter = centroid();
+            }
+        });
+
+        canvas.addEventListener('pointermove', e => {
+            if (!ptrs.has(e.pointerId)) return;
+            const prev = ptrs.get(e.pointerId);
+            const cur = { x: e.clientX, y: e.clientY };
+            ptrs.set(e.pointerId, cur);
+
+            if (ptrs.size === 1) {
+                yaw += (cur.x - prev.x) * 0.006;
+                pitch += (cur.y - prev.y) * 0.006;
+                pitch = Math.max(-1.45, Math.min(1.45, pitch));
+            } else if (ptrs.size === 2) {
+                const [p1, p2] = [...ptrs.values()];
+                const d = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                const c = centroid();
+
+                if (lastPinch > 0) {
+                    zoom *= d / lastPinch;
+                    zoom = Math.max(0.2, Math.min(6, zoom));
+                }
+                if (lastCenter) {
+                    panX += c.x - lastCenter.x;
+                    panY += c.y - lastCenter.y;
+                }
+                lastPinch = d;
+                lastCenter = c;
+            }
+        });
+
+        const endPtr = e => {
+            ptrs.delete(e.pointerId);
+            lastPinch = 0;
+            lastCenter = ptrs.size ? centroid() : null;
+            if (ptrs.size === 0) dragging = false;
+        };
+        canvas.addEventListener('pointerup', endPtr);
+        canvas.addEventListener('pointercancel', endPtr);
+
+        canvas.addEventListener('wheel', e => {
+            e.preventDefault();
+            if (e.shiftKey) {
+                panX -= e.deltaX;
+                panY -= e.deltaY;
+            } else {
+                zoom *= Math.exp(-e.deltaY * 0.0015);
+                zoom = Math.max(0.2, Math.min(6, zoom));
+            }
+        }, { passive: false });
+
+        // ── software turntable renderer ─────────────────────────
+        const GEOMETRY_OUTPUT_GAIN = 10;
+
+        // Lighting is now controlled by lightingState / the collapsible lighting drawer.
+
+        function frame(ts) {
+            const dt = Math.min(50, ts - lastTs || 16);
+            lastTs = ts;
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (imageData && nodes.length) draw(dt);
+
+            requestAnimationFrame(frame);
+        }
+
+        function moldProfile(t, roundness) {
+            t = Math.max(0, Math.min(1, t));
+            // Suppress steep spherical rise near edge — apply t² ramp first
+            // so profile is 0 at edge and tapers smoothly
+            const ramped = t * t * (3 - 2 * t); // smoothstep: 0→0, 1→1
+            const spherical = Math.sqrt(Math.max(0, 2 * ramped - ramped * ramped));
+            const r = Math.max(0, Math.min(1, roundness / 100));
+            return ramped * (1 - r) + spherical * r;
+        }
+
+        function nodeHalfDepth(nd, depth, volume, roundness, lumSculptAmt, edgeCarveAmt, localContrastAmt) {
+            if (!nd) return 0;
+            const depthAbs = Math.abs(depth);
+            if (depthAbs <= 0) return 0;
+
+            // Seam vertices are always flush so the shells close, in EVERY mode.
+            // Relief/surface/edges used to return early above this line, which
+            // silently disabled the seam, the bevel, Mold Inflation and Form
+            // Roundness whenever one of those modes was selected.
+            if (nd.boundary) return 0;
+
+            const f = Math.max(0, Math.min(1, nd.form || 0));
+            const geoMode = visualState.geometryMode;
+            const mold = moldProfile(f, roundness);
+
+            // Per-mode base shape.
+            let shape;
+            if (geoMode === 'relief') {
+                shape = Math.max(0, Math.min(1, _getNodeDepthSignal(nd)));
+            } else if (geoMode === 'surface') {
+                shape = 0.30 + 0.70 * Math.max(0, Math.min(1, _getNodeDepthSignal(nd)));
+            } else if (geoMode === 'edges') {
+                shape = Math.max(0, Math.min(1, nd.edge || 0));
+            } else {
+                shape = mold;                       // object / lowpoly
+            }
+            // Non-mold modes stay contained by the mold envelope, so Form
+            // Roundness keeps working and the piece still reads as a solid.
+            if (geoMode === 'relief' || geoMode === 'surface' || geoMode === 'edges') {
+                shape *= 0.35 + 0.65 * mold;
+            }
+
+            // Bevel: taper to zero over a band measured in real pixels from the
+            // seam, not in normalized form units. A form-based band changes
+            // width every time the subject's proportions change.
+            const bevelPx = Math.max(1, seamSpacing * 2.2 * (parseFloat(el('bevelWidth').value) / 100));
+            const dist = nd.rawDist !== undefined ? nd.rawDist : bevelPx;
+            const tb = Math.max(0, Math.min(1, dist / bevelPx));
+            const edgeFade = tb * tb * (3 - 2 * tb);
+            if (edgeFade <= 0) return 0;
+
+            const volScale = geoMode === 'object' ? 1.4 : 1.0;
+            const inflation = (0.25 + 0.75 * Math.max(0, Math.min(1, volume / (60 * GEOMETRY_OUTPUT_GAIN)))) * volScale;
+            const envelope = shape * depthAbs * inflation;
+
+            // Sculpt terms MODULATE the mold rather than scaling it from zero,
+            // so shadows can't collapse the shell.
+            let depthFactor = 1;
+
+            const ls = Math.max(0, Math.min(1, (lumSculptAmt || 0) / 100));
+            if (ls > 0 && geoMode !== 'relief' && geoMode !== 'surface') {
+                const signal = Math.max(0, Math.min(1, _getNodeDepthSignal(nd)));
+                depthFactor *= 1 + (signal - 0.5) * 2 * ls * 0.5;   // ±50% at full
+            }
+
+            const ec = Math.max(0, Math.min(1, (edgeCarveAmt || 0) / 100));
+            if (ec > 0) {
+                const edge = Math.max(0, Math.min(1, nd.edge || 0));
+                depthFactor *= 1 - Math.pow(edge, 0.7) * ec * 0.35;
+            }
+
+            const lc = Math.max(0, Math.min(1, (localContrastAmt || 0) / 100));
+            if (lc > 0 && nd.localContrast !== undefined) {
+                const lcSigned = Math.max(-1, Math.min(1, nd.localContrast * 2));
+                depthFactor *= 1 + lcSigned * lc * 0.3;
+            }
+
+            depthFactor = Math.max(0.25, Math.min(1.6, depthFactor));
+            return envelope * depthFactor * edgeFade;
+        }
+
+        // ── advanced lighting / material system ─────────────────────
+        const lightingState = {
+            preset: 'custom',
+            azimuth: 35, elevation: 55, keyIntensity: 100, keyWarmth: 12,
+            fill: 22, fillOffset: 150,
+            sky: 26, skyTint: -18, bounce: 12,
+            facetContrast: 72, tonalBands: 0, facetBias: 0, shadowFloor: 6,
+            rim: 18, rimPower: 2, rimWarmth: 0,
+            ao: 28, cavityPower: 1.6, formLift: 0,
+            specular: 8, specPower: 18, specTint: 0,
+            model: 'physical', space: 'world'
+        };
+
+        const lightingPresets = {
+            studio:  { azimuth:35,  elevation:55, keyIntensity:92,  keyWarmth:10,  fill:28, fillOffset:150, sky:30, skyTint:-14, bounce:14, facetContrast:58,  tonalBands:0, facetBias:0, shadowFloor:8,  rim:16, rimPower:2,   rimWarmth:8,   ao:22, cavityPower:1.5, formLift:0, specular:7,  specPower:18, specTint:0,  model:'physical' },
+            hard:    { azimuth:-35, elevation:68, keyIntensity:128, keyWarmth:26,  fill:8,  fillOffset:165, sky:10, skyTint:-30, bounce:5,  facetContrast:92,  tonalBands:4, facetBias:0, shadowFloor:2,  rim:10, rimPower:2.5, rimWarmth:-5,  ao:34, cavityPower:1.8, formLift:0, specular:13, specPower:28, specTint:4,  model:'graphic'  },
+            rim:     { azimuth:145, elevation:38, keyIntensity:74,  keyWarmth:-8,  fill:14, fillOffset:140, sky:20, skyTint:-24, bounce:10, facetContrast:82,  tonalBands:0, facetBias:4, shadowFloor:5,  rim:58, rimPower:2.2, rimWarmth:15,  ao:26, cavityPower:1.7, formLift:0, specular:9,  specPower:20, specTint:12, model:'crystal'  },
+            flat:    { azimuth:25,  elevation:52, keyIntensity:66,  keyWarmth:0,   fill:38, fillOffset:180, sky:44, skyTint:0,   bounce:26, facetContrast:34,  tonalBands:5, facetBias:0, shadowFloor:14, rim:6,  rimPower:2,   rimWarmth:0,   ao:10, cavityPower:1.2, formLift:2, specular:0,  specPower:20, specTint:0,  model:'graphic'  },
+            crystal: { azimuth:-55, elevation:60, keyIntensity:112, keyWarmth:-14, fill:12, fillOffset:155, sky:16, skyTint:-40, bounce:6,  facetContrast:112, tonalBands:3, facetBias:0, shadowFloor:2,  rim:34, rimPower:3,   rimWarmth:-12, ao:38, cavityPower:2.2, formLift:0, specular:18, specPower:38, specTint:18, model:'crystal'  },
+            dusk:    { azimuth:-120,elevation:18, keyIntensity:86,  keyWarmth:62,  fill:20, fillOffset:150, sky:22, skyTint:-58, bounce:18, facetContrast:76,  tonalBands:0, facetBias:0, shadowFloor:4,  rim:40, rimPower:2.4, rimWarmth:44,  ao:30, cavityPower:1.7, formLift:0, specular:11, specPower:24, specTint:22, model:'physical' }
+        };
+
+        function clamp01(v) { return Math.max(0, Math.min(1, v)); }
+        function mix(a,b,t) { return a + (b-a)*t; }
+        function rgbClamp(c) { return [Math.max(0,Math.min(255,c[0])), Math.max(0,Math.min(255,c[1])), Math.max(0,Math.min(255,c[2]))]; }
+
+        // Warmth (-100 cool .. +100 warm) → per-channel multiplier.
+        function tintOf(warmth) {
+            const w = Math.max(-100, Math.min(100, warmth)) / 100;
+            return w >= 0
+                ? [1, 1 - 0.10*w, 1 - 0.28*w]
+                : [1 + 0.22*w, 1 + 0.07*w, 1];
+        }
+
+        // Direction TOWARD the light. az=0,el=0 is a headlight sitting at the
+        // camera. The previous version had +z here, which put the default key
+        // light behind the object — every front face fell back to ambient.
+        function getLightVector(azDeg, elDeg) {
+            const az = azDeg * Math.PI / 180, elv = elDeg * Math.PI / 180;
+            const ce = Math.cos(elv);
+            const v = { x: Math.sin(az)*ce, y: -Math.sin(elv), z: -Math.cos(az)*ce };
+            const m = Math.hypot(v.x, v.y, v.z) || 1;
+            return { x:v.x/m, y:v.y/m, z:v.z/m };
+        }
+
+        // Rotate a world-space direction into camera space using the same
+        // pitch-then-yaw the vertex transform applies.
+        function rotToCamera(v) {
+            const cX=Math.cos(pitch), sX=Math.sin(pitch), cY=Math.cos(yaw), sY=Math.sin(yaw);
+            const y  = v.y*cX - v.z*sX;
+            const z0 = v.y*sX + v.z*cX;
+            return { x: v.x*cY + z0*sY, y, z: -v.x*sY + z0*cY };
+        }
+
+        // Returns per-channel light multipliers plus rim and specular terms.
+        function evaluateLighting(nx,ny,nz,viewX,viewY,viewZ,cavity) {
+            const S = lightingState;
+
+            let L  = getLightVector(S.azimuth, S.elevation);
+            let F  = getLightVector(S.azimuth + S.fillOffset, S.elevation * 0.35);
+            let up = { x:0, y:-1, z:0 };
+            if (S.space === 'world') { L = rotToCamera(L); F = rotToCamera(F); up = rotToCamera(up); }
+
+            // ── key ──
+            let d = clamp01(nx*L.x + ny*L.y + nz*L.z);
+            if (S.model === 'soft') d = Math.pow(d, 0.82);
+            if (S.model === 'crystal') d = Math.pow(d, 1.25);
+            const fc = S.facetContrast / 100;
+            d = clamp01(0.5 + (d - 0.5) * (1 + fc * 1.35));
+            d = clamp01(d + S.facetBias / 100);
+            const bands = S.model === 'graphic' ? Math.max(3, S.tonalBands) : S.tonalBands;
+            if (bands > 0) { const b = Math.max(2, bands); d = Math.round(d * (b-1)) / (b-1); }
+
+            const kC = tintOf(S.keyWarmth), key = S.keyIntensity / 100;
+
+            // ── fill: opposite side, complementary temperature ──
+            const fd = clamp01(nx*F.x + ny*F.y + nz*F.z);
+            const fC = tintOf(-S.keyWarmth * 0.6), fill = S.fill / 100;
+
+            // ── hemisphere ambient: sky above, ground bounce below ──
+            const hemi = clamp01(0.5 + 0.5 * (nx*up.x + ny*up.y + nz*up.z));
+            const sC = tintOf(S.skyTint), sky = S.sky / 100, bnc = S.bounce / 100;
+
+            let r = d*key*kC[0] + fd*fill*fC[0] + sky*hemi*sC[0] + bnc*(1-hemi)*1.00;
+            let g = d*key*kC[1] + fd*fill*fC[1] + sky*hemi*sC[1] + bnc*(1-hemi)*0.94;
+            let b = d*key*kC[2] + fd*fill*fC[2] + sky*hemi*sC[2] + bnc*(1-hemi)*0.86;
+
+            // ── geometric occlusion ──
+            const occ = 1 - (S.ao/100) * Math.pow(clamp01(cavity), S.cavityPower);
+            r *= occ; g *= occ; b *= occ;
+
+            const fl = S.shadowFloor/100, lift = S.formLift/100;
+            r = Math.max(fl, r) + lift; g = Math.max(fl, g) + lift; b = Math.max(fl, b) + lift;
+
+            // ── rim / specular ──
+            const vdot = clamp01(nx*viewX + ny*viewY + nz*viewZ);
+            let rim = Math.pow(1 - vdot, S.rimPower) * (S.rim/100);
+            if (S.model === 'crystal') rim *= 1.4;
+
+            let spec = 0;
+            if (S.specular > 0) {
+                const hx=L.x+viewX, hy=L.y+viewY, hz=L.z+viewZ;
+                const hl=Math.hypot(hx,hy,hz)||1;
+                spec = Math.pow(clamp01((nx*hx+ny*hy+nz*hz)/hl), S.specPower) * (S.specular/100);
+            }
+
+            return {
+                r: Math.max(0, Math.min(2, r)),
+                g: Math.max(0, Math.min(2, g)),
+                b: Math.max(0, Math.min(2, b)),
+                spec: Math.min(1, spec),
+                rim:  Math.min(1, rim)
+            };
+        }
+
+        function applyPreset(name) {
+            const p = lightingPresets[name];
+            if (!p) return;
+            for (const k of Object.keys(p)) lightingState[k] = p[k];
+            lightingState.preset = name;
+            syncLightingControls();
+        }
+
+        function syncLightingControls() {
+            const FIELDS = [
+                ['lightAz','azimuth','lightAzVal'], ['lightEl','elevation','lightElVal'],
+                ['keyIntensity','keyIntensity','keyIntVal'], ['keyWarmth','keyWarmth','keyWarmVal'],
+                ['fillLight','fill','fillVal'], ['fillOffset','fillOffset','fillOffsetVal'],
+                ['skyLight','sky','skyVal'], ['skyTint','skyTint','skyTintVal'], ['bounceLight','bounce','bounceVal'],
+                ['facetContrast','facetContrast','facetVal'], ['tonalBands','tonalBands','bandsVal'],
+                ['facetBias','facetBias','biasVal'], ['shadowFloor','shadowFloor','floorVal'],
+                ['geoAO','ao','aoVal'], ['cavityPower','cavityPower','cavityVal'], ['formLift','formLift','formLiftVal'],
+                ['rimLight','rim','rimVal'], ['rimPower','rimPower','rimPowerVal'], ['rimWarmth','rimWarmth','rimWarmVal'],
+                ['specular','specular','specVal'], ['specPower','specPower','specPowerVal'], ['specTint','specTint','specTintVal']
+            ];
+            for (const [id,key,vid] of FIELDS) {
+                const e = el(id); if (!e) continue;
+                e.value = lightingState[key];
+                const v = el(vid); if (v) v.textContent = lightingState[key];
+            }
+            el('lightPreset').value = lightingState.preset;
+            el('lightingModel').value = lightingState.model;
+            el('lightSpace').value = lightingState.space;
+            updateLightingReadout();
+        }
+
+        function updateLightingReadout() {
+            const r = el('lightingReadout');
+            const sEl = el('lightingSummary');
+            if (!r || !sEl) return;
+            const S = lightingState;
+            const warm = S.keyWarmth > 8 ? 'warm' : S.keyWarmth < -8 ? 'cool' : 'neutral';
+            r.textContent = `Key ${S.azimuth}\u00b0/${S.elevation}\u00b0 ${S.keyIntensity} (${warm}) \u00b7 Fill ${S.fill} \u00b7 Sky ${S.sky} \u00b7 Bounce ${S.bounce} \u00b7 AO ${S.ao}`;
+            sEl.textContent = S.model === 'crystal' ? 'CRYSTAL'
+                : S.tonalBands > 0 || S.model === 'graphic' ? `${Math.max(3,S.tonalBands)} BANDS`
+                : S.model === 'soft' ? 'SOFT' : 'FACETED';
+        }
+
+        function resetLighting() {
+            Object.assign(lightingState, {
+                preset:'custom',
+                azimuth:35, elevation:55, keyIntensity:100, keyWarmth:12,
+                fill:22, fillOffset:150,
+                sky:26, skyTint:-18, bounce:12,
+                facetContrast:72, tonalBands:0, facetBias:0, shadowFloor:6,
+                rim:18, rimPower:2, rimWarmth:0,
+                ao:28, cavityPower:1.6, formLift:0,
+                specular:8, specPower:18, specTint:0,
+                model:'physical', space:'world'
+            });
+            syncLightingControls();
+        }
+
+        function prepareLightingControls() {
+            const FIELDS = [
+                ['lightAz','azimuth','lightAzVal'], ['lightEl','elevation','lightElVal'],
+                ['keyIntensity','keyIntensity','keyIntVal'], ['keyWarmth','keyWarmth','keyWarmVal'],
+                ['fillLight','fill','fillVal'], ['fillOffset','fillOffset','fillOffsetVal'],
+                ['skyLight','sky','skyVal'], ['skyTint','skyTint','skyTintVal'], ['bounceLight','bounce','bounceVal'],
+                ['facetContrast','facetContrast','facetVal'], ['tonalBands','tonalBands','bandsVal'],
+                ['facetBias','facetBias','biasVal'], ['shadowFloor','shadowFloor','floorVal'],
+                ['geoAO','ao','aoVal'], ['cavityPower','cavityPower','cavityVal'], ['formLift','formLift','formLiftVal'],
+                ['rimLight','rim','rimVal'], ['rimPower','rimPower','rimPowerVal'], ['rimWarmth','rimWarmth','rimWarmVal'],
+                ['specular','specular','specVal'], ['specPower','specPower','specPowerVal'], ['specTint','specTint','specTintVal']
+            ];
+            for (const [id,key,vid] of FIELDS) {
+                const e = el(id); if (!e) continue;
+                e.addEventListener('input', ev => {
+                    lightingState[key] = parseFloat(ev.target.value);
+                    lightingState.preset = 'custom';
+                    el('lightPreset').value = 'custom';
+                    const v = el(vid); if (v) v.textContent = ev.target.value;
+                    updateLightingReadout();
+                });
+            }
+            el('lightPreset').addEventListener('change', ev => {
+                if (ev.target.value === 'custom') { lightingState.preset='custom'; return; }
+                applyPreset(ev.target.value);
+            });
+            el('lightingModel').addEventListener('change', ev => { lightingState.model=ev.target.value; lightingState.preset='custom'; updateLightingReadout(); });
+            el('lightSpace').addEventListener('change', ev => { lightingState.space=ev.target.value; lightingState.preset='custom'; updateLightingReadout(); });
+            syncLightingControls();
+        }
+
+        prepareLightingControls();
+
+        function draw(dt) {
+            const W = canvas._cssW || canvas.clientWidth || window.innerWidth;
+            const H = canvas._cssH || canvas.clientHeight || Math.round(window.innerHeight * 0.55);
+
+            // Nothing loaded yet: clear and bail. Without this the frame loop
+            // dereferences a null imageData on every tick from page open until
+            // a file is chosen.
+            if (!imageData || !nodes.length) {
+                const dpr = window.devicePixelRatio || 1;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, W, H);
+                return;
+            }
+
+            const depth = parseFloat(el('depthScale').value) * GEOMETRY_OUTPUT_GAIN;
+            const volume = parseFloat(el('volumeScale').value) * GEOMETRY_OUTPUT_GAIN;
+            const surfA = parseFloat(el('surfAlpha').value) / 100;
+            const shade = parseFloat(el('shadeAmt').value) / 100;
+            const lineA = parseFloat(el('lineAlpha').value) / 100;
+            const nSize = parseFloat(el('nodeSize').value);
+            const spin = parseFloat(el('spinSpeed').value);
+            const mode = visualState.colorMode;
+            const heatSrc = visualState.heatSource;
+
+            if (!dragging && spin > 0) yaw += spin * 0.00016 * dt;
+
+            const cX = Math.cos(pitch), sX = Math.sin(pitch);
+            const cY = Math.cos(yaw), sY = Math.sin(yaw);
+            const iw = imageData.width, ih = imageData.height;
+            const cx0 = iw / 2, cy0 = ih / 2;
+            const maxDim = Math.max(iw, ih);
+            const fit = referenceFit / maxDim * zoom;
+            const N = nodes.length;
+            const ox = W / 2 + panX, oy = H / 2 + panY;
+
+            const roundness = parseFloat(el('formRound').value);
+            const lumSculptAmt = parseFloat(el('lumSculpt').value);
+            const edgeCarveAmt = parseFloat(el('edgeCarve').value);
+            const localContrastAmt = parseFloat(el('localContrast').value);
+            const depthSign = depth < 0 ? -1 : 1;
+
+            for (let i = 0; i < N; i++) {
+                const nd = nodes[i];
+                const mx = nd.x - cx0;
+                const my = nd.y - cy0;
+                const half = nodeHalfDepth(nd, depth, volume, roundness, lumSculptAmt, edgeCarveAmt, localContrastAmt) * depthSign;
+
+                let z0 = half;
+                let yy = my * cX - z0 * sX;
+                let zz = my * sX + z0 * cX;
+                let xx = mx * cY + zz * sY;
+                let zc = -mx * sY + zz * cY;
+                vx[i] = xx; vy[i] = yy; vz[i] = zc;
+                px[i] = ox + xx * fit;
+                py[i] = oy + yy * fit;
+
+                z0 = -half;
+                yy = my * cX - z0 * sX;
+                zz = my * sX + z0 * cX;
+                xx = mx * cY + zz * sY;
+                zc = -mx * sY + zz * cY;
+                bx[i] = xx; by[i] = yy; bz[i] = zc;
+                backPx[i] = ox + xx * fit;
+                backPy[i] = oy + yy * fit;
+            }
+
+            let minZ = Infinity, maxZ = -Infinity;
+            for (let i = 0; i < N; i++) {
+                if (vz[i] < minZ) minZ = vz[i];
+                if (vz[i] > maxZ) maxZ = vz[i];
+                if (bz[i] < minZ) minZ = bz[i];
+                if (bz[i] > maxZ) maxZ = bz[i];
+            }
+            const zSpan = (maxZ - minZ) || 1;
+            const liveHeatZ = (mode === 'heat' && heatSrc === 'depth');
+            const renderFaces = [];
+
+            // ── ground plane + cast shadow ─────────────────────
+            // Both go through the same painter sort as the figure, so the
+            // plane correctly passes in front of the feet and behind the body.
+            const groundOn = el('groundMode').value !== 'off';
+            if (groundOn) {
+                // Project a point on the ground plane using the same transform.
+                const proj = (gx, gy, gz) => {
+                    const yy = gy * cX - gz * sX;
+                    const zz = gy * sX + gz * cX;
+                    const xx = gx * cY + zz * sY;
+                    return { x: ox + xx * fit, y: oy + yy * fit, z: -gx * sY + zz * cY };
+                };
+                // Ground sits at the bottom of the figure; the slider slides it
+                // up so the subject sinks into the plane.
+                let botY = -Infinity;
+                for (const nd of nodes) if (nd.y - cy0 > botY) botY = nd.y - cy0;
+                const gLevel = botY - (parseFloat(el('groundLevel').value) / 100) * (botY || 1);
+                const ext = maxDim * 1.6 * (parseFloat(el('groundSize').value) / 100);
+                const CELLS = 14, step = (ext * 2) / CELLS;
+                const gTone = parseFloat(el('groundTone').value) / 100;
+
+                for (let iz = 0; iz < CELLS; iz++) {
+                    for (let ix = 0; ix < CELLS; ix++) {
+                        const x0 = -ext + ix * step, z0g = -ext + iz * step;
+                        const c0 = proj(x0, gLevel, z0g);
+                        const c1 = proj(x0 + step, gLevel, z0g);
+                        const c2 = proj(x0 + step, gLevel, z0g + step);
+                        const c3 = proj(x0, gLevel, z0g + step);
+                        // Fade with distance so the plane reads as ground
+                        // rather than a hard-edged card.
+                        const d = Math.hypot(x0 + step * 0.5, z0g + step * 0.5) / ext;
+                        const fade = Math.max(0, 1 - d * d);
+                        if (fade <= 0.01) continue;
+                        const checker = ((ix + iz) & 1) ? 1.0 : 0.93;
+                        const v = 255 * gTone * fade * checker;
+                        renderFaces.push({ type: 'ground', quad: [c0, c1, c2, c3],
+                                           z: (c0.z + c1.z + c2.z + c3.z) / 4,
+                                           col: [v, v * 1.01, v * 1.04] });
+                    }
+                }
+
+                // Cast shadow: project the seam ring onto the plane along the
+                // key light. Uses the lighting rig's own azimuth/elevation, so
+                // shadow and shading can never disagree.
+                const shOp = parseFloat(el('groundShadow').value) / 100;
+                if (shOp > 0 && seamRing.length > 2) {
+                    let L = getLightVector(lightingState.azimuth, lightingState.elevation);
+                    // Keep the light above the horizon or the shadow inverts.
+                    const ly = Math.min(-0.12, L.y);
+                    const pts = [];
+                    for (const idx of seamRing) {
+                        const nd = nodes[idx];
+                        const wx = nd.x - cx0, wy = nd.y - cy0, wz = 0;
+                        const tt = (gLevel - wy) / ly;      // travel to the plane
+                        const sxw = wx + L.x * tt, szw = wz + L.z * tt;
+                        pts.push(proj(sxw, gLevel, szw));
+                    }
+                    let ccx = 0, ccy = 0, ccz = 0;
+                    for (const q of pts) { ccx += q.x; ccy += q.y; ccz += q.z; }
+                    ccx /= pts.length; ccy /= pts.length; ccz /= pts.length;
+                    for (let i = 0; i < pts.length; i++) {
+                        const a = pts[i], b = pts[(i + 1) % pts.length];
+                        renderFaces.push({ type: 'shadow',
+                            tri: [{x:ccx,y:ccy}, a, b],
+                            z: (a.z + b.z + ccz) / 3 - 0.5,   // sit just above the plane
+                            alpha: shOp });
+                    }
+                }
+            }
+
+            for (let ti = 0; ti < filteredTris.length; ti++) {
+                const t = filteredTris[ti];
+                const fa = [px[t.a], py[t.a]], fb = [px[t.b], py[t.b]], fc = [px[t.c], py[t.c]];
+                const ba = [backPx[t.a], backPy[t.a]], bb = [backPx[t.b], backPy[t.b]], bc = [backPx[t.c], backPy[t.c]];
+                const frontArea = (fb[0]-fa[0])*(fc[1]-fa[1]) - (fb[1]-fa[1])*(fc[0]-fa[0]);
+                const backArea = (bb[0]-ba[0])*(bc[1]-ba[1]) - (bb[1]-ba[1])*(bc[0]-ba[0]);
+                if (Math.abs(frontArea) > 0.05) {
+                    renderFaces.push({ type:'front', t, fi: ti, z:(vz[t.a]+vz[t.b]+vz[t.c])/3, area:frontArea });
+                }
+                if (Math.abs(backArea) > 0.05) {
+                    renderFaces.push({ type:'back', t, fi: ti, z:(bz[t.a]+bz[t.b]+bz[t.c])/3, area:backArea });
+                }
+            }
+
+            for (const [a,b] of boundaryEdges) {
+                const A = nodes[a], B = nodes[b];
+                const edgeLen = Math.hypot(A.x-B.x, A.y-B.y);
+                const maxWall = Math.max(8, seamSpacing * 2.5);
+                if (edgeLen > maxWall) continue;
+                const area = (backPx[b]-px[a])*(backPy[a]-py[a]) -
+                             (backPy[b]-py[a])*(backPx[a]-px[a]);
+                if (Math.abs(area) < 0.05) continue;
+                renderFaces.push({ type:'side', a, b, z:(vz[a]+vz[b]+bz[a]+bz[b])/4 });
+            }
+
+            renderFaces.sort((a,b) => b.z - a.z);
+
+            for (const rf of renderFaces) {
+                if (rf.type === 'ground') {
+                    const q = rf.quad;
+                    ctx.beginPath();
+                    ctx.moveTo(q[0].x, q[0].y);
+                    ctx.lineTo(q[1].x, q[1].y);
+                    ctx.lineTo(q[2].x, q[2].y);
+                    ctx.lineTo(q[3].x, q[3].y);
+                    ctx.closePath();
+                    ctx.fillStyle = `rgb(${rf.col[0]|0},${rf.col[1]|0},${rf.col[2]|0})`;
+                    ctx.fill();
+                    continue;
+                }
+                if (rf.type === 'shadow') {
+                    const t3 = rf.tri;
+                    ctx.beginPath();
+                    ctx.moveTo(t3[0].x, t3[0].y);
+                    ctx.lineTo(t3[1].x, t3[1].y);
+                    ctx.lineTo(t3[2].x, t3[2].y);
+                    ctx.closePath();
+                    ctx.fillStyle = `rgba(0,0,0,${rf.alpha})`;
+                    ctx.fill();
+                    continue;
+                }
+                if (rf.type === 'side') {
+                    const A=nodes[rf.a], B=nodes[rf.b];
+                    const rr=Math.max(0,(((A.r+B.r)*0.5)*0.32)|0);
+                    const gg=Math.max(0,(((A.g+B.g)*0.5)*0.32)|0);
+                    const bb=Math.max(0,(((A.b+B.b)*0.5)*0.32)|0);
+                    // FIX: use actual surfA, not forced near 1
+                    const alpha = Math.max(0, Math.min(1, surfA));
+                    ctx.fillStyle=`rgba(${rr},${gg},${bb},${alpha})`;
+                    ctx.beginPath();
+                    ctx.moveTo(px[rf.a],py[rf.a]);
+                    ctx.lineTo(px[rf.b],py[rf.b]);
+                    ctx.lineTo(backPx[rf.b],backPy[rf.b]);
+                    ctx.lineTo(backPx[rf.a],backPy[rf.a]);
+                    ctx.closePath(); ctx.fill();
+                    continue;
+                }
+
+                const t = rf.t;
+                const A=nodes[t.a], B=nodes[t.b], C=nodes[t.c];
+                let sa,sb,sc;
+                if (rf.type === 'front') {
+                    sa=[px[t.a],py[t.a]]; sb=[px[t.b],py[t.b]]; sc=[px[t.c],py[t.c]];
+                } else {
+                    sa=[backPx[t.a],backPy[t.a]]; sb=[backPx[t.b],backPy[t.b]]; sc=[backPx[t.c],backPy[t.c]];
+                }
+
+                const area=(sb[0]-sa[0])*(sc[1]-sa[1])-(sb[1]-sa[1])*(sc[0]-sa[0]);
+                if (Math.abs(area) < 0.05) continue;
+
+                const base = liveHeatZ
+                    ? heatColor(1 - (rf.z-minZ)/zSpan)
+                    : faceColor(t, mode, heatSrc);
+
+                // Camera-space vertex arrays for THIS shell. The previous build
+                // mixed unrotated image-space x/y with rotated z, so normals
+                // lived in a hybrid space and barely responded to orbiting.
+                const NX = rf.type === 'front' ? vx : bx;
+                const NY = rf.type === 'front' ? vy : by;
+                const NZ = rf.type === 'front' ? vz : bz;
+
+                const ax = NX[t.b]-NX[t.a], ay = NY[t.b]-NY[t.a], az = NZ[t.b]-NZ[t.a];
+                const bxv = NX[t.c]-NX[t.a], byv = NY[t.c]-NY[t.a], bzv = NZ[t.c]-NZ[t.a];
+                let nx=ay*bzv-az*byv, ny=az*bxv-ax*bzv, nz=ax*byv-ay*bxv;
+                const nl=Math.hypot(nx,ny,nz)||1; nx/=nl; ny/=nl; nz/=nl;
+                // Painter sort draws large z first, so the camera looks along +z.
+                // Flip the normal toward the viewer — this two-sides both shells
+                // without needing a front/back sign hack.
+                if (nz > 0) { nx=-nx; ny=-ny; nz=-nz; }
+
+                // Projection is orthographic (no perspective divide), so the
+                // view vector is constant. The old per-face vector produced a
+                // fake fisheye rim that swam across the surface.
+                const viewX=0, viewY=0, viewZ=-1;
+
+                // Neighbor-normal divergence is a cheap, stable geometric cavity signal.
+                let cavity=0;
+                if (faceNeighbors.length) {
+                    const ns = faceNeighbors[rf.fi] || [];
+                    for (const oi of ns) {
+                        const ot=filteredTris[oi];
+                        const oax=NX[ot.b]-NX[ot.a], oay=NY[ot.b]-NY[ot.a], oaz=NZ[ot.b]-NZ[ot.a];
+                        const obx=NX[ot.c]-NX[ot.a], oby=NY[ot.c]-NY[ot.a], obz=NZ[ot.c]-NZ[ot.a];
+                        let onx=oay*obz-oaz*oby, ony=oaz*obx-oax*obz, onz=oax*oby-oay*obx;
+                        const oml=Math.hypot(onx,ony,onz)||1; onx/=oml; ony/=oml; onz/=oml;
+                        if (onz > 0) { onx=-onx; ony=-ony; onz=-onz; }
+                        cavity=Math.max(cavity, 1-clamp01(nx*onx+ny*ony+nz*onz));
+                    }
+                }
+
+                const lit=evaluateLighting(nx,ny,nz,viewX,viewY,viewZ,cavity);
+                const rimColor = lightingState.rimWarmth >= 0
+                    ? [255, 210 - lightingState.rimWarmth*0.7, 160]
+                    : [150, 205, 255 + lightingState.rimWarmth*0.55];
+                let rr = base[0]*mix(1,lit.r,shade);
+                let gg = base[1]*mix(1,lit.g,shade);
+                let bb = base[2]*mix(1,lit.b,shade);
+
+                // Rim contributes a restrained colored lift rather than washing the whole face.
+                const rimMix=Math.min(0.65,lit.rim*0.65);
+                rr=mix(rr,rimColor[0],rimMix); gg=mix(gg,rimColor[1],rimMix); bb=mix(bb,rimColor[2],rimMix);
+
+                // Specular is additive, preserving the underlying image color.
+                if (lit.spec > 0) {
+                    const tint=lightingState.specTint/100;
+                    const sr=mix(255,base[0],tint), sg=mix(255,base[1],tint), sb=mix(255,base[2],tint);
+                    rr += sr*lit.spec; gg += sg*lit.spec; bb += sb*lit.spec;
+                }
+                const finalRGB=rgbClamp([rr,gg,bb]);
+                const col=`rgba(${finalRGB[0]|0},${finalRGB[1]|0},${finalRGB[2]|0},${surfA})`;
+                ctx.fillStyle=col;
+                ctx.strokeStyle=col;
+                ctx.lineWidth=0.6;
+                ctx.beginPath();
+                ctx.moveTo(sa[0],sa[1]); ctx.lineTo(sb[0],sb[1]); ctx.lineTo(sc[0],sc[1]);
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+            }
+
+            if (lineA > 0 && wireEdges.length) {
+                ctx.strokeStyle = mode === 'mono' ? `rgba(0,255,136,${lineA})` : `rgba(255,255,255,${lineA})`;
+                ctx.lineWidth = 1;
+                // front wireframe
+                ctx.beginPath();
+                for (const [a,b] of wireEdges) {
+                    ctx.moveTo(px[a],py[a]); ctx.lineTo(px[b],py[b]);
+                }
+                ctx.stroke();
+                // back wireframe (dimmer)
+                const backLineA = lineA * 0.45;
+                ctx.strokeStyle = mode === 'mono' ? `rgba(0,255,136,${backLineA})` : `rgba(255,255,255,${backLineA})`;
+                ctx.beginPath();
+                for (const [a,b] of wireEdges) {
+                    ctx.moveTo(backPx[a],backPy[a]); ctx.lineTo(backPx[b],backPy[b]);
+                }
+                ctx.stroke();
+            }
+
+            if (nSize > 0) {
+                if (mode === 'true') {
+                    for (let i=0;i<N;i++) {
+                        const nd=nodes[i];
+                        ctx.fillStyle=`rgba(${nd.r},${nd.g},${nd.b},0.85)`;
+                        ctx.beginPath(); ctx.arc(px[i],py[i],nSize,0,Math.PI*2); ctx.fill();
+                    }
+                } else {
+                    ctx.fillStyle=mode==='mono'?'rgba(0,255,136,0.6)':'rgba(255,255,255,0.6)';
+                    for(let i=0;i<N;i++){ctx.beginPath();ctx.arc(px[i],py[i],nSize,0,Math.PI*2);ctx.fill();}
+                }
+            }
+        }
+
+        // ── controls drawer ─────────────────────────────────────
+        el('controlsToggle').addEventListener('click', () => {
+            const c = el('controls');
+            const b = el('controlsToggle');
+            c.classList.toggle('collapsed');
+            b.classList.toggle('collapsed');
+        });
+
+        // ── lighting drawer ───────────────────────────────────────
+        el('lightingHead').addEventListener('click', () => {
+            el('lightingDrawer').classList.toggle('open');
+        });
+
+        // ── JSON drawer ─────────────────────────────────────────
+        el('drawerHead').addEventListener('click', () => {
+            el('drawer').classList.toggle('open');
+        });
+
+        function buildJSON() {
+            const depth = parseFloat(el('depthScale').value) * GEOMETRY_OUTPUT_GAIN;
+            const cx0 = imageData ? imageData.width / 2 : 0;
+            const cy0 = imageData ? imageData.height / 2 : 0;
+
+            return {
+                format: 'constellation_mesh',
+                version: 6,
+                source: imageData ? { w: imageData.width, h: imageData.height } : null,
+                params: {
+                    edgeThreshold: +el('edgeThreshold').value,
+                    adaptivity: +el('adaptivity').value / 100, detailBias: +el('detailBias').value / 100, textureReject: +el('textureReject').value / 100, focus: +el('focus').value / 100, edgeWeight: +el('edgeWeight').value / 100, colorWeight: +el('colorWeight').value / 100, toneWeight: +el('toneWeight').value / 100, gradientWeight: +el('gradientWeight').value / 100, minCell: +el('minCell').value / 1000, maxQuadDepth: +el('maxQuadDepth').value,
+                    sampleRate: +el('sampleRate').value,
+                    maxDistance: +el('maxDistance').value,
+                    depthScale: depth,
+                    colorMode: el('colorMode').value,
+                    heatSource: el('heatSource').value,
+                    geometryMode: el('geometryMode').value,
+                    maskMode: visualState.maskMode,
+                    volumeScale: +el('volumeScale').value,
+                    depthSmooth: +el('depthSmooth').value,
+                    depthSource: el('depthSource').value,
+                    depthMapInfluence: +el('depthMapInfluence').value,
+                    depthMapDirection: el('depthMapDirection').value,
+                    formRound: +el('formRound').value,
+                },
+                counts: { nodes: nodes.length, faces: filteredTris.length },
+                vertices: nodes.map(n => [
+                    +(n.x - cx0).toFixed(2),
+                    +(-(n.y - cy0)).toFixed(2),
+                    +(nodeHalfDepth(n, depth, +el('volumeScale').value * GEOMETRY_OUTPUT_GAIN, +el('formRound').value, +el('lumSculpt').value, +el('edgeCarve').value, +el('localContrast').value) * (depth < 0 ? -1 : 1)).toFixed(2),
+                ]),
+                colors: nodes.map(n => [n.r, n.g, n.b]),
+                lum: nodes.map(n => +n.lum.toFixed(3)),
+                edge: nodes.map(n => +n.edge.toFixed(3)),
+                faces: filteredTris.map(t => [t.a, t.b, t.c]),
+            };
+        }
+
+        let jsonCache = null;
+
+        function refreshJSON() {
+            if (!nodes.length) return;
+            jsonCache = buildJSON();
+            const full = JSON.stringify(jsonCache);
+            const kb = (full.length / 1024).toFixed(1);
+            el('drawerSize').textContent = jsonCache.counts.nodes + 'v / ' +
+                jsonCache.counts.faces + 'f · ' + kb + 'kb';
+
+            const preview = {
+                ...jsonCache,
+                vertices: jsonCache.vertices.slice(0, 6),
+                colors: jsonCache.colors.slice(0, 6),
+                lum: jsonCache.lum.slice(0, 6),
+                edge: jsonCache.edge.slice(0, 6),
+                faces: jsonCache.faces.slice(0, 6),
+            };
+            let s = JSON.stringify(preview, null, 1);
+            if (jsonCache.vertices.length > 6) {
+                s += '\n\n// preview truncated to 6 entries per array\n' +
+                    '// copy / download gives all ' + jsonCache.counts.nodes +
+                    ' verts + ' + jsonCache.counts.faces + ' faces';
+            }
+            el('jsonOut').textContent = s;
+        }
+
+        function copyJSON() {
+            if (!jsonCache) return;
+            const s = JSON.stringify(jsonCache);
+            const done = () => {
+                const b = el('copyBtn');
+                b.textContent = '✓ Copied';
+                setTimeout(() => { b.textContent = '⧉ Copy JSON'; }, 1400);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(s).then(done).catch(() => fallbackCopy(s, done));
+            } else {
+                fallbackCopy(s, done);
+            }
+        }
+
+        function fallbackCopy(s, done) {
+            const ta = document.createElement('textarea');
+            ta.value = s;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); done(); } catch (_) {}
+            document.body.removeChild(ta);
+        }
+
+        function downloadJSON() {
+            if (!jsonCache) return;
+            const blob = new Blob([JSON.stringify(jsonCache)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.download = 'constellation_' + Date.now() + '.json';
+            a.href = URL.createObjectURL(blob);
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        }
+
+        // ── exports ─────────────────────────────────────────────
+        function savePNG() {
+            const a = document.createElement('a');
+            a.download = 'constellation_solid_' + Date.now() + '.png';
+            a.href = canvas.toDataURL('image/png');
+            a.click();
+        }
+
+        function exportOBJ() {
+            if (!nodes.length || !filteredTris.length) return;
+            const depthValue = parseFloat(el('depthScale').value);
+            const depth = Math.abs(depthValue) * GEOMETRY_OUTPUT_GAIN;
+            const volume = parseFloat(el('volumeScale').value) * GEOMETRY_OUTPUT_GAIN;
+            const roundness = parseFloat(el('formRound').value);
+            const lumSculptAmt = parseFloat(el('lumSculpt').value);
+            const edgeCarveAmt = parseFloat(el('edgeCarve').value);
+            const localContrastAmt = parseFloat(el('localContrast').value);
+            const depthSign = depthValue < 0 ? -1 : 1;
+            const cx0 = imageData.width / 2, cy0 = imageData.height / 2;
+
+            let s = '# CONSTELLATION_SOLID volumetric export\n# front vertices: ' + nodes.length +
+                ' front faces: ' + filteredTris.length + '\n';
+            for (const nd of nodes) {
+                s += 'v ' + (nd.x - cx0).toFixed(3) +
+                    ' ' + (-(nd.y - cy0)).toFixed(3) +
+                    ' ' + (nodeHalfDepth(nd, depth, volume, roundness, lumSculptAmt, edgeCarveAmt, localContrastAmt) * depthSign).toFixed(3) +
+                    ' ' + (nd.r / 255).toFixed(3) +
+                    ' ' + (nd.g / 255).toFixed(3) +
+                    ' ' + (nd.b / 255).toFixed(3) + '\n';
+            }
+            const backOffset = nodes.length;
+            for (const nd of nodes) {
+                s += 'v ' + (nd.x - cx0).toFixed(3) +
+                    ' ' + (-(nd.y - cy0)).toFixed(3) +
+                    ' ' + (-nodeHalfDepth(nd, depth, volume, roundness, lumSculptAmt, edgeCarveAmt, localContrastAmt) * depthSign).toFixed(3) + '\n';
+            }
+            for (const t of filteredTris) {
+                s += 'f ' + (t.a + 1) + ' ' + (t.b + 1) + ' ' + (t.c + 1) + '\n';
+            }
+            for (const t of filteredTris) {
+                s += 'f ' + (backOffset + t.c + 1) + ' ' + (backOffset + t.b + 1) + ' ' + (backOffset + t.a + 1) + '\n';
+            }
+            for (const [a,b] of boundaryEdges) {
+                s += 'f ' + (a + 1) + ' ' + (backOffset + a + 1) + ' ' + (backOffset + b + 1) + ' ' + (b + 1) + '\n';
+            }
+
+            const blob = new Blob([s], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.download = 'constellation_volume_' + Date.now() + '.obj';
+            a.href = URL.createObjectURL(blob);
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        }
+
+        function resetView() {
+            yaw = 0.6; pitch = -0.35; zoom = 1; panX = 0; panY = 0;
+        }
+
+        function resetDefaults() {
+            const defs = {
+                edgeThreshold: 40, sampleRate: 8, maxDistance: 60, minQuality: 6, depthScale: 7,
+                seamDensity: 22, bevelWidth: 100, cutoutTol: 40, groundLevel: 0, groundSize: 100, groundShadow: 35, groundTone: 16,
+                volumeScale: 18, depthSmooth: 65, depthMapInfluence: 100, formRound: 65, lumSculpt: 30, edgeCarve: 20, localContrast: 25, maxNodes: 700,
+                surfAlpha: 100, shadeAmt: 80, lineAlpha: 25, nodeSize: 0, spinSpeed: 0.5, adaptivity: 82, detailBias: 68, textureReject: 0, focus: 155, edgeWeight: 100, colorWeight: 58, toneWeight: 72, gradientWeight: 52, minCell: 18, maxQuadDepth: 7,
+            };
+            const vals = {
+                edgeThreshold: 'edgeVal', sampleRate: 'sampleVal', maxDistance: 'distVal', minQuality: 'minQualityVal',
+                seamDensity: 'seamDensityVal', bevelWidth: 'bevelWidthVal', cutoutTol: 'cutoutTolVal', groundLevel: 'groundLevelVal', groundSize: 'groundSizeVal', groundShadow: 'groundShadowVal', groundTone: 'groundToneVal',
+                depthScale: 'depthVal', volumeScale: 'volumeVal', depthSmooth: 'smoothVal', depthMapInfluence: 'depthMapInfluenceVal', formRound: 'roundVal', lumSculpt: 'lumSculptVal', edgeCarve: 'edgeCarveVal', localContrast: 'localContrastVal', maxNodes: 'maxNodesVal',
+                surfAlpha: 'surfVal', shadeAmt: 'shadeVal',
+                lineAlpha: 'alphaVal', nodeSize: 'nodeVal', spinSpeed: 'spinVal', adaptivity:'adaptivityVal', detailBias:'detailBiasVal', textureReject:'textureRejectVal', focus:'focusVal', edgeWeight:'edgeWeightVal', colorWeight:'colorWeightVal', toneWeight:'toneWeightVal', gradientWeight:'gradientWeightVal', minCell:'minCellVal', maxQuadDepth:'maxQuadDepthVal',
+            };
+            for (const k in defs) {
+                el(k).value = defs[k];
+                el(vals[k]).textContent = defs[k];
+            }
+            el('colorMode').value = 'true';
+            el('heatSource').value = 'depth';
+            el('depthSource').value = 'auto';
+            el('depthMapDirection').value = 'normal';
+            el('geometryMode').value = 'lowpoly';
+            el('groundMode').value = 'off';
+            el('balancePoints').value='on'; el('edgePoints').value='on'; el('triangleSource').value='porygon';
+            visualState.maskMode = 'auto';
+            resetView();
+            resetLighting();
+            if (imageData) rebuild();
+        }
+
+        // ── PORYGON mesh export ─────────────────────────────────
+        function exportMeshJSON() {
+            if (!nodes.length || !filteredTris.length) return;
+
+            const cx0 = imageData.width / 2, cy0 = imageData.height / 2;
+            const depth = parseFloat(el('depthScale').value) * GEOMETRY_OUTPUT_GAIN;
+            const vol = +el('volumeScale').value * GEOMETRY_OUTPUT_GAIN;
+            const rnd = +el('formRound').value;
+            const ls = +el('lumSculpt').value;
+            const ec = +el('edgeCarve').value;
+            const lcv = +el('localContrast').value;
+
+            const mesh = {
+                metadata: {
+                    type: 'CONSTELLATION_MESH',
+                    timestamp: new Date().toISOString(),
+                    imageSize: { w: imageData.width, h: imageData.height },
+                    pipeline: 'constellation → unified depth field → delaunay → volumetric geometry'
+                },
+                params: {
+                    edgeThreshold: +el('edgeThreshold').value,
+                    adaptivity: +el('adaptivity').value / 100, detailBias: +el('detailBias').value / 100, textureReject: +el('textureReject').value / 100, focus: +el('focus').value / 100, edgeWeight: +el('edgeWeight').value / 100, colorWeight: +el('colorWeight').value / 100, toneWeight: +el('toneWeight').value / 100, gradientWeight: +el('gradientWeight').value / 100, minCell: +el('minCell').value / 1000, maxQuadDepth: +el('maxQuadDepth').value,
+                    sampleRate:    +el('sampleRate').value,
+                    maxDistance:   +el('maxDistance').value,
+                    depthScale:    depth,
+                    colorMode:     el('colorMode').value,
+                    heatSource:    el('heatSource').value,
+                    geometryMode:  el('geometryMode').value,
+                    maskMode:      visualState.maskMode,
+                    volumeScale:   +el('volumeScale').value,
+                    depthSmooth:   +el('depthSmooth').value,
+                    formRound:     +el('formRound').value,
+                    lumSculpt:     +el('lumSculpt').value,
+                    edgeCarve:     +el('edgeCarve').value,
+                    localContrast: +el('localContrast').value,
+                },
+                vertices: nodes.map(n => {
+                    const ds = depth < 0 ? -1 : 1;
+                    return [
+                        +(n.x - cx0).toFixed(2),
+                        +(-(n.y - cy0)).toFixed(2),
+                        +(nodeHalfDepth(n, depth, vol, rnd, ls, ec, lcv) * ds).toFixed(2)
+                    ];
+                }),
+                colors: nodes.map(n => [n.r, n.g, n.b]),
+                luminance: nodes.map(n => +n.lum.toFixed(3)),
+                edgeStrength: nodes.map(n => +n.edge.toFixed(3)),
+                faces: filteredTris.map(t => [t.a, t.b, t.c]),
+                stats: {
+                    vertexCount: nodes.length,
+                    faceCount:   filteredTris.length,
+                    bounds: (() => {
+                        const ds = depth < 0 ? -1 : 1;
+                        const zs = nodes.map(n => nodeHalfDepth(n, depth, vol, rnd, ls, ec, lcv) * ds);
+                        return {
+                            min: [
+                                +Math.min(...nodes.map(n => n.x - cx0)).toFixed(2),
+                                +Math.min(...nodes.map(n => -(n.y - cy0))).toFixed(2),
+                                +Math.min(...zs).toFixed(2)
+                            ],
+                            max: [
+                                +Math.max(...nodes.map(n => n.x - cx0)).toFixed(2),
+                                +Math.max(...nodes.map(n => -(n.y - cy0))).toFixed(2),
+                                +Math.max(...zs).toFixed(2)
+                            ]
+                        };
+                    })()
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(mesh, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.download = 'CONST_MESH_' + Date.now() + '.json';
+            a.href = URL.createObjectURL(blob);
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        }
+
+        requestAnimationFrame(frame);
+    </script>
 </body>
 </html>
